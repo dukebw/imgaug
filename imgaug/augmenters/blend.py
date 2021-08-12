@@ -2765,12 +2765,14 @@ class StochasticParameterMaskGen(IBatchwiseMaskGenerator):
 
         # mask has no elements if height or width in shape is 0
         if mask.size > 0:
-            assert (
-                0 <= mask.item(0) <= 1.0
-            ), "Expected 'parameter' samples to be in the interval " "[0.0, 1.0]. Got min %.4f and max %.4f." % (
-                np.min(mask),
-                np.max(mask),
-            )
+            if not 0 <= mask.item(0) <= 1.0:
+                assert (
+                    0 <= mask.item(0) <= 1.0001
+                ), "Expected 'parameter' samples to be in the interval " "[0.0, 1.0]. Got min %.4f and max %.4f." % (
+                    np.min(mask),
+                    np.max(mask),
+                )
+                mask = np.clip(mask, 0.0, 1.0)
 
         return mask
 
