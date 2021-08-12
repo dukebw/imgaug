@@ -23,7 +23,7 @@ def main():
         "https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/"
         "Salad_platter.jpg/320px-Salad_platter.jpg",
         "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/"
-        "Squirrel_posing.jpg/287px-Squirrel_posing.jpg"
+        "Squirrel_posing.jpg/287px-Squirrel_posing.jpg",
     ]
     urls_medium = [
         "https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/"
@@ -42,7 +42,7 @@ def main():
         "https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/"
         "Salad_platter.jpg/640px-Salad_platter.jpg",
         "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/"
-        "Squirrel_posing.jpg/574px-Squirrel_posing.jpg"
+        "Squirrel_posing.jpg/574px-Squirrel_posing.jpg",
     ]
     urls_large = [
         "https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/"
@@ -61,7 +61,7 @@ def main():
         "https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/"
         "Salad_platter.jpg/1024px-Salad_platter.jpg",
         "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/"
-        "Squirrel_posing.jpg/574px-Squirrel_posing.jpg"
+        "Squirrel_posing.jpg/574px-Squirrel_posing.jpg",
     ]
 
     image = imageio.imread(urls_medium[1])

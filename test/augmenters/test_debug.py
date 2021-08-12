@@ -1,6 +1,7 @@
 from __future__ import print_function, division, absolute_import
 
 import sys
+
 # unittest only added in 3.4 self.subTest()
 if sys.version_info[0] < 3 or sys.version_info[1] < 4:
     import unittest2 as unittest
@@ -12,6 +13,7 @@ try:
 except ImportError:
     import mock
 import os
+
 try:
     import cPickle as pickle
 except ImportError:
@@ -35,13 +37,14 @@ class Test_draw_debug_image(unittest.TestCase):
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
 
         top_left = min_loc
-        bottom_right = (top_left[0] + find_image.shape[1],
-                        top_left[1] + find_image.shape[0])
-        image_found = in_image[top_left[1]:bottom_right[1],
-                               top_left[0]:bottom_right[0],
-                               :]
-        diff = np.abs(image_found.astype(np.float32)
-                      - find_image.astype(np.float32))
+        bottom_right = (
+            top_left[0] + find_image.shape[1],
+            top_left[1] + find_image.shape[0],
+        )
+        image_found = in_image[
+            top_left[1] : bottom_right[1], top_left[0] : bottom_right[0], :
+        ]
+        diff = np.abs(image_found.astype(np.float32) - find_image.astype(np.float32))
         return np.average(diff)
 
     @classmethod
@@ -79,14 +82,13 @@ class Test_draw_debug_image(unittest.TestCase):
         rng = iarandom.RNG(0)
         images = rng.integers(0, 256, size=(2, 256, 256, 3), dtype=np.uint8)
         heatmap = np.zeros((256, 256, 1), dtype=np.float32)
-        heatmap[128-25:128+25, 128-25:128+25] = 1.0
+        heatmap[128 - 25 : 128 + 25, 128 - 25 : 128 + 25] = 1.0
         heatmap1 = ia.HeatmapsOnImage(np.copy(heatmap), shape=images[0].shape)
         heatmap2 = ia.HeatmapsOnImage(1.0 - heatmap, shape=images[1].shape)
         image1_w_overlay = heatmap1.draw_on_image(images[0])[0]
         image2_w_overlay = heatmap2.draw_on_image(images[1])[0]
 
-        debug_image = iaa.draw_debug_image(images,
-                                           heatmaps=[heatmap1, heatmap2])
+        debug_image = iaa.draw_debug_image(images, heatmaps=[heatmap1, heatmap2])
 
         assert self._image_contains(images[0, ...], debug_image)
         assert self._image_contains(images[1, ...], debug_image)
@@ -97,19 +99,16 @@ class Test_draw_debug_image(unittest.TestCase):
         rng = iarandom.RNG(0)
         images = rng.integers(0, 256, size=(2, 256, 256, 3), dtype=np.uint8)
         sm1 = np.zeros((256, 256, 1), dtype=np.int32)
-        sm1[128-25:128+25, 128-25:128+25] = 1
+        sm1[128 - 25 : 128 + 25, 128 - 25 : 128 + 25] = 1
         sm2 = np.zeros((256, 256, 1), dtype=np.int32)
-        sm2[64-25:64+25, 64-25:64+25] = 2
-        sm2[192-25:192+25, 192-25:192+25] = 3
+        sm2[64 - 25 : 64 + 25, 64 - 25 : 64 + 25] = 2
+        sm2[192 - 25 : 192 + 25, 192 - 25 : 192 + 25] = 3
         segmap1 = ia.SegmentationMapsOnImage(sm1, shape=images[0].shape)
         segmap2 = ia.SegmentationMapsOnImage(sm2, shape=images[1].shape)
-        image1_w_overlay = segmap1.draw_on_image(images[0],
-                                                 draw_background=True)[0]
-        image2_w_overlay = segmap2.draw_on_image(images[1],
-                                                 draw_background=True)[0]
+        image1_w_overlay = segmap1.draw_on_image(images[0], draw_background=True)[0]
+        image2_w_overlay = segmap2.draw_on_image(images[1], draw_background=True)[0]
 
-        debug_image = iaa.draw_debug_image(images,
-                                           segmentation_maps=[segmap1, segmap2])
+        debug_image = iaa.draw_debug_image(images, segmentation_maps=[segmap1, segmap2])
 
         assert self._image_contains(images[0, ...], debug_image)
         assert self._image_contains(images[1, ...], debug_image)
@@ -120,14 +119,13 @@ class Test_draw_debug_image(unittest.TestCase):
         rng = iarandom.RNG(0)
         images = rng.integers(0, 256, size=(2, 256, 256, 3), dtype=np.uint8)
         heatmap = np.zeros((128, 128, 1), dtype=np.float32)
-        heatmap[64-25:64+25, 64-25:64+25] = 1.0
+        heatmap[64 - 25 : 64 + 25, 64 - 25 : 64 + 25] = 1.0
         heatmap1 = ia.HeatmapsOnImage(np.copy(heatmap), shape=images[0].shape)
         heatmap2 = ia.HeatmapsOnImage(1.0 - heatmap, shape=images[1].shape)
         image1_w_overlay = heatmap1.draw_on_image(images[0])[0]
         image2_w_overlay = heatmap2.draw_on_image(images[1])[0]
 
-        debug_image = iaa.draw_debug_image(images,
-                                           heatmaps=[heatmap1, heatmap2])
+        debug_image = iaa.draw_debug_image(images, heatmaps=[heatmap1, heatmap2])
 
         assert self._image_contains(images[0, ...], debug_image)
         assert self._image_contains(images[1, ...], debug_image)
@@ -138,14 +136,12 @@ class Test_draw_debug_image(unittest.TestCase):
         rng = iarandom.RNG(0)
         images = rng.integers(0, 256, size=(2, 256, 256, 3), dtype=np.uint8)
         heatmap = np.zeros((256, 256, 2), dtype=np.float32)
-        heatmap[100-25:100+25, 100-25:100+25, 0] = 1.0
-        heatmap[200-25:200+25, 200-25:200+25, 1] = 1.0
+        heatmap[100 - 25 : 100 + 25, 100 - 25 : 100 + 25, 0] = 1.0
+        heatmap[200 - 25 : 200 + 25, 200 - 25 : 200 + 25, 1] = 1.0
         heatmap1 = ia.HeatmapsOnImage(np.copy(heatmap), shape=images[0].shape)
         heatmap2 = ia.HeatmapsOnImage(1.0 - heatmap, shape=images[1].shape)
-        image1_w_overlay_c1, image1_w_overlay_c2 = \
-            heatmap1.draw_on_image(images[0])
-        image2_w_overlay_c1, image2_w_overlay_c2 = \
-            heatmap2.draw_on_image(images[1])
+        image1_w_overlay_c1, image1_w_overlay_c2 = heatmap1.draw_on_image(images[0])
+        image2_w_overlay_c1, image2_w_overlay_c2 = heatmap2.draw_on_image(images[1])
 
         debug_image = iaa.draw_debug_image(images, heatmaps=[heatmap1, heatmap2])
 
@@ -181,14 +177,13 @@ class Test_draw_debug_image(unittest.TestCase):
         bbs = []
         for x in np.linspace(0, 256, 5):
             for y in np.linspace(0, 256, 5):
-                bbs.append(ia.BoundingBox(x1=x, y1=y, x2=x+20, y2=y+20))
+                bbs.append(ia.BoundingBox(x1=x, y1=y, x2=x + 20, y2=y + 20))
         bbsoi1 = ia.BoundingBoxesOnImage(bbs, shape=images[0].shape)
         bbsoi2 = bbsoi1.shift(x=20)
         image1_w_overlay = bbsoi1.draw_on_image(images[0])
         image2_w_overlay = bbsoi2.draw_on_image(images[1])
 
-        debug_image = iaa.draw_debug_image(images,
-                                           bounding_boxes=[bbsoi1, bbsoi2])
+        debug_image = iaa.draw_debug_image(images, bounding_boxes=[bbsoi1, bbsoi2])
 
         assert self._image_contains(images[0, ...], debug_image)
         assert self._image_contains(images[1, ...], debug_image)
@@ -201,15 +196,15 @@ class Test_draw_debug_image(unittest.TestCase):
         polys = []
         for x in np.linspace(0, 256, 4):
             for y in np.linspace(0, 256, 4):
-                polys.append(ia.Polygon([(x, y), (x+20, y), (x+20, y+20),
-                                         (x, y+20)]))
+                polys.append(
+                    ia.Polygon([(x, y), (x + 20, y), (x + 20, y + 20), (x, y + 20)])
+                )
         psoi1 = ia.PolygonsOnImage(polys, shape=images[0].shape)
         psoi2 = psoi1.shift(x=20)
         image1_w_overlay = psoi1.draw_on_image(images[0])
         image2_w_overlay = psoi2.draw_on_image(images[1])
 
-        debug_image = iaa.draw_debug_image(images,
-                                           polygons=[psoi1, psoi2])
+        debug_image = iaa.draw_debug_image(images, polygons=[psoi1, psoi2])
 
         assert self._image_contains(images[0, ...], debug_image)
         assert self._image_contains(images[1, ...], debug_image)
@@ -222,15 +217,15 @@ class Test_draw_debug_image(unittest.TestCase):
         ls = []
         for x in np.linspace(0, 256, 4):
             for y in np.linspace(0, 256, 4):
-                ls.append(ia.LineString([(x, y), (x+20, y), (x+20, y+20),
-                                         (x, y+20)]))
+                ls.append(
+                    ia.LineString([(x, y), (x + 20, y), (x + 20, y + 20), (x, y + 20)])
+                )
         lsoi1 = ia.LineStringsOnImage(ls, shape=images[0].shape)
         lsoi2 = lsoi1.deepcopy()
         image1_w_overlay = lsoi1.draw_on_image(images[0])
         image2_w_overlay = lsoi2.draw_on_image(images[1])
 
-        debug_image = iaa.draw_debug_image(images,
-                                           line_strings=[lsoi1, lsoi2])
+        debug_image = iaa.draw_debug_image(images, line_strings=[lsoi1, lsoi2])
 
         assert self._image_contains(images[0, ...], debug_image)
         assert self._image_contains(images[1, ...], debug_image)
@@ -243,17 +238,15 @@ class Test_draw_debug_image(unittest.TestCase):
 
         debug_image = iaa.draw_debug_image([image])
 
-        assert self._image_contains((image * 255).astype(np.uint8),
-                                    debug_image)
+        assert self._image_contains((image * 255).astype(np.uint8), debug_image)
 
     def test_one_image_float32_and_heatmap(self):
         rng = iarandom.RNG(0)
         image = rng.random(size=(256, 256, 3)).astype(np.float32)
         heatmap = np.zeros((256, 256, 1), dtype=np.float32)
-        heatmap[128-25:128+25, 128-25:128+25] = 1.0
+        heatmap[128 - 25 : 128 + 25, 128 - 25 : 128 + 25] = 1.0
         heatmap = ia.HeatmapsOnImage(heatmap, shape=image.shape)
-        image1_w_overlay = heatmap.draw_on_image(
-            (image*255).astype(np.uint8))[0]
+        image1_w_overlay = heatmap.draw_on_image((image * 255).astype(np.uint8))[0]
 
         debug_image = iaa.draw_debug_image([image], heatmaps=[heatmap])
 
@@ -273,8 +266,7 @@ class SaveDebugImageEveryNBatches(unittest.TestCase):
             def receive(self, image):
                 self.received.append(np.copy(image))
 
-        image = iarandom.RNG(0).integers(0, 256, size=(256, 256, 3),
-                                         dtype=np.uint8)
+        image = iarandom.RNG(0).integers(0, 256, size=(256, 256, 3), dtype=np.uint8)
         destination = _DummyDestination()
         aug = iaa.SaveDebugImageEveryNBatches(destination, 10)
 
@@ -288,8 +280,7 @@ class SaveDebugImageEveryNBatches(unittest.TestCase):
 
     def test_temp_directory(self):
         with TemporaryDirectory() as folder_path:
-            image = iarandom.RNG(0).integers(0, 256, size=(256, 256, 3),
-                                             dtype=np.uint8)
+            image = iarandom.RNG(0).integers(0, 256, size=(256, 256, 3), dtype=np.uint8)
             aug = iaa.SaveDebugImageEveryNBatches(folder_path, 10)
 
             for _ in np.arange(20):

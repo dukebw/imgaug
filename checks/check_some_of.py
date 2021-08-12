@@ -14,16 +14,20 @@ NB_AUGS_PER_IMAGE = 10
 def main():
     image = data.astronaut()
     image = ia.imresize_single_image(image, (64, 64))
-    keypoints_on_image = ia.KeypointsOnImage([ia.Keypoint(x=10, y=10)], shape=image.shape)
+    keypoints_on_image = ia.KeypointsOnImage(
+        [ia.Keypoint(x=10, y=10)], shape=image.shape
+    )
     images_arr = np.array([image for _ in range(NB_AUGS_PER_IMAGE)])
     images_list = [image for _ in range(NB_AUGS_PER_IMAGE)]
-    keypoints_on_images = [keypoints_on_image.deepcopy() for _ in range(NB_AUGS_PER_IMAGE)]
+    keypoints_on_images = [
+        keypoints_on_image.deepcopy() for _ in range(NB_AUGS_PER_IMAGE)
+    ]
     print("image shape:", image.shape)
     print("Press ENTER or wait %d ms to proceed to the next image." % (TIME_PER_STEP,))
 
     children = [
         iaa.CoarseDropout(p=0.5, size_percent=0.05),
-        iaa.AdditiveGaussianNoise(scale=0.1*255)
+        iaa.AdditiveGaussianNoise(scale=0.1 * 255),
     ]
 
     n = [
@@ -31,15 +35,15 @@ def main():
         0,
         1,
         len(children),
-        len(children)+1,
+        len(children) + 1,
         (1, 1),
         (1, len(children)),
-        (1, len(children)+1),
-        (1, None)
+        (1, len(children) + 1),
+        (1, None),
     ]
 
     cv2.namedWindow("aug", cv2.WINDOW_NORMAL)
-    cv2.resizeWindow("aug", 64*NB_AUGS_PER_IMAGE, (2+4+4)*64)
+    cv2.resizeWindow("aug", 64 * NB_AUGS_PER_IMAGE, (2 + 4 + 4) * 64)
 
     rows = []
     for ni in n:
@@ -82,7 +86,7 @@ def main():
         title = "n=%s" % (str(ni),)
         grid = ia.draw_text(grid, x=5, y=5, text=title)
 
-        cv2.imshow("aug", grid[..., ::-1]) # here with rgb2bgr
+        cv2.imshow("aug", grid[..., ::-1])  # here with rgb2bgr
         cv2.waitKey(TIME_PER_STEP)
 
 

@@ -10,7 +10,7 @@ KIND_TO_DTYPES = {
     "i": ["int8", "int16", "int32", "int64"],
     "u": ["uint8", "uint16", "uint32", "uint64"],
     "b": ["bool"],
-    "f": ["float16", "float32", "float64", "float128"]
+    "f": ["float16", "float32", "float64", "float128"],
 }
 
 # Added in 0.5.0.
@@ -49,7 +49,7 @@ _DTYPE_NAME_TO_DTYPE = {
     "float32": _FLOAT32_DTYPE,
     "float64": _FLOAT64_DTYPE,
     "float128": _FLOAT128_DTYPE,
-    "bool": _BOOL_DTYPE
+    "bool": _BOOL_DTYPE,
 }
 
 
@@ -60,8 +60,9 @@ def normalize_dtypes(dtypes):
 
 
 def normalize_dtype(dtype):
-    assert not isinstance(dtype, list), (
-        "Expected a single dtype-like, got a list instead.")
+    assert not isinstance(
+        dtype, list
+    ), "Expected a single dtype-like, got a list instead."
     return (
         dtype.dtype
         if ia.is_np_array(dtype) or ia.is_np_scalar(dtype)
@@ -71,8 +72,7 @@ def normalize_dtype(dtype):
 
 def change_dtype_(arr, dtype, clip=True, round=True):
     # pylint: disable=redefined-builtin
-    assert ia.is_np_array(arr), (
-        "Expected array as input, got type %s." % (type(arr),))
+    assert ia.is_np_array(arr), "Expected array as input, got type %s." % (type(arr),)
     dtype = normalize_dtype(dtype)
 
     if arr.dtype.name == dtype.name:
@@ -97,8 +97,8 @@ def change_dtypes_(images, dtypes, clip=True, round=True):
             assert len(dtypes) == len(images), (
                 "If an iterable of dtypes is provided to "
                 "change_dtypes_(), it must contain as many dtypes as "
-                "there are images. Got %d dtypes and %d images." % (
-                    len(dtypes), len(images))
+                "there are images. Got %d dtypes and %d images."
+                % (len(dtypes), len(images))
             )
 
             assert n_distinct_dtypes == 1, (
@@ -121,18 +121,22 @@ def change_dtypes_(images, dtypes, clip=True, round=True):
         )
         assert len(images) == len(dtypes), (
             "Expected the provided images and dtypes to match, but got "
-            "iterables of size %d (images) %d (dtypes)." % (
-                len(images), len(dtypes)))
+            "iterables of size %d (images) %d (dtypes)." % (len(images), len(dtypes))
+        )
 
         result = images
         for i, (image, dtype) in enumerate(zip(images, dtypes)):
-            assert ia.is_np_array(image), (
-                "Expected each image to be an ndarray, got type %s "
-                "instead." % (type(image),))
+            assert ia.is_np_array(
+                image
+            ), "Expected each image to be an ndarray, got type %s " "instead." % (
+                type(image),
+            )
             result[i] = change_dtype_(image, dtype, clip=clip, round=round)
     else:
-        raise Exception("Expected numpy array or iterable of numpy arrays, "
-                        "got type '%s'." % (type(images),))
+        raise Exception(
+            "Expected numpy array or iterable of numpy arrays, "
+            "got type '%s'." % (type(images),)
+        )
     return result
 
 
@@ -154,15 +158,16 @@ def copy_dtypes_for_restore(images, force_list=False):
 def increase_itemsize_of_dtype(dtype, factor):
     dtype = normalize_dtype(dtype)
 
-    assert ia.is_single_integer(factor), (
-        "Expected 'factor' to be an integer, got type %s instead." % (
-            type(factor),))
+    assert ia.is_single_integer(
+        factor
+    ), "Expected 'factor' to be an integer, got type %s instead." % (type(factor),)
     # int8 -> int64 = factor 8
     # uint8 -> uint64 = factor 8
     # float16 -> float128 = factor 8
     assert factor in [1, 2, 4, 8], (
         "The itemsize may only be increased any of the following factors: "
-        "1, 2, 4 or 8. Got factor %d." % (factor,))
+        "1, 2, 4 or 8. Got factor %d." % (factor,)
+    )
     assert dtype.kind != "b", "Cannot increase the itemsize of boolean."
 
     dt_high_name = "%s%d" % (dtype.kind, dtype.itemsize * factor)
@@ -177,19 +182,15 @@ def increase_itemsize_of_dtype(dtype, factor):
             "that increases the itemsize of dtype '%s' by a factor of %d."
             "This error can be avoided by choosing arrays with lower "
             "resolution dtypes as inputs, e.g. by reducing "
-            "float32 to float16." % (
-                dt_high_name,
-                dtype.name,
-                factor
-            )
+            "float32 to float16." % (dt_high_name, dtype.name, factor)
         )
 
 
 def get_minimal_dtype(arrays, increase_itemsize_factor=1):
-    assert isinstance(arrays, list), (
-        "Expected a list of arrays or dtypes, got type %s." % (type(arrays),))
-    assert len(arrays) > 0, (
-        "Cannot estimate minimal dtype of an empty iterable.")
+    assert isinstance(
+        arrays, list
+    ), "Expected a list of arrays or dtypes, got type %s." % (type(arrays),)
+    assert len(arrays) > 0, "Cannot estimate minimal dtype of an empty iterable."
 
     input_dts = normalize_dtypes(arrays)
 
@@ -203,11 +204,12 @@ def get_minimal_dtype(arrays, increase_itemsize_factor=1):
         input_dts = input_dts[1:]
 
     if increase_itemsize_factor > 1:
-        assert isinstance(promoted_dt, np.dtype), (
-            "Expected numpy.dtype output from numpy.promote_dtypes, got type "
-            "%s." % (type(promoted_dt),))
-        return increase_itemsize_of_dtype(promoted_dt,
-                                          increase_itemsize_factor)
+        assert isinstance(
+            promoted_dt, np.dtype
+        ), "Expected numpy.dtype output from numpy.promote_dtypes, got type " "%s." % (
+            type(promoted_dt),
+        )
+        return increase_itemsize_of_dtype(promoted_dt, increase_itemsize_factor)
     return promoted_dt
 
 
@@ -217,8 +219,7 @@ def promote_array_dtypes_(arrays, dtypes=None, increase_itemsize_factor=1):
         dtypes = normalize_dtypes(arrays)
     elif not isinstance(dtypes, list):
         dtypes = [dtypes]
-    dtype = get_minimal_dtype(dtypes,
-                              increase_itemsize_factor=increase_itemsize_factor)
+    dtype = get_minimal_dtype(dtypes, increase_itemsize_factor=increase_itemsize_factor)
     return change_dtypes_(arrays, dtype, clip=False, round=False)
 
 
@@ -243,8 +244,10 @@ def get_value_range_of_dtype(dtype):
     if dtype.kind == "b":
         return 0, None, 1
 
-    raise Exception("Cannot estimate value range of dtype '%s' "
-                    "(type: %s)" % (str(dtype), type(dtype)))
+    raise Exception(
+        "Cannot estimate value range of dtype '%s' "
+        "(type: %s)" % (str(dtype), type(dtype))
+    )
 
 
 # TODO call this function wherever data is clipped
@@ -256,8 +259,8 @@ def clip_(array, min_value, max_value):
     gate_dtypes_strs(
         {array.dtype},
         allowed="bool uint8 uint16 uint32 int8 int16 int32 "
-                "float16 float32 float64 float128",
-        disallowed="uint64 int64"
+        "float16 float32 float64 float128",
+        disallowed="uint64 int64",
     )
 
     # If the min of the input value range is above the allowed min, we do not
@@ -291,8 +294,7 @@ def clip_(array, min_value, max_value):
     return array
 
 
-def clip_to_dtype_value_range_(array, dtype, validate=True,
-                               validate_values=None):
+def clip_to_dtype_value_range_(array, dtype, validate=True, validate_values=None):
     dtype = normalize_dtype(dtype)
     min_value, _, max_value = get_value_range_of_dtype(dtype)
     if validate:
@@ -300,10 +302,12 @@ def clip_to_dtype_value_range_(array, dtype, validate=True,
         if ia.is_single_integer(validate):
             assert validate >= 1, (
                 "If 'validate' is an integer, it must have a value >=1, "
-                "got %d instead." % (validate,))
+                "got %d instead." % (validate,)
+            )
             assert validate_values is None, (
                 "If 'validate' is an integer, 'validate_values' must be "
-                "None. Got type %s instead." % (type(validate_values),))
+                "None. Got type %s instead." % (type(validate_values),)
+            )
             array_val = array.flat[0:validate]
         if validate_values is not None:
             min_value_found, max_value_found = validate_values
@@ -312,10 +316,12 @@ def clip_to_dtype_value_range_(array, dtype, validate=True,
             max_value_found = np.max(array_val)
         assert min_value <= min_value_found <= max_value, (
             "Minimum value of array is outside of allowed value range (%.4f "
-            "vs %.4f to %.4f)." % (min_value_found, min_value, max_value))
+            "vs %.4f to %.4f)." % (min_value_found, min_value, max_value)
+        )
         assert min_value <= max_value_found <= max_value, (
             "Maximum value of array is outside of allowed value range (%.4f "
-            "vs %.4f to %.4f)." % (max_value_found, min_value, max_value))
+            "vs %.4f to %.4f)." % (max_value_found, min_value, max_value)
+        )
 
     return clip_(array, min_value, max_value)
 
@@ -343,9 +349,7 @@ def gate_dtypes_strs(dtypes, allowed, disallowed, augmenter=None):
         messages and warnings.
 
     """
-    allowed, disallowed = _convert_gate_dtype_strs_to_types(
-        allowed, disallowed
-    )
+    allowed, disallowed = _convert_gate_dtype_strs_to_types(allowed, disallowed)
     return _gate_dtypes(dtypes, allowed, disallowed, augmenter=augmenter)
 
 
@@ -359,12 +363,8 @@ def _convert_gate_dtype_strs_to_types(allowed, disallowed):
     assert nb_overlapping == 0, (
         "Expected 'allowed' and 'disallowed' dtypes to not contain the same "
         "dtypes, but %d appeared in both arguments. Got allowed: %s, "
-        "disallowed: %s, intersection: %s" % (
-            nb_overlapping,
-            allowed,
-            disallowed,
-            intersection
-        )
+        "disallowed: %s, intersection: %s"
+        % (nb_overlapping, allowed, disallowed, intersection)
     )
 
     return allowed_types, disallowed_types
@@ -414,9 +414,7 @@ def gate_dtypes(dtypes, allowed, disallowed, augmenter=None):
     allowed_norm = _cvt(allowed)
     disallowed_norm = _cvt(disallowed)
 
-    return _gate_dtypes(
-        dtypes_norm, allowed_norm, disallowed_norm, augmenter=augmenter
-    )
+    return _gate_dtypes(dtypes_norm, allowed_norm, disallowed_norm, augmenter=augmenter)
 
 
 def _gate_dtypes(dtypes, allowed, disallowed, augmenter=None):
@@ -451,7 +449,7 @@ def _gate_dtypes(dtypes, allowed, disallowed, augmenter=None):
         dtypes = {arr.dtype for arr in dtypes}
 
     dts_not_explicitly_allowed = dtypes - allowed
-    all_allowed = (not dts_not_explicitly_allowed)
+    all_allowed = not dts_not_explicitly_allowed
 
     if all_allowed:
         return
@@ -459,28 +457,27 @@ def _gate_dtypes(dtypes, allowed, disallowed, augmenter=None):
     if disallowed is None:
         disallowed = set()
 
-    dts_explicitly_disallowed = dts_not_explicitly_allowed.intersection(
-        disallowed
-    )
+    dts_explicitly_disallowed = dts_not_explicitly_allowed.intersection(disallowed)
     dts_undefined = dts_not_explicitly_allowed - disallowed
 
     if dts_explicitly_disallowed:
         for dtype in dts_explicitly_disallowed:
             if augmenter is None:
                 raise ValueError(
-                    "Got dtype '%s', which is a forbidden dtype (%s)." % (
-                        np.dtype(dtype).name,
-                        _dtype_names_to_string(disallowed)
-                    ))
+                    "Got dtype '%s', which is a forbidden dtype (%s)."
+                    % (np.dtype(dtype).name, _dtype_names_to_string(disallowed))
+                )
 
             raise ValueError(
                 "Got dtype '%s' in augmenter '%s' (class '%s'), which "
-                "is a forbidden dtype (%s)." % (
+                "is a forbidden dtype (%s)."
+                % (
                     np.dtype(dtype).name,
                     augmenter.name,
                     augmenter.__class__.__name__,
                     _dtype_names_to_string(disallowed),
-                ))
+                )
+            )
 
     if dts_undefined:
         for dtype in dts_undefined:
@@ -488,7 +485,8 @@ def _gate_dtypes(dtypes, allowed, disallowed, augmenter=None):
                 ia.warn(
                     "Got dtype '%s', which was neither explicitly allowed "
                     "(%s), nor explicitly disallowed (%s). Generated "
-                    "outputs may contain errors." % (
+                    "outputs may contain errors."
+                    % (
                         dtype.name,
                         _dtype_names_to_string(allowed),
                         _dtype_names_to_string(disallowed),
@@ -499,7 +497,8 @@ def _gate_dtypes(dtypes, allowed, disallowed, augmenter=None):
                     "Got dtype '%s' in augmenter '%s' (class '%s'), which was "
                     "neither explicitly allowed (%s), nor explicitly "
                     "disallowed (%s). Generated outputs may contain "
-                    "errors." % (
+                    "errors."
+                    % (
                         dtype.name,
                         augmenter.name,
                         augmenter.__class__.__name__,
@@ -536,8 +535,8 @@ def allow_only_uint8(dtypes, augmenter=None):
         dtypes,
         allowed="uint8",
         disallowed="uint16 uint32 uint64 "
-                   "int8 int16 int32 int64 "
-                   "float16 float32 float64 float128 "
-                   "bool",
-        augmenter=augmenter
+        "int8 int16 int32 int64 "
+        "float16 float32 float64 float128 "
+        "bool",
+        augmenter=augmenter,
     )

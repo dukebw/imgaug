@@ -11,8 +11,7 @@ def main():
         print(cspace, "add")
         images_aug = []
         for add in np.linspace(-200, 200, 64):
-            aug = iaa.MultiplyAndAddToBrightness(add=add, mul=1.0,
-                                                 to_colorspace=cspace)
+            aug = iaa.MultiplyAndAddToBrightness(add=add, mul=1.0, to_colorspace=cspace)
             images_aug.append(aug(image=image))
 
         ia.imshow(ia.draw_grid(images_aug))
@@ -21,8 +20,7 @@ def main():
         print(cspace, "mul")
         images_aug = []
         for mul in np.linspace(0.5, 1.5, 64):
-            aug = iaa.MultiplyAndAddToBrightness(add=0, mul=mul,
-                                                 to_colorspace=cspace)
+            aug = iaa.MultiplyAndAddToBrightness(add=0, mul=mul, to_colorspace=cspace)
             images_aug.append(aug(image=image))
 
         ia.imshow(ia.draw_grid(images_aug))

@@ -42,26 +42,34 @@ class HeatmapsOnImage(IAugmentable):
 
     def __init__(self, arr, shape, min_value=0.0, max_value=1.0):
         """Construct a new HeatmapsOnImage object."""
-        assert ia.is_np_array(arr), (
-            "Expected numpy array as heatmap input array, "
-            "got type %s" % (type(arr),))
+        assert ia.is_np_array(
+            arr
+        ), "Expected numpy array as heatmap input array, " "got type %s" % (type(arr),)
         # TODO maybe allow 0-sized heatmaps? in that case the min() and max()
         #      must be adjusted
         assert arr.shape[0] > 0 and arr.shape[1] > 0, (
             "Expected numpy array as heatmap with height and width greater "
-            "than 0, got shape %s." % (arr.shape,))
-        assert arr.dtype.name in ["float32"], (
-            "Heatmap input array expected to be of dtype float32, "
-            "got dtype %s." % (arr.dtype,))
-        assert arr.ndim in [2, 3], (
-            "Heatmap input array must be 2d or 3d, got shape %s." % (
-                arr.shape,))
+            "than 0, got shape %s." % (arr.shape,)
+        )
+        assert arr.dtype.name in [
+            "float32"
+        ], "Heatmap input array expected to be of dtype float32, " "got dtype %s." % (
+            arr.dtype,
+        )
+        assert arr.ndim in [
+            2,
+            3,
+        ], "Heatmap input array must be 2d or 3d, got shape %s." % (arr.shape,)
         assert len(shape) in [2, 3], (
             "Argument 'shape' in HeatmapsOnImage expected to be 2d or 3d, "
-            "got shape %s." % (shape,))
-        assert min_value < max_value, (
-            "Expected min_value to be lower than max_value, "
-            "got %.4f and %.4f" % (min_value, max_value))
+            "got shape %s." % (shape,)
+        )
+        assert (
+            min_value < max_value
+        ), "Expected min_value to be lower than max_value, " "got %.4f and %.4f" % (
+            min_value,
+            max_value,
+        )
 
         eps = np.finfo(arr.dtype).eps
         components = arr.flat[0:50]
@@ -71,8 +79,9 @@ class HeatmapsOnImage(IAugmentable):
             ia.warn(
                 "Value range of heatmap was chosen to be (%.8f, %.8f), but "
                 "found actual min/max of (%.8f, %.8f). Array will be "
-                "clipped to chosen value range." % (
-                    min_value, max_value, np.min(arr), np.max(arr)))
+                "clipped to chosen value range."
+                % (min_value, max_value, np.min(arr), np.max(arr))
+            )
             arr = np.clip(arr, min_value, max_value)
 
         if arr.ndim == 2:
@@ -157,11 +166,12 @@ class HeatmapsOnImage(IAugmentable):
         for c in sm.xrange(heatmaps_uint8.shape[2]):
             # We use c:c+1 here to get a (H,W,1) array. Otherwise imresize
             # would have to re-attach an axis.
-            heatmap_c = heatmaps_uint8[..., c:c+1]
+            heatmap_c = heatmaps_uint8[..., c : c + 1]
 
             if size is not None:
                 heatmap_c_rs = ia.imresize_single_image(
-                    heatmap_c, size, interpolation="nearest")
+                    heatmap_c, size, interpolation="nearest"
+                )
             else:
                 heatmap_c_rs = heatmap_c
             heatmap_c_rs = np.squeeze(heatmap_c_rs).astype(np.float32) / 255.0
@@ -175,11 +185,9 @@ class HeatmapsOnImage(IAugmentable):
                 heatmap_cmapped = cmap_func(heatmap_c_rs)
                 heatmap_cmapped = np.delete(heatmap_cmapped, 3, 2)
             else:
-                heatmap_cmapped = np.tile(
-                    heatmap_c_rs[..., np.newaxis], (1, 1, 3))
+                heatmap_cmapped = np.tile(heatmap_c_rs[..., np.newaxis], (1, 1, 3))
 
-            heatmap_cmapped = np.clip(
-                heatmap_cmapped * 255, 0, 255).astype(np.uint8)
+            heatmap_cmapped = np.clip(heatmap_cmapped * 255, 0, 255).astype(np.uint8)
 
             heatmaps_drawn.append(heatmap_cmapped)
         return heatmaps_drawn
@@ -218,36 +226,37 @@ class HeatmapsOnImage(IAugmentable):
         # assert RGB image
         assert image.ndim == 3, (
             "Expected to draw on three-dimensional image, "
-            "got %d dimensions with shape %s instead." % (
-                image.ndim, image.shape))
-        assert image.shape[2] == 3, (
-            "Expected RGB image, got %d channels instead." % (image.shape[2],))
-        assert image.dtype.name == "uint8", (
-            "Expected uint8 image, got dtype %s." % (image.dtype.name,))
+            "got %d dimensions with shape %s instead." % (image.ndim, image.shape)
+        )
+        assert image.shape[2] == 3, "Expected RGB image, got %d channels instead." % (
+            image.shape[2],
+        )
+        assert image.dtype.name == "uint8", "Expected uint8 image, got dtype %s." % (
+            image.dtype.name,
+        )
 
-        assert 0 - 1e-8 <= alpha <= 1.0 + 1e-8, (
-            "Expected 'alpha' to be in the interval [0.0, 1.0], got %.4f" % (
-                alpha))
-        assert resize in ["heatmaps", "image"], (
-            "Expected resize to be \"heatmaps\" or \"image\", "
-            "got %s instead." % (resize,))
+        assert (
+            0 - 1e-8 <= alpha <= 1.0 + 1e-8
+        ), "Expected 'alpha' to be in the interval [0.0, 1.0], got %.4f" % (alpha)
+        assert resize in [
+            "heatmaps",
+            "image",
+        ], 'Expected resize to be "heatmaps" or "image", ' "got %s instead." % (resize,)
 
         if resize == "image":
             image = ia.imresize_single_image(
-                image, self.arr_0to1.shape[0:2], interpolation="cubic")
+                image, self.arr_0to1.shape[0:2], interpolation="cubic"
+            )
 
         heatmaps_drawn = self.draw(
-            size=image.shape[0:2] if resize == "heatmaps" else None,
-            cmap=cmap)
+            size=image.shape[0:2] if resize == "heatmaps" else None, cmap=cmap
+        )
 
         # TODO use blend_alpha here
         mix = [
-            np.clip(
-                (1-alpha) * image + alpha * heatmap_i,
-                0, 255
-            ).astype(np.uint8)
-            for heatmap_i
-            in heatmaps_drawn]
+            np.clip((1 - alpha) * image + alpha * heatmap_i, 0, 255).astype(np.uint8)
+            for heatmap_i in heatmaps_drawn
+        ]
 
         return mix
 
@@ -279,7 +288,8 @@ class HeatmapsOnImage(IAugmentable):
             1 - self.arr_0to1,
             shape=self.shape,
             min_value=self.min_value,
-            max_value=self.max_value)
+            max_value=self.max_value,
+        )
         arr_inv.arr_was_2d = self.arr_was_2d
         return arr_inv
 
@@ -319,6 +329,7 @@ class HeatmapsOnImage(IAugmentable):
 
         """
         from ..augmenters import size as iasize
+
         arr_0to1_padded = iasize.pad(
             self.arr_0to1,
             top=top,
@@ -326,16 +337,19 @@ class HeatmapsOnImage(IAugmentable):
             bottom=bottom,
             left=left,
             mode=mode,
-            cval=cval)
+            cval=cval,
+        )
         # TODO change to deepcopy()
         return HeatmapsOnImage.from_0to1(
             arr_0to1_padded,
             shape=self.shape,
             min_value=self.min_value,
-            max_value=self.max_value)
+            max_value=self.max_value,
+        )
 
-    def pad_to_aspect_ratio(self, aspect_ratio, mode="constant", cval=0.0,
-                            return_pad_amounts=False):
+    def pad_to_aspect_ratio(
+        self, aspect_ratio, mode="constant", cval=0.0, return_pad_amounts=False
+    ):
         """Pad the heatmaps until they match a target aspect ratio.
 
         Depending on which dimension is smaller (height or width), only the
@@ -377,18 +391,21 @@ class HeatmapsOnImage(IAugmentable):
 
         """
         from ..augmenters import size as iasize
+
         arr_0to1_padded, pad_amounts = iasize.pad_to_aspect_ratio(
             self.arr_0to1,
             aspect_ratio=aspect_ratio,
             mode=mode,
             cval=cval,
-            return_pad_amounts=True)
+            return_pad_amounts=True,
+        )
         # TODO change to deepcopy()
         heatmaps = HeatmapsOnImage.from_0to1(
             arr_0to1_padded,
             shape=self.shape,
             min_value=self.min_value,
-            max_value=self.max_value)
+            max_value=self.max_value,
+        )
         if return_pad_amounts:
             return heatmaps, pad_amounts
         return heatmaps
@@ -413,7 +430,8 @@ class HeatmapsOnImage(IAugmentable):
             arr_0to1_reduced,
             shape=self.shape,
             min_value=self.min_value,
-            max_value=self.max_value)
+            max_value=self.max_value,
+        )
 
     def max_pool(self, block_size):
         """Max-pool the heatmap(s) array using a given block/kernel size.
@@ -435,10 +453,13 @@ class HeatmapsOnImage(IAugmentable):
             arr_0to1_reduced,
             shape=self.shape,
             min_value=self.min_value,
-            max_value=self.max_value)
+            max_value=self.max_value,
+        )
 
-    @ia.deprecated(alt_func="HeatmapsOnImage.resize()",
-                   comment="resize() has the exactly same interface.")
+    @ia.deprecated(
+        alt_func="HeatmapsOnImage.resize()",
+        comment="resize() has the exactly same interface.",
+    )
     def scale(self, *args, **kwargs):
         """Resize the heatmap(s) array given a target size and interpolation."""
         return self.resize(*args, **kwargs)
@@ -463,7 +484,8 @@ class HeatmapsOnImage(IAugmentable):
 
         """
         arr_0to1_resized = ia.imresize_single_image(
-            self.arr_0to1, sizes, interpolation=interpolation)
+            self.arr_0to1, sizes, interpolation=interpolation
+        )
 
         # cubic interpolation can lead to values outside of [0.0, 1.0],
         # see https://github.com/opencv/opencv/issues/7195
@@ -474,7 +496,8 @@ class HeatmapsOnImage(IAugmentable):
             arr_0to1_resized,
             shape=self.shape,
             min_value=self.min_value,
-            max_value=self.max_value)
+            max_value=self.max_value,
+        )
 
     def to_uint8(self):
         """Convert this heatmaps object to an ``uint8`` array.
@@ -533,9 +556,8 @@ class HeatmapsOnImage(IAugmentable):
         """
         arr_0to1 = arr_uint8.astype(np.float32) / 255.0
         return HeatmapsOnImage.from_0to1(
-            arr_0to1, shape,
-            min_value=min_value,
-            max_value=max_value)
+            arr_0to1, shape, min_value=min_value, max_value=max_value
+        )
 
     @staticmethod
     def from_0to1(arr_0to1, shape, min_value=0.0, max_value=1.0):
@@ -575,8 +597,7 @@ class HeatmapsOnImage(IAugmentable):
             Heatmaps object.
 
         """
-        heatmaps = HeatmapsOnImage(arr_0to1, shape,
-                                   min_value=0.0, max_value=1.0)
+        heatmaps = HeatmapsOnImage(arr_0to1, shape, min_value=0.0, max_value=1.0)
         heatmaps.min_value = min_value
         heatmaps.max_value = max_value
         return heatmaps
@@ -609,21 +630,28 @@ class HeatmapsOnImage(IAugmentable):
             value range.
 
         """
-        assert ia.is_np_array(arr), (
-            "Expected 'arr' to be an ndarray, got type %s." % (type(arr),))
+        assert ia.is_np_array(arr), "Expected 'arr' to be an ndarray, got type %s." % (
+            type(arr),
+        )
 
         def _validate_tuple(arg_name, arg_value):
-            assert isinstance(arg_value, tuple), (
-                "'%s' was not a HeatmapsOnImage instance, "
-                "expected type tuple then. Got type %s." % (
-                    arg_name, type(arg_value),))
-            assert len(arg_value) == 2, (
-                "Expected tuple '%s' to contain exactly two entries, "
-                "got %d." % (arg_name, len(arg_value),))
+            assert isinstance(
+                arg_value, tuple
+            ), "'%s' was not a HeatmapsOnImage instance, " "expected type tuple then. Got type %s." % (
+                arg_name,
+                type(arg_value),
+            )
+            assert (
+                len(arg_value) == 2
+            ), "Expected tuple '%s' to contain exactly two entries, " "got %d." % (
+                arg_name,
+                len(arg_value),
+            )
             assert arg_value[0] < arg_value[1], (
                 "Expected tuple '%s' to have two entries with "
-                "entry 1 < entry 2, got values %.4f and %.4f." % (
-                    arg_name, arg_value[0], arg_value[1]))
+                "entry 1 < entry 2, got values %.4f and %.4f."
+                % (arg_name, arg_value[0], arg_value[1])
+            )
 
         if isinstance(source, HeatmapsOnImage):
             source = (source.min_value, source.max_value)
@@ -640,8 +668,8 @@ class HeatmapsOnImage(IAugmentable):
         # This is reasonable, as source and target will often both
         # be (0.0, 1.0).
         eps = np.finfo(arr.dtype).eps
-        mins_same = source[0] - 10*eps < target[0] < source[0] + 10*eps
-        maxs_same = source[1] - 10*eps < target[1] < source[1] + 10*eps
+        mins_same = source[0] - 10 * eps < target[0] < source[0] + 10 * eps
+        maxs_same = source[1] - 10 * eps < target[1] < source[1] + 10 * eps
         if mins_same and maxs_same:
             return np.copy(arr)
 
@@ -681,4 +709,5 @@ class HeatmapsOnImage(IAugmentable):
             self.get_arr(),
             shape=self.shape,
             min_value=self.min_value,
-            max_value=self.max_value)
+            max_value=self.max_value,
+        )

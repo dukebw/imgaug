@@ -132,30 +132,45 @@ class FastSnowyLandscape(meta.Augmenter):
 
     """
 
-    def __init__(self, lightness_threshold=(100, 255),
-                 lightness_multiplier=(1.0, 4.0),
-                 from_colorspace=colorlib.CSPACE_RGB,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        lightness_threshold=(100, 255),
+        lightness_multiplier=(1.0, 4.0),
+        from_colorspace=colorlib.CSPACE_RGB,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(FastSnowyLandscape, self).__init__(
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed, name=name, random_state=random_state, deterministic=deterministic
+        )
 
         self.lightness_threshold = iap.handle_continuous_param(
-            lightness_threshold, "lightness_threshold",
-            value_range=(0, 255), tuple_to_uniform=True, list_to_choice=True)
+            lightness_threshold,
+            "lightness_threshold",
+            value_range=(0, 255),
+            tuple_to_uniform=True,
+            list_to_choice=True,
+        )
         self.lightness_multiplier = iap.handle_continuous_param(
-            lightness_multiplier, "lightness_multiplier",
-            value_range=(0, None), tuple_to_uniform=True, list_to_choice=True)
+            lightness_multiplier,
+            "lightness_multiplier",
+            value_range=(0, None),
+            tuple_to_uniform=True,
+            list_to_choice=True,
+        )
         self.from_colorspace = from_colorspace
 
     def _draw_samples(self, augmentables, random_state):
         nb_augmentables = len(augmentables)
         rss = random_state.duplicate(2)
         thresh_samples = self.lightness_threshold.draw_samples(
-            (nb_augmentables,), rss[1])
+            (nb_augmentables,), rss[1]
+        )
         lmul_samples = self.lightness_multiplier.draw_samples(
-            (nb_augmentables,), rss[0])
+            (nb_augmentables,), rss[0]
+        )
         return thresh_samples, lmul_samples
 
     # Added in 0.4.0.
@@ -170,7 +185,8 @@ class FastSnowyLandscape(meta.Augmenter):
         gen = enumerate(zip(images, thresh_samples, lmul_samples))
         for i, (image, thresh, lmul) in gen:
             image_hls = colorlib.change_colorspace_(
-                image, colorlib.CSPACE_HLS, self.from_colorspace)
+                image, colorlib.CSPACE_HLS, self.from_colorspace
+            )
             cvt_dtype = image_hls.dtype
             image_hls = image_hls.astype(np.float64)
             lightness = image_hls[..., 1]
@@ -179,7 +195,8 @@ class FastSnowyLandscape(meta.Augmenter):
 
             image_hls = iadt.restore_dtypes_(image_hls, cvt_dtype)
             image_rgb = colorlib.change_colorspace_(
-                image_hls, self.from_colorspace, colorlib.CSPACE_HLS)
+                image_hls, self.from_colorspace, colorlib.CSPACE_HLS
+            )
 
             batch.images[i] = image_rgb
 
@@ -344,27 +361,40 @@ class CloudLayer(meta.Augmenter):
 
     """
 
-    def __init__(self, intensity_mean, intensity_freq_exponent,
-                 intensity_coarse_scale, alpha_min, alpha_multiplier,
-                 alpha_size_px_max, alpha_freq_exponent, sparsity,
-                 density_multiplier,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        intensity_mean,
+        intensity_freq_exponent,
+        intensity_coarse_scale,
+        alpha_min,
+        alpha_multiplier,
+        alpha_size_px_max,
+        alpha_freq_exponent,
+        sparsity,
+        density_multiplier,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(CloudLayer, self).__init__(
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed, name=name, random_state=random_state, deterministic=deterministic
+        )
         self.intensity_mean = iap.handle_continuous_param(
-            intensity_mean, "intensity_mean")
+            intensity_mean, "intensity_mean"
+        )
         self.intensity_freq_exponent = intensity_freq_exponent
         self.intensity_coarse_scale = intensity_coarse_scale
         self.alpha_min = iap.handle_continuous_param(alpha_min, "alpha_min")
         self.alpha_multiplier = iap.handle_continuous_param(
-            alpha_multiplier, "alpha_multiplier")
+            alpha_multiplier, "alpha_multiplier"
+        )
         self.alpha_size_px_max = alpha_size_px_max
         self.alpha_freq_exponent = alpha_freq_exponent
         self.sparsity = iap.handle_continuous_param(sparsity, "sparsity")
         self.density_multiplier = iap.handle_continuous_param(
-            density_multiplier, "density_multiplier")
+            density_multiplier, "density_multiplier"
+        )
 
     # Added in 0.4.0.
     def _augment_batch_(self, batch, random_state, parents, hooks):
@@ -380,22 +410,24 @@ class CloudLayer(meta.Augmenter):
 
     def get_parameters(self):
         """See :func:`~imgaug.augmenters.meta.Augmenter.get_parameters`."""
-        return [self.intensity_mean,
-                self.alpha_min,
-                self.alpha_multiplier,
-                self.alpha_size_px_max,
-                self.alpha_freq_exponent,
-                self.intensity_freq_exponent,
-                self.sparsity,
-                self.density_multiplier,
-                self.intensity_coarse_scale]
+        return [
+            self.intensity_mean,
+            self.alpha_min,
+            self.alpha_multiplier,
+            self.alpha_size_px_max,
+            self.alpha_freq_exponent,
+            self.intensity_freq_exponent,
+            self.sparsity,
+            self.density_multiplier,
+            self.intensity_coarse_scale,
+        ]
 
     def draw_on_image(self, image, random_state):
         iadt.gate_dtypes_strs(
             image,
             allowed="uint8 float16 float32 float64 float128",
             disallowed="bool uint16 uint32 uint64 int8 int16 int32 int64",
-            augmenter=self
+            augmenter=self,
         )
 
         alpha, intensity = self.generate_maps(image, random_state)
@@ -412,79 +444,94 @@ class CloudLayer(meta.Augmenter):
             (1 - alpha) * image.astype(alpha.dtype)
             + alpha * intensity.astype(alpha.dtype),
             0,
-            255
+            255,
         ).astype(np.uint8)
 
     def generate_maps(self, image, random_state):
         intensity_mean_sample = self.intensity_mean.draw_sample(random_state)
         alpha_min_sample = self.alpha_min.draw_sample(random_state)
-        alpha_multiplier_sample = \
-            self.alpha_multiplier.draw_sample(random_state)
+        alpha_multiplier_sample = self.alpha_multiplier.draw_sample(random_state)
         alpha_size_px_max = self.alpha_size_px_max
         intensity_freq_exponent = self.intensity_freq_exponent
         alpha_freq_exponent = self.alpha_freq_exponent
         sparsity_sample = self.sparsity.draw_sample(random_state)
-        density_multiplier_sample = \
-            self.density_multiplier.draw_sample(random_state)
+        density_multiplier_sample = self.density_multiplier.draw_sample(random_state)
 
         height, width = image.shape[0:2]
         rss_alpha, rss_intensity = random_state.duplicate(2)
 
         intensity_coarse = self._generate_intensity_map_coarse(
-            height, width, intensity_mean_sample,
+            height,
+            width,
+            intensity_mean_sample,
             iap.Normal(0, scale=self.intensity_coarse_scale),
-            rss_intensity
+            rss_intensity,
         )
         intensity_fine = self._generate_intensity_map_fine(
-            height, width, intensity_mean_sample, intensity_freq_exponent,
-            rss_intensity)
+            height, width, intensity_mean_sample, intensity_freq_exponent, rss_intensity
+        )
         intensity = intensity_coarse + intensity_fine
 
         alpha = self._generate_alpha_mask(
-            height, width, alpha_min_sample, alpha_multiplier_sample,
-            alpha_freq_exponent, alpha_size_px_max, sparsity_sample,
-            density_multiplier_sample, rss_alpha)
+            height,
+            width,
+            alpha_min_sample,
+            alpha_multiplier_sample,
+            alpha_freq_exponent,
+            alpha_size_px_max,
+            sparsity_sample,
+            density_multiplier_sample,
+            rss_alpha,
+        )
 
         return alpha, intensity
 
     @classmethod
-    def _generate_intensity_map_coarse(cls, height, width, intensity_mean,
-                                       intensity_local_offset, random_state):
+    def _generate_intensity_map_coarse(
+        cls, height, width, intensity_mean, intensity_local_offset, random_state
+    ):
         # TODO (8, 8) might be too simplistic for some image sizes
         height_intensity, width_intensity = (8, 8)
-        intensity = (
-            intensity_mean
-            + intensity_local_offset.draw_samples(
-                (height_intensity, width_intensity), random_state)
+        intensity = intensity_mean + intensity_local_offset.draw_samples(
+            (height_intensity, width_intensity), random_state
         )
         intensity = ia.imresize_single_image(
-            intensity, (height, width), interpolation="cubic")
+            intensity, (height, width), interpolation="cubic"
+        )
 
         return intensity
 
     @classmethod
-    def _generate_intensity_map_fine(cls, height, width, intensity_mean,
-                                     exponent, random_state):
+    def _generate_intensity_map_fine(
+        cls, height, width, intensity_mean, exponent, random_state
+    ):
         intensity_details_generator = iap.FrequencyNoise(
             exponent=exponent,
             size_px_max=max(height, width, 1),  # 1 here for case H, W being 0
-            upscale_method="cubic"
+            upscale_method="cubic",
         )
         intensity_details = intensity_details_generator.draw_samples(
-            (height, width), random_state)
-        return intensity_mean * ((2*intensity_details - 1.0)/5.0)
+            (height, width), random_state
+        )
+        return intensity_mean * ((2 * intensity_details - 1.0) / 5.0)
 
     @classmethod
-    def _generate_alpha_mask(cls, height, width, alpha_min, alpha_multiplier,
-                             exponent, alpha_size_px_max, sparsity,
-                             density_multiplier, random_state):
+    def _generate_alpha_mask(
+        cls,
+        height,
+        width,
+        alpha_min,
+        alpha_multiplier,
+        exponent,
+        alpha_size_px_max,
+        sparsity,
+        density_multiplier,
+        random_state,
+    ):
         alpha_generator = iap.FrequencyNoise(
-            exponent=exponent,
-            size_px_max=alpha_size_px_max,
-            upscale_method="cubic"
+            exponent=exponent, size_px_max=alpha_size_px_max, upscale_method="cubic"
         )
-        alpha_local = alpha_generator.draw_samples(
-            (height, width), random_state)
+        alpha_local = alpha_generator.draw_samples((height, width), random_state)
         alpha = alpha_min + (alpha_multiplier * alpha_local)
         alpha = (alpha ** sparsity) * density_multiplier
         alpha = np.clip(alpha, 0.0, 1.0)
@@ -554,9 +601,13 @@ class Clouds(meta.SomeOf):
 
     """
 
-    def __init__(self,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         layers = [
             CloudLayer(
                 intensity_mean=(196, 255),
@@ -570,7 +621,7 @@ class Clouds(meta.SomeOf):
                 density_multiplier=(0.5, 1.0),
                 seed=seed,
                 random_state=random_state,
-                deterministic=deterministic
+                deterministic=deterministic,
             ),
             CloudLayer(
                 intensity_mean=(196, 255),
@@ -584,16 +635,19 @@ class Clouds(meta.SomeOf):
                 density_multiplier=(0.8, 1.5),
                 seed=seed,
                 random_state=random_state,
-                deterministic=deterministic
-            )
+                deterministic=deterministic,
+            ),
         ]
 
         super(Clouds, self).__init__(
             (1, 2),
             children=layers,
             random_order=False,
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed,
+            name=name,
+            random_state=random_state,
+            deterministic=deterministic,
+        )
 
 
 # TODO add vertical gradient alpha to have fog only at skylevel/groundlevel
@@ -657,9 +711,13 @@ class Fog(CloudLayer):
 
     """
 
-    def __init__(self,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(Fog, self).__init__(
             intensity_mean=(220, 255),
             intensity_freq_exponent=(-2.0, -1.5),
@@ -670,8 +728,11 @@ class Fog(CloudLayer):
             alpha_freq_exponent=(-4.0, -2.0),
             sparsity=0.9,
             density_multiplier=(0.4, 0.9),
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed,
+            name=name,
+            random_state=random_state,
+            deterministic=deterministic,
+        )
 
 
 # TODO add examples and add these to the overview docs
@@ -844,27 +905,39 @@ class SnowflakesLayer(meta.Augmenter):
 
     """
 
-    def __init__(self, density, density_uniformity, flake_size,
-                 flake_size_uniformity, angle, speed, blur_sigma_fraction,
-                 blur_sigma_limits=(0.5, 3.75),
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        density,
+        density_uniformity,
+        flake_size,
+        flake_size_uniformity,
+        angle,
+        speed,
+        blur_sigma_fraction,
+        blur_sigma_limits=(0.5, 3.75),
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(SnowflakesLayer, self).__init__(
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed, name=name, random_state=random_state, deterministic=deterministic
+        )
         self.density = density
         self.density_uniformity = iap.handle_continuous_param(
-            density_uniformity, "density_uniformity", value_range=(0.0, 1.0))
+            density_uniformity, "density_uniformity", value_range=(0.0, 1.0)
+        )
         self.flake_size = iap.handle_continuous_param(
-            flake_size, "flake_size", value_range=(0.0+1e-4, 1.0))
+            flake_size, "flake_size", value_range=(0.0 + 1e-4, 1.0)
+        )
         self.flake_size_uniformity = iap.handle_continuous_param(
-            flake_size_uniformity, "flake_size_uniformity",
-            value_range=(0.0, 1.0))
+            flake_size_uniformity, "flake_size_uniformity", value_range=(0.0, 1.0)
+        )
         self.angle = iap.handle_continuous_param(angle, "angle")
-        self.speed = iap.handle_continuous_param(
-            speed, "speed", value_range=(0.0, 1.0))
+        self.speed = iap.handle_continuous_param(speed, "speed", value_range=(0.0, 1.0))
         self.blur_sigma_fraction = iap.handle_continuous_param(
-            blur_sigma_fraction, "blur_sigma_fraction", value_range=(0.0, 1.0))
+            blur_sigma_fraction, "blur_sigma_fraction", value_range=(0.0, 1.0)
+        )
 
         # (min, max), same for all images
         self.blur_sigma_limits = blur_sigma_limits
@@ -886,66 +959,67 @@ class SnowflakesLayer(meta.Augmenter):
 
     def get_parameters(self):
         """See :func:`~imgaug.augmenters.meta.Augmenter.get_parameters`."""
-        return [self.density,
-                self.density_uniformity,
-                self.flake_size,
-                self.flake_size_uniformity,
-                self.angle,
-                self.speed,
-                self.blur_sigma_fraction,
-                self.blur_sigma_limits,
-                self.gate_noise_size]
+        return [
+            self.density,
+            self.density_uniformity,
+            self.flake_size,
+            self.flake_size_uniformity,
+            self.angle,
+            self.speed,
+            self.blur_sigma_fraction,
+            self.blur_sigma_limits,
+            self.gate_noise_size,
+        ]
 
     def draw_on_image(self, image, random_state):
-        assert image.ndim == 3, (
-            "Expected input image to be three-dimensional, "
-            "got %d dimensions." % (image.ndim,))
+        assert (
+            image.ndim == 3
+        ), "Expected input image to be three-dimensional, " "got %d dimensions." % (
+            image.ndim,
+        )
         assert image.shape[2] in [1, 3], (
             "Expected to get image with a channel axis of size 1 or 3, "
-            "got %d (shape: %s)" % (image.shape[2], image.shape))
+            "got %d (shape: %s)" % (image.shape[2], image.shape)
+        )
 
         rss = random_state.duplicate(2)
 
         flake_size_sample = self.flake_size.draw_sample(random_state)
         flake_size_uniformity_sample = self.flake_size_uniformity.draw_sample(
-            random_state)
+            random_state
+        )
         angle_sample = self.angle.draw_sample(random_state)
         speed_sample = self.speed.draw_sample(random_state)
-        blur_sigma_fraction_sample = self.blur_sigma_fraction.draw_sample(
-            random_state)
+        blur_sigma_fraction_sample = self.blur_sigma_fraction.draw_sample(random_state)
 
         height, width, nb_channels = image.shape
         downscale_factor = np.clip(1.0 - flake_size_sample, 0.001, 1.0)
-        height_down = max(1, int(height*downscale_factor))
-        width_down = max(1, int(width*downscale_factor))
-        noise = self._generate_noise(
-            height_down,
-            width_down,
-            self.density,
-            rss[0]
-        )
+        height_down = max(1, int(height * downscale_factor))
+        width_down = max(1, int(width * downscale_factor))
+        noise = self._generate_noise(height_down, width_down, self.density, rss[0])
 
         # gate the sampled noise via noise in range [0.0, 1.0]
         # this leads to less flakes in some areas of the image and more in
         # other areas
         gate_noise = iap.Beta(1.0, 1.0 - self.density_uniformity)
         noise = self._gate(noise, gate_noise, self.gate_noise_size, rss[1])
-        noise = ia.imresize_single_image(noise, (height, width),
-                                         interpolation="cubic")
+        noise = ia.imresize_single_image(noise, (height, width), interpolation="cubic")
 
         # apply a bit of gaussian blur and then motion blur according to
         # angle and speed
         sigma = max(height, width) * blur_sigma_fraction_sample
-        sigma = np.clip(sigma,
-                        self.blur_sigma_limits[0], self.blur_sigma_limits[1])
+        sigma = np.clip(sigma, self.blur_sigma_limits[0], self.blur_sigma_limits[1])
         noise_small_blur = self._blur(noise, sigma)
-        noise_small_blur = self._motion_blur(noise_small_blur,
-                                             angle=angle_sample,
-                                             speed=speed_sample,
-                                             random_state=random_state)
+        noise_small_blur = self._motion_blur(
+            noise_small_blur,
+            angle=angle_sample,
+            speed=speed_sample,
+            random_state=random_state,
+        )
 
         noise_small_blur_rgb = self._postprocess_noise(
-            noise_small_blur, flake_size_uniformity_sample, nb_channels)
+            noise_small_blur, flake_size_uniformity_sample, nb_channels
+        )
 
         return self._blend(image, speed_sample, noise_small_blur_rgb)
 
@@ -960,12 +1034,13 @@ class SnowflakesLayer(meta.Augmenter):
         # will only rarely sample values around 0.0 the average of the
         # sampled values seems to be at around 0.6-0.75
         gate_noise = gate_noise.draw_samples(gate_size, random_state)
-        gate_noise_up = ia.imresize_single_image(gate_noise, noise.shape[0:2],
-                                                 interpolation="cubic")
+        gate_noise_up = ia.imresize_single_image(
+            gate_noise, noise.shape[0:2], interpolation="cubic"
+        )
         gate_noise_up = np.clip(gate_noise_up, 0.0, 1.0)
-        return np.clip(
-            noise.astype(np.float32) * gate_noise_up, 0, 255
-        ).astype(np.uint8)
+        return np.clip(noise.astype(np.float32) * gate_noise_up, 0, 255).astype(
+            np.uint8
+        )
 
     @classmethod
     def _blur(cls, noise, sigma):
@@ -981,23 +1056,25 @@ class SnowflakesLayer(meta.Augmenter):
         # we use max(k, 3) here because MotionBlur errors for anything less
         # than 3
         blurer = blur.MotionBlur(
-            k=max(k, 3), angle=angle, direction=1.0, random_state=random_state)
+            k=max(k, 3), angle=angle, direction=1.0, random_state=random_state
+        )
         return blurer.augment_image(noise)
 
     # Added in 0.4.0.
     @classmethod
-    def _postprocess_noise(cls, noise_small_blur,
-                           flake_size_uniformity_sample, nb_channels):
+    def _postprocess_noise(
+        cls, noise_small_blur, flake_size_uniformity_sample, nb_channels
+    ):
         # use contrast adjustment of noise to make the flake size a bit less
         # uniform then readjust the noise values to make them more visible
         # again
-        gain = 1.0 + 2*(1 - flake_size_uniformity_sample)
-        gain_adj = 1.0 + 5*(1 - flake_size_uniformity_sample)
-        noise_small_blur = contrast.GammaContrast(gain).augment_image(
-            noise_small_blur)
+        gain = 1.0 + 2 * (1 - flake_size_uniformity_sample)
+        gain_adj = 1.0 + 5 * (1 - flake_size_uniformity_sample)
+        noise_small_blur = contrast.GammaContrast(gain).augment_image(noise_small_blur)
         noise_small_blur = noise_small_blur.astype(np.float32) * gain_adj
         noise_small_blur_rgb = np.tile(
-            noise_small_blur[..., np.newaxis], (1, 1, nb_channels))
+            noise_small_blur[..., np.newaxis], (1, 1, nb_channels)
+        )
         return noise_small_blur_rgb
 
     # Added in 0.4.0.
@@ -1008,9 +1085,11 @@ class SnowflakesLayer(meta.Augmenter):
         # max for the main flakes
         image_f32 = image.astype(np.float32)
         image_f32 = cls._blend_by_sum(
-            image_f32, (0.1 + 20*speed_sample) * noise_small_blur_rgb)
+            image_f32, (0.1 + 20 * speed_sample) * noise_small_blur_rgb
+        )
         image_f32 = cls._blend_by_max(
-            image_f32, (1.0 + 20*speed_sample) * noise_small_blur_rgb)
+            image_f32, (1.0 + 20 * speed_sample) * noise_small_blur_rgb
+        )
         return image_f32
 
     # TODO replace this by a function from module blend.py
@@ -1193,11 +1272,19 @@ class Snowflakes(meta.SomeOf):
 
     """
 
-    def __init__(self, density=(0.005, 0.075), density_uniformity=(0.3, 0.9),
-                 flake_size=(0.2, 0.7), flake_size_uniformity=(0.4, 0.8),
-                 angle=(-30, 30), speed=(0.007, 0.03),
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        density=(0.005, 0.075),
+        density_uniformity=(0.3, 0.9),
+        flake_size=(0.2, 0.7),
+        flake_size_uniformity=(0.4, 0.8),
+        angle=(-30, 30),
+        speed=(0.007, 0.03),
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         layer = SnowflakesLayer(
             density=density,
             density_uniformity=density_uniformity,
@@ -1208,15 +1295,18 @@ class Snowflakes(meta.SomeOf):
             blur_sigma_fraction=(0.0001, 0.001),
             seed=seed,
             random_state=random_state,
-            deterministic=deterministic
+            deterministic=deterministic,
         )
 
         super(Snowflakes, self).__init__(
             (1, 3),
             children=[layer.deepcopy() for _ in range(3)],
             random_order=False,
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed,
+            name=name,
+            random_state=random_state,
+            deterministic=deterministic,
+        )
 
 
 class RainLayer(SnowflakesLayer):
@@ -1290,17 +1380,35 @@ class RainLayer(SnowflakesLayer):
     """
 
     # Added in 0.4.0.
-    def __init__(self, density, density_uniformity, drop_size,
-                 drop_size_uniformity, angle, speed, blur_sigma_fraction,
-                 blur_sigma_limits=(0.5, 3.75),
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        density,
+        density_uniformity,
+        drop_size,
+        drop_size_uniformity,
+        angle,
+        speed,
+        blur_sigma_fraction,
+        blur_sigma_limits=(0.5, 3.75),
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(RainLayer, self).__init__(
-            density, density_uniformity, drop_size,
-            drop_size_uniformity, angle, speed, blur_sigma_fraction,
+            density,
+            density_uniformity,
+            drop_size,
+            drop_size_uniformity,
+            angle,
+            speed,
+            blur_sigma_fraction,
             blur_sigma_limits=blur_sigma_limits,
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed,
+            name=name,
+            random_state=random_state,
+            deterministic=deterministic,
+        )
 
     # Added in 0.4.0.
     @classmethod
@@ -1309,10 +1417,12 @@ class RainLayer(SnowflakesLayer):
 
     # Added in 0.4.0.
     @classmethod
-    def _postprocess_noise(cls, noise_small_blur,
-                           flake_size_uniformity_sample, nb_channels):
+    def _postprocess_noise(
+        cls, noise_small_blur, flake_size_uniformity_sample, nb_channels
+    ):
         noise_small_blur_rgb = np.tile(
-            noise_small_blur[..., np.newaxis], (1, 1, nb_channels))
+            noise_small_blur[..., np.newaxis], (1, 1, nb_channels)
+        )
         return noise_small_blur_rgb
 
     # Added in 0.4.0.
@@ -1330,9 +1440,8 @@ class RainLayer(SnowflakesLayer):
         noise_small_blur_rgb = np.clip(1.3 * noise_small_blur_rgb, 0, 1.0)
         image_f32 = image.astype(np.float32)
         image_f32 = (
-            (1 - noise_small_blur_rgb) * image_f32
-            + noise_small_blur_rgb * drop_mean_color
-        )
+            1 - noise_small_blur_rgb
+        ) * image_f32 + noise_small_blur_rgb * drop_mean_color
         return np.clip(image_f32, 0, 255).astype(np.uint8)
 
 
@@ -1417,11 +1526,16 @@ class Rain(meta.SomeOf):
     """
 
     # Added in 0.4.0.
-    def __init__(self, nb_iterations=(1, 3),
-                 drop_size=(0.01, 0.02),
-                 speed=(0.04, 0.20),
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        nb_iterations=(1, 3),
+        drop_size=(0.01, 0.02),
+        speed=(0.04, 0.20),
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         layer = RainLayer(
             density=(0.03, 0.14),
             density_uniformity=(0.8, 1.0),
@@ -1432,12 +1546,15 @@ class Rain(meta.SomeOf):
             blur_sigma_fraction=(0.001, 0.001),
             seed=seed,
             random_state=random_state,
-            deterministic=deterministic
+            deterministic=deterministic,
         )
 
         super(Rain, self).__init__(
             nb_iterations,
             children=[layer.deepcopy() for _ in range(3)],
             random_order=False,
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed,
+            name=name,
+            random_state=random_state,
+            deterministic=deterministic,
+        )

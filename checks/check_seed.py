@@ -27,7 +27,18 @@ def main():
     reseeded3 = aug.draw_grid(img, cols=8, rows=1)
     reseeded4 = aug.draw_grid(img, cols=8, rows=1)
 
-    all_rows = np.vstack([unseeded1, unseeded2, seeded1, seeded2, reseeded1, reseeded2, reseeded3, reseeded4])
+    all_rows = np.vstack(
+        [
+            unseeded1,
+            unseeded2,
+            seeded1,
+            seeded2,
+            reseeded1,
+            reseeded2,
+            reseeded3,
+            reseeded4,
+        ]
+    )
     ia.imshow(all_rows)
 
 

@@ -185,9 +185,16 @@ class RandAugment(meta.Sequential):
     # N=2, M=28 is optimal for ImageNet with EfficientNet-B7
     # for cval they use [125, 122, 113]
     # Added in 0.4.0.
-    def __init__(self, n=2, m=(6, 12), cval=128,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        n=2,
+        m=(6, 12),
+        cval=128,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         # pylint: disable=invalid-name
         seed = seed if random_state == "deprecated" else random_state
         rng = iarandom.RNG.create_if_not_rng_(seed)
@@ -195,9 +202,13 @@ class RandAugment(meta.Sequential):
         # we don't limit the value range to 10 here, because the paper
         # gives several examples of using more than 10 for M
         m = iap.handle_discrete_param(
-            m, "m", value_range=(0, None),
-            tuple_to_uniform=True, list_to_choice=True,
-            allow_floats=False)
+            m,
+            "m",
+            value_range=(0, None),
+            tuple_to_uniform=True,
+            list_to_choice=True,
+            allow_floats=False,
+        )
         self._m = m
         self._cval = cval
 
@@ -217,13 +228,13 @@ class RandAugment(meta.Sequential):
 
         super(RandAugment, self).__init__(
             [
-                meta.Sequential(initial_augs,
-                                seed=rng.derive_rng_()),
-                meta.SomeOf(n, main_augs, random_order=True,
-                            seed=rng.derive_rng_())
+                meta.Sequential(initial_augs, seed=rng.derive_rng_()),
+                meta.SomeOf(n, main_augs, random_order=True, seed=rng.derive_rng_()),
             ],
-            seed=rng, name=name,
-            random_state=random_state, deterministic=deterministic
+            seed=rng,
+            name=name,
+            random_state=random_state,
+            deterministic=deterministic,
         )
 
     # Added in 0.4.0.
@@ -237,14 +248,12 @@ class RandAugment(meta.Sequential):
                 # 224px ImageNet images, we crop here a fraction of
                 # M*(M_max/224)
                 sizelib.Crop(
-                    percent=iap.Divide(
-                        iap.Uniform(0, m),
-                        224,
-                        elementwise=True),
+                    percent=iap.Divide(iap.Uniform(0, m), 224, elementwise=True),
                     sample_independently=True,
-                    keep_size=False),
-                interpolation="linear"
-            )
+                    keep_size=False,
+                ),
+                interpolation="linear",
+            ),
         ]
 
     # Added in 0.4.0.
@@ -259,8 +268,7 @@ class RandAugment(meta.Sequential):
 
         def _int_parameter(level, maxval):
             # paper applies just int(), so we don't round here
-            return iap.Discretize(_float_parameter(level, maxval),
-                                  round=False)
+            return iap.Discretize(_float_parameter(level, maxval), round=False)
 
         # In the paper's code they use the definition from AutoAugment,
         # which is 0.1 + M*1.8/10. But that results in 0.1 for M=0, i.e. for
@@ -272,8 +280,7 @@ class RandAugment(meta.Sequential):
         def _enhance_parameter(level):
             fparam = _float_parameter(level, 0.9)
             return iap.Clip(
-                iap.Add(1.0, iap.RandomSign(fparam), elementwise=True),
-                0.1, 1.9
+                iap.Add(1.0, iap.RandomSign(fparam), elementwise=True), 0.1, 1.9
             )
 
         def _subtract(a, b):
@@ -297,22 +304,15 @@ class RandAugment(meta.Sequential):
             arithmetic.Invert(p=1.0),
             # they use Image.rotate() for the rotation, which uses
             # the image center as the rotation center
-            _affine(rotate=_rnd_s(_float_parameter(m, 30)),
-                    center=(0.5, 0.5)),
+            _affine(rotate=_rnd_s(_float_parameter(m, 30)), center=(0.5, 0.5)),
             # paper uses 4 - int_parameter(M, 4)
             pillike.Posterize(
-                nb_bits=_subtract(
-                    8,
-                    iap.Clip(_int_parameter(m, 6), 0, 6)
-                )
+                nb_bits=_subtract(8, iap.Clip(_int_parameter(m, 6), 0, 6))
             ),
             # paper uses 256 - int_parameter(M, 256)
             pillike.Solarize(
                 p=1.0,
-                threshold=iap.Clip(
-                    _subtract(256, _int_parameter(m, 256)),
-                    0, 256
-                )
+                threshold=iap.Clip(_subtract(256, _int_parameter(m, 256)), 0, 256),
             ),
             pillike.EnhanceColor(_enhance_parameter(m)),
             pillike.EnhanceContrast(_enhance_parameter(m)),
@@ -324,14 +324,15 @@ class RandAugment(meta.Sequential):
             _affine(translate_percent={"y": _rnd_s(_float_parameter(m, 0.33))}),
             # paper code uses 20px on CIFAR (i.e. size 20/32), no information
             # on ImageNet values so we just use the same values
-            arithmetic.Cutout(1,
-                              size=iap.Clip(
-                                  _float_parameter(m, 20 / 32), 0, 20 / 32),
-                              squared=True,
-                              fill_mode="constant",
-                              cval=cval),
+            arithmetic.Cutout(
+                1,
+                size=iap.Clip(_float_parameter(m, 20 / 32), 0, 20 / 32),
+                squared=True,
+                fill_mode="constant",
+                cval=cval,
+            ),
             pillike.FilterBlur(),
-            pillike.FilterSmooth()
+            pillike.FilterSmooth(),
         ]
 
     # Added in 0.4.0.

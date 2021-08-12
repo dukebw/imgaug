@@ -20,6 +20,7 @@ if sys.version_info[0] == 2:
     import cPickle as pickle
     from Queue import Empty as QueueEmpty, Full as QueueFull
     import socket
+
     BrokenPipeError = socket.error
 elif sys.version_info[0] == 3:
     import pickle
@@ -35,9 +36,7 @@ def _get_context_method():
 
     # get_context() is only supported in 3.5 and later (same for
     # set_start_method)
-    get_context_unsupported = (
-        vinfo[0] == 2
-        or (vinfo[0] == 3 and vinfo[1] <= 3))
+    get_context_unsupported = vinfo[0] == 2 or (vinfo[0] == 3 and vinfo[1] <= 3)
 
     method = None
     # Fix random hanging code in NixOS by switching to spawn method,
@@ -51,11 +50,13 @@ def _get_context_method():
     if "NixOS" in platform.version():
         method = "spawn"
         if get_context_unsupported:
-            ia.warn("Detected usage of imgaug.multicore in python <=3.4 "
-                    "and NixOS. This is known to sometimes cause endlessly "
-                    "hanging programs when also making use of multicore "
-                    "augmentation (aka background augmentation). Use "
-                    "python 3.5 or later to prevent this.")
+            ia.warn(
+                "Detected usage of imgaug.multicore in python <=3.4 "
+                "and NixOS. This is known to sometimes cause endlessly "
+                "hanging programs when also making use of multicore "
+                "augmentation (aka background augmentation). Use "
+                "python 3.5 or later to prevent this."
+            )
     elif platform.system() == "Darwin" and vinfo[0:2] == (3, 7):
         # On Mac with python 3.7 there seems to be a problem with matplotlib,
         # resulting in the error "libc++abi.dylib: terminating with uncaught
@@ -80,8 +81,8 @@ def _set_context(method):
     # method=False indicates that multiprocessing module (i.e. no context)
     # should be used, e.g. because get_context() is not supported
     globals()["_CONTEXT"] = (
-        multiprocessing if method is False
-        else multiprocessing.get_context(method))
+        multiprocessing if method is False else multiprocessing.get_context(method)
+    )
 
 
 # Added in 0.4.0.
@@ -130,6 +131,7 @@ class Pool(object):
         be used.
 
     """
+
     # This attribute saves the augmentation sequence for background workers so
     # that it does not have to be resend with every batch. The attribute is set
     # once per worker in the worker's initializer. As each worker has its own
@@ -144,18 +146,18 @@ class Pool(object):
     # attribute.
     _WORKER_SEED_START = None
 
-    def __init__(self, augseq, processes=None, maxtasksperchild=None,
-                 seed=None):
+    def __init__(self, augseq, processes=None, maxtasksperchild=None, seed=None):
         # make sure that don't call pool again in a child process
         assert Pool._WORKER_AUGSEQ is None, (
             "_WORKER_AUGSEQ was already set when calling Pool.__init__(). "
-            "Did you try to instantiate a Pool within a Pool?")
+            "Did you try to instantiate a Pool within a Pool?"
+        )
         assert processes is None or processes != 0, (
-            "Expected `processes` to be `None` (\"use as many cores as "
-            "available\") or a negative integer (\"use as many as available "
-            "MINUS this number\") or an integer>1 (\"use exactly that many "
-            "processes\"). Got type %s, value %s instead." % (
-                type(processes), str(processes))
+            'Expected `processes` to be `None` ("use as many cores as '
+            'available") or a negative integer ("use as many as available '
+            'MINUS this number") or an integer>1 ("use exactly that many '
+            'processes"). Got type %s, value %s instead.'
+            % (type(processes), str(processes))
         )
 
         self.augseq = augseq
@@ -163,14 +165,13 @@ class Pool(object):
         self.maxtasksperchild = maxtasksperchild
 
         if seed is not None:
-            assert iarandom.SEED_MIN_VALUE <= seed <= iarandom.SEED_MAX_VALUE, (
-                "Expected `seed` to be either `None` or a value between "
-                "%d and %d. Got type %s, value %s instead." % (
-                    iarandom.SEED_MIN_VALUE,
-                    iarandom.SEED_MAX_VALUE,
-                    type(seed),
-                    str(seed)
-                )
+            assert (
+                iarandom.SEED_MIN_VALUE <= seed <= iarandom.SEED_MAX_VALUE
+            ), "Expected `seed` to be either `None` or a value between " "%d and %d. Got type %s, value %s instead." % (
+                iarandom.SEED_MIN_VALUE,
+                iarandom.SEED_MAX_VALUE,
+                type(seed),
+                str(seed),
             )
         self.seed = seed
 
@@ -220,14 +221,16 @@ class Pool(object):
                         "Could not find method multiprocessing.cpu_count(). "
                         "This will likely lead to more CPU cores being used "
                         "for the background augmentation than originally "
-                        "intended.")
+                        "intended."
+                    )
                     processes = None
 
             self._pool = _get_context().Pool(
                 processes,
                 initializer=_Pool_initialize_worker,
                 initargs=(self.augseq, self.seed),
-                maxtasksperchild=self.maxtasksperchild)
+                maxtasksperchild=self.maxtasksperchild,
+            )
         return self._pool
 
     def map_batches(self, batches, chunksize=None):
@@ -251,12 +254,12 @@ class Pool(object):
         """
         self._assert_batches_is_list(batches)
         return self.pool.map(
-            _Pool_starworker,
-            self._handle_batch_ids(batches),
-            chunksize=chunksize)
+            _Pool_starworker, self._handle_batch_ids(batches), chunksize=chunksize
+        )
 
-    def map_batches_async(self, batches, chunksize=None, callback=None,
-                          error_callback=None):
+    def map_batches_async(
+        self, batches, chunksize=None, callback=None, error_callback=None
+    ):
         """
         Augment batches asynchonously.
 
@@ -287,13 +290,15 @@ class Pool(object):
             self._handle_batch_ids(batches),
             chunksize=chunksize,
             callback=callback,
-            error_callback=error_callback)
+            error_callback=error_callback,
+        )
 
     @classmethod
     def _assert_batches_is_list(cls, batches):
         assert isinstance(batches, list), (
             "Expected `batches` to be a list, got type %s. Call "
-            "imap_batches() if you use generators.") % (type(batches),)
+            "imap_batches() if you use generators."
+        ) % (type(batches),)
 
     def imap_batches(self, batches, chunksize=1, output_buffer_size=None):
         """
@@ -339,18 +344,17 @@ class Pool(object):
         gen = self.pool.imap(
             _Pool_starworker,
             self._ibuffer_batch_loading(
-                self._handle_batch_ids_gen(batches),
-                output_buffer_left
+                self._handle_batch_ids_gen(batches), output_buffer_left
             ),
-            chunksize=chunksize)
+            chunksize=chunksize,
+        )
 
         for batch in gen:
             yield batch
             if output_buffer_left is not None:
                 output_buffer_left.release()
 
-    def imap_batches_unordered(self, batches, chunksize=1,
-                               output_buffer_size=None):
+    def imap_batches_unordered(self, batches, chunksize=1, output_buffer_size=None):
         """Augment batches from a generator (without preservation of order).
 
         Pattern for output buffer constraint is from
@@ -392,10 +396,9 @@ class Pool(object):
         gen = self.pool.imap_unordered(
             _Pool_starworker,
             self._ibuffer_batch_loading(
-                self._handle_batch_ids_gen(batches),
-                output_buffer_left
+                self._handle_batch_ids_gen(batches), output_buffer_left
             ),
-            chunksize=chunksize
+            chunksize=chunksize,
         )
 
         for batch in gen:
@@ -407,11 +410,13 @@ class Pool(object):
     def _assert_batches_is_generator(cls, batches):
         assert ia.is_generator(batches), (
             "Expected `batches` to be generator, got type %s. Call "
-            "map_batches() if you use lists.") % (type(batches),)
+            "map_batches() if you use lists."
+        ) % (type(batches),)
 
     def __enter__(self):
-        assert self._pool is None, (
-            "Tried to __enter__ a pool that has already been initialized.")
+        assert (
+            self._pool is None
+        ), "Tried to __enter__ a pool that has already been initialized."
         _ = self.pool  # initialize internal multiprocessing pool instance
         return self
 
@@ -471,7 +476,8 @@ def _create_output_buffer_left(output_buffer_size):
     if output_buffer_size:
         assert output_buffer_size > 0, (
             "Expected buffer size to be greater than zero, but got size %d "
-            "instead." % (output_buffer_size,))
+            "instead." % (output_buffer_size,)
+        )
         output_buffer_left = _get_context().Semaphore(output_buffer_size)
     return output_buffer_left
 
@@ -499,7 +505,7 @@ def _Pool_initialize_worker(augseq, seed_start):
         if sys.version_info[0] == 3 and sys.version_info[1] >= 7:
             seed_offset = time.time_ns()
         else:
-            seed_offset = int(time.time() * 10**6) % 10**6
+            seed_offset = int(time.time() * 10 ** 6) % 10 ** 6
         seed = hash(process_name) + seed_offset
         _reseed_global_local(seed, augseq)
     Pool._WORKER_SEED_START = seed_start
@@ -512,19 +518,18 @@ def _Pool_initialize_worker(augseq, seed_start):
 # leads to pickle errors.
 def _Pool_worker(batch_idx, batch):
     # pylint: disable=invalid-name, protected-access
-    assert ia.is_single_integer(batch_idx), (
-        "Expected `batch_idx` to be an integer. Got type %s instead." % (
-            type(batch_idx)
-        ))
+    assert ia.is_single_integer(
+        batch_idx
+    ), "Expected `batch_idx` to be an integer. Got type %s instead." % (type(batch_idx))
     assert isinstance(batch, (UnnormalizedBatch, Batch)), (
         "Expected `batch` to be either an instance of "
         "`imgaug.augmentables.batches.UnnormalizedBatch` or "
-        "`imgaug.augmentables.batches.Batch`. Got type %s instead." % (
-            type(batch)
-        ))
+        "`imgaug.augmentables.batches.Batch`. Got type %s instead." % (type(batch))
+    )
     assert Pool._WORKER_AUGSEQ is not None, (
         "Expected `Pool._WORKER_AUGSEQ` to NOT be `None`. Did you manually "
-        "call _Pool_worker()?")
+        "call _Pool_worker()?"
+    )
 
     augseq = Pool._WORKER_AUGSEQ
     # TODO why is this if here? _WORKER_SEED_START should always be set?
@@ -544,17 +549,15 @@ def _Pool_starworker(inputs):
 
 
 def _reseed_global_local(base_seed, augseq):
-    seed_global = _derive_seed(base_seed, -10**9)
+    seed_global = _derive_seed(base_seed, -(10 ** 9))
     seed_local = _derive_seed(base_seed)
     iarandom.seed(seed_global)
     augseq.seed_(seed_local)
 
 
 def _derive_seed(base_seed, offset=0):
-    return (
-        iarandom.SEED_MIN_VALUE
-        + (base_seed + offset)
-        % (iarandom.SEED_MAX_VALUE - iarandom.SEED_MIN_VALUE)
+    return iarandom.SEED_MIN_VALUE + (base_seed + offset) % (
+        iarandom.SEED_MAX_VALUE - iarandom.SEED_MIN_VALUE
     )
 
 
@@ -587,16 +590,17 @@ class BatchLoader(object):
     """
 
     @ia.deprecated(alt_func="imgaug.multicore.Pool")
-    def __init__(self, load_batch_func, queue_size=50, nb_workers=1,
-                 threaded=True):
-        assert queue_size >= 2, (
-            "Queue size for BatchLoader must be at least 2, "
-            "got %d." % (queue_size,))
-        assert nb_workers >= 1, (
-            "Number of workers for BatchLoader must be at least 1, "
-            "got %d" % (nb_workers,))
-        self._queue_internal = multiprocessing.Queue(queue_size//2)
-        self.queue = multiprocessing.Queue(queue_size//2)
+    def __init__(self, load_batch_func, queue_size=50, nb_workers=1, threaded=True):
+        assert (
+            queue_size >= 2
+        ), "Queue size for BatchLoader must be at least 2, " "got %d." % (queue_size,)
+        assert (
+            nb_workers >= 1
+        ), "Number of workers for BatchLoader must be at least 1, " "got %d" % (
+            nb_workers,
+        )
+        self._queue_internal = multiprocessing.Queue(queue_size // 2)
+        self.queue = multiprocessing.Queue(queue_size // 2)
         self.join_signal = multiprocessing.Event()
         self.workers = []
         self.threaded = threaded
@@ -605,23 +609,28 @@ class BatchLoader(object):
             if threaded:
                 worker = threading.Thread(
                     target=self._load_batches,
-                    args=(load_batch_func, self._queue_internal,
-                          self.join_signal, None)
+                    args=(
+                        load_batch_func,
+                        self._queue_internal,
+                        self.join_signal,
+                        None,
+                    ),
                 )
             else:
                 worker = multiprocessing.Process(
                     target=self._load_batches,
-                    args=(load_batch_func, self._queue_internal,
-                          self.join_signal, seeds[i])
+                    args=(
+                        load_batch_func,
+                        self._queue_internal,
+                        self.join_signal,
+                        seeds[i],
+                    ),
                 )
             worker.daemon = True
             worker.start()
             self.workers.append(worker)
 
-        self.main_worker_thread = threading.Thread(
-            target=self._main_worker,
-            args=()
-        )
+        self.main_worker_thread = threading.Thread(target=self._main_worker, args=())
         self.main_worker_thread.daemon = True
         self.main_worker_thread.start()
 
@@ -674,8 +683,7 @@ class BatchLoader(object):
         time.sleep(0.01)
 
     @classmethod
-    def _load_batches(cls, load_batch_func, queue_internal, join_signal,
-                      seedval):
+    def _load_batches(cls, load_batch_func, queue_internal, join_signal, seedval):
         # pylint: disable=broad-except
         if seedval is not None:
             random.seed(seedval)
@@ -691,8 +699,8 @@ class BatchLoader(object):
             for batch in gen:
                 assert isinstance(batch, Batch), (
                     "Expected batch returned by load_batch_func to "
-                    "be of class imgaug.Batch, got %s." % (
-                        type(batch),))
+                    "be of class imgaug.Batch, got %s." % (type(batch),)
+                )
                 batch_pickled = pickle.dumps(batch, protocol=-1)
                 while not join_signal.is_set():
                     try:
@@ -798,8 +806,9 @@ class BackgroundAugmenter(object):
 
     @ia.deprecated(alt_func="imgaug.multicore.Pool")
     def __init__(self, batch_loader, augseq, queue_size=50, nb_workers="auto"):
-        assert queue_size > 0, (
-            "Expected 'queue_size' to be at least 1, got %d." % (queue_size,))
+        assert queue_size > 0, "Expected 'queue_size' to be at least 1, got %d." % (
+            queue_size,
+        )
         self.augseq = augseq
         self.queue_source = (
             batch_loader
@@ -818,7 +827,8 @@ class BackgroundAugmenter(object):
         else:
             assert nb_workers >= 1, (
                 "Expected 'nb_workers' to be \"auto\" or at least 1, "
-                "got %d instead." % (nb_workers,))
+                "got %d instead." % (nb_workers,)
+            )
 
         self.nb_workers = nb_workers
         self.workers = []
@@ -828,7 +838,7 @@ class BackgroundAugmenter(object):
         for i in range(nb_workers):
             worker = multiprocessing.Process(
                 target=self._augment_images_worker,
-                args=(augseq, self.queue_source, self.queue_result, seeds[i])
+                args=(augseq, self.queue_source, self.queue_result, seeds[i]),
             )
             worker.daemon = True
             worker.start()
@@ -869,8 +879,7 @@ class BackgroundAugmenter(object):
         return self.get_batch()
 
     @classmethod
-    def _augment_images_worker(cls, augseq, queue_source, queue_result,
-                               seedval):
+    def _augment_images_worker(cls, augseq, queue_source, queue_result, seedval):
         """
         Augment endlessly images in the source queue.
 

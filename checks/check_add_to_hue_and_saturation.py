@@ -23,12 +23,16 @@ def main():
         aug = iaa.AddToHueAndSaturation(value=value)
         img_aug = aug.augment_image(image)
         img_aug = iaa.pad(img_aug, bottom=40)
-        img_aug = ia.draw_text(img_aug, x=0, y=img_aug.shape[0]-38, text="value=%d" % (value,), size=30)
+        img_aug = ia.draw_text(
+            img_aug, x=0, y=img_aug.shape[0] - 38, text="value=%d" % (value,), size=30
+        )
 
         cv2.imshow("aug", img_aug)
         cv2.waitKey(TIME_PER_STEP)
 
-    images_aug = iaa.AddToHueAndSaturation(value=(-255, 255), per_channel=True).augment_images([image] * 64)
+    images_aug = iaa.AddToHueAndSaturation(
+        value=(-255, 255), per_channel=True
+    ).augment_images([image] * 64)
     ia.imshow(ia.draw_grid(images_aug))
 
     image = ia.quokka_square((128, 128))

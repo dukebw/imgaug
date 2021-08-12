@@ -159,11 +159,11 @@ def blur_gaussian_(image, sigma, ksize=None, backend="auto", eps=1e-3):
     iadt.gate_dtypes_strs(
         {image.dtype},
         allowed="bool uint8 uint16 uint32 "
-                "int8 int16 int32 int64 "
-                "uint64 "
-                "float16 float32 float64",
+        "int8 int16 int32 int64 "
+        "uint64 "
+        "float16 float32 float64",
         disallowed="float128",
-        augmenter=None
+        augmenter=None,
     )
 
     dts_not_supported_by_cv2 = iadt._convert_dtype_strs_to_types(
@@ -172,16 +172,15 @@ def blur_gaussian_(image, sigma, ksize=None, backend="auto", eps=1e-3):
     backend_to_use = backend
     if backend == "auto":
         backend_to_use = (
-            "cv2"
-            if image.dtype not in dts_not_supported_by_cv2
-            else "scipy")
+            "cv2" if image.dtype not in dts_not_supported_by_cv2 else "scipy"
+        )
     elif backend == "cv2":
         assert image.dtype not in dts_not_supported_by_cv2, (
             "Requested 'cv2' backend, but provided %s input image, which "
             "cannot be handled by that backend. Choose a different "
             "backend or set backend to 'auto' or use a different "
-            "datatype." % (
-                image.dtype.name,))
+            "datatype." % (image.dtype.name,)
+        )
     elif backend == "scipy":
         # can handle all dtypes that were allowed in gate_dtypes()
         pass
@@ -215,20 +214,21 @@ def _blur_gaussian_scipy_(image, sigma, ksize):
             "Requested 'scipy' backend or picked it automatically by "
             "backend='auto' n blur_gaussian_(), but also provided "
             "'ksize' argument, which is not understood by that "
-            "backend and will be ignored.")
+            "backend and will be ignored."
+        )
 
     # Note that while gaussian_filter can be applied to all channels
     # at the same time, that should not be done here, because then
     # the blurring would also happen across channels (e.g. red values
     # might be mixed with blue values in RGB)
     if image.ndim == 2:
-        image[:, :] = ndimage.gaussian_filter(image[:, :], sigma,
-                                              mode="mirror")
+        image[:, :] = ndimage.gaussian_filter(image[:, :], sigma, mode="mirror")
     else:
         nb_channels = image.shape[2]
         for channel in sm.xrange(nb_channels):
             image[:, :, channel] = ndimage.gaussian_filter(
-                image[:, :, channel], sigma, mode="mirror")
+                image[:, :, channel], sigma, mode="mirror"
+            )
 
     if dtype.kind == "b":
         image = image > 0.5
@@ -266,9 +266,9 @@ def _blur_gaussian_cv2(image, sigma, ksize):
     if ksize is None:
         ksize = _compute_gaussian_blur_ksize(sigma)
     else:
-        assert ia.is_single_integer(ksize), (
-            "Expected 'ksize' argument to be a number, "
-            "got %s." % (type(ksize),))
+        assert ia.is_single_integer(
+            ksize
+        ), "Expected 'ksize' argument to be a number, " "got %s." % (type(ksize),)
         ksize = ksize + 1 if ksize % 2 == 0 else ksize
 
     image_warped = image
@@ -281,7 +281,7 @@ def _blur_gaussian_cv2(image, sigma, ksize):
             (ksize, ksize),
             sigmaX=sigma,
             sigmaY=sigma,
-            borderType=cv2.BORDER_REFLECT_101
+            borderType=cv2.BORDER_REFLECT_101,
         )
 
         if image_warped.ndim == 2 and image.ndim == 3:
@@ -381,7 +381,7 @@ def blur_avg_(image, k):
     iadt.gate_dtypes_strs(
         {image.dtype},
         allowed="bool uint8 uint16 int8 int16 float16 float32 float64",
-        disallowed="uint32 uint64 int32 int64 float128"
+        disallowed="uint32 uint64 int32 int64 float128",
     )
 
     input_dtype = image.dtype
@@ -393,11 +393,7 @@ def blur_avg_(image, k):
     input_ndim = len(shape)
     if input_ndim == 2 or shape[-1] <= 512:
         image = _normalize_cv2_input_arr_(image)
-        image_aug = cv2.blur(
-            image,
-            (k_width, k_height),
-            dst=image
-        )
+        image_aug = cv2.blur(image, (k_width, k_height), dst=image)
         # cv2.blur() removes channel axis for single-channel images
         if input_ndim == 3 and image_aug.ndim == 2:
             image_aug = image_aug[..., np.newaxis]
@@ -405,10 +401,7 @@ def blur_avg_(image, k):
         # TODO this is quite inefficient
         # handling more than 512 channels in cv2.blur()
         channels = [
-            cv2.blur(
-                _normalize_cv2_input_arr_(image[..., c]),
-                (k_width, k_height)
-            )
+            cv2.blur(_normalize_cv2_input_arr_(image[..., c]), (k_width, k_height))
             for c in sm.xrange(shape[-1])
         ]
         image_aug = np.stack(channels, axis=-1)
@@ -486,13 +479,13 @@ def blur_mean_shift_(image, spatial_window_radius, color_window_radius):
     # opencv method only supports uint8
     iadt.allow_only_uint8({image.dtype})
 
-    shape_is_hw = (image.ndim == 2)
-    shape_is_hw1 = (image.ndim == 3 and image.shape[-1] == 1)
-    shape_is_hw3 = (image.ndim == 3 and image.shape[-1] == 3)
+    shape_is_hw = image.ndim == 2
+    shape_is_hw1 = image.ndim == 3 and image.shape[-1] == 1
+    shape_is_hw3 = image.ndim == 3 and image.shape[-1] == 3
 
-    assert shape_is_hw or shape_is_hw1 or shape_is_hw3, (
-        "Expected (H,W) or (H,W,1) or (H,W,3) image, "
-        "got shape %s." % (image.shape,))
+    assert (
+        shape_is_hw or shape_is_hw1 or shape_is_hw3
+    ), "Expected (H,W) or (H,W,1) or (H,W,3) image, " "got shape %s." % (image.shape,)
 
     # opencv method only supports (H,W,3), so we have to tile here for (H,W)
     # and (H,W,1)
@@ -506,10 +499,8 @@ def blur_mean_shift_(image, spatial_window_radius, color_window_radius):
 
     image = _normalize_cv2_input_arr_(image)
     image = cv2.pyrMeanShiftFiltering(
-        image,
-        sp=spatial_window_radius,
-        sr=color_window_radius,
-        dst=image)
+        image, sp=spatial_window_radius, sr=color_window_radius, dst=image
+    )
 
     if shape_is_hw:
         image = image[..., 0]
@@ -577,16 +568,25 @@ class GaussianBlur(meta.Augmenter):
 
     """
 
-    def __init__(self, sigma=(0.0, 3.0),
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        sigma=(0.0, 3.0),
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(GaussianBlur, self).__init__(
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed, name=name, random_state=random_state, deterministic=deterministic
+        )
 
         self.sigma = iap.handle_continuous_param(
-            sigma, "sigma", value_range=(0, None), tuple_to_uniform=True,
-            list_to_choice=True)
+            sigma,
+            "sigma",
+            value_range=(0, None),
+            tuple_to_uniform=True,
+            list_to_choice=True,
+        )
 
         # epsilon value to estimate whether sigma is sufficently above 0 to
         # apply the blur
@@ -599,8 +599,7 @@ class GaussianBlur(meta.Augmenter):
 
         images = batch.images
         nb_images = len(images)
-        samples = self.sigma.draw_samples((nb_images,),
-                                          random_state=random_state)
+        samples = self.sigma.draw_samples((nb_images,), random_state=random_state)
         for image, sig in zip(images, samples):
             image[...] = blur_gaussian_(image, sigma=sig, eps=self.eps)
         return batch
@@ -701,21 +700,28 @@ class AverageBlur(meta.Augmenter):
 
     """
 
-    def __init__(self, k=(1, 7),
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        k=(1, 7),
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(AverageBlur, self).__init__(
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed, name=name, random_state=random_state, deterministic=deterministic
+        )
 
         # TODO replace this by iap.handle_discrete_kernel_size()
         self.mode = "single"
         if ia.is_single_number(k):
             self.k = iap.Deterministic(int(k))
         elif ia.is_iterable(k):
-            assert len(k) == 2, (
-                "Expected iterable 'k' to contain exactly 2 entries, "
-                "got %d." % (len(k),))
+            assert (
+                len(k) == 2
+            ), "Expected iterable 'k' to contain exactly 2 entries, " "got %d." % (
+                len(k),
+            )
             if all([ia.is_single_number(ki) for ki in k]):
                 self.k = iap.DiscreteUniform(int(k[0]), int(k[1]))
             elif all([isinstance(ki, iap.StochasticParameter) for ki in k]):
@@ -725,25 +731,27 @@ class AverageBlur(meta.Augmenter):
                 k_tuple = [None, None]
                 if ia.is_single_number(k[0]):
                     k_tuple[0] = iap.Deterministic(int(k[0]))
-                elif (ia.is_iterable(k[0])
-                      and all([ia.is_single_number(ki) for ki in k[0]])):
-                    k_tuple[0] = iap.DiscreteUniform(int(k[0][0]),
-                                                     int(k[0][1]))
+                elif ia.is_iterable(k[0]) and all(
+                    [ia.is_single_number(ki) for ki in k[0]]
+                ):
+                    k_tuple[0] = iap.DiscreteUniform(int(k[0][0]), int(k[0][1]))
                 else:
                     raise Exception(
                         "k[0] expected to be int or tuple of two ints, "
-                        "got %s" % (type(k[0]),))
+                        "got %s" % (type(k[0]),)
+                    )
 
                 if ia.is_single_number(k[1]):
                     k_tuple[1] = iap.Deterministic(int(k[1]))
-                elif (ia.is_iterable(k[1])
-                      and all([ia.is_single_number(ki) for ki in k[1]])):
-                    k_tuple[1] = iap.DiscreteUniform(int(k[1][0]),
-                                                     int(k[1][1]))
+                elif ia.is_iterable(k[1]) and all(
+                    [ia.is_single_number(ki) for ki in k[1]]
+                ):
+                    k_tuple[1] = iap.DiscreteUniform(int(k[1][0]), int(k[1][1]))
                 else:
                     raise Exception(
                         "k[1] expected to be int or tuple of two ints, "
-                        "got %s" % (type(k[1]),))
+                        "got %s" % (type(k[1]),)
+                    )
 
                 self.mode = "two"
                 self.k = k_tuple
@@ -752,11 +760,10 @@ class AverageBlur(meta.Augmenter):
         else:
             raise Exception(
                 "Expected int, tuple/list with 2 entries or "
-                "StochasticParameter. Got %s." % (type(k),))
+                "StochasticParameter. Got %s." % (type(k),)
+            )
 
-        self.k = iap._wrap_leafs_of_param_in_prefetchers(
-            self.k, iap._NB_PREFETCH
-        )
+        self.k = iap._wrap_leafs_of_param_in_prefetchers(self.k, iap._NB_PREFETCH)
 
     # Added in 0.4.0.
     def _augment_batch_(self, batch, random_state, parents, hooks):
@@ -767,8 +774,7 @@ class AverageBlur(meta.Augmenter):
 
         nb_images = len(images)
         if self.mode == "single":
-            samples = self.k.draw_samples((nb_images,),
-                                          random_state=random_state)
+            samples = self.k.draw_samples((nb_images,), random_state=random_state)
             samples = (samples, samples)
         else:
             rss = random_state.duplicate(2)
@@ -859,28 +865,37 @@ class MedianBlur(meta.Augmenter):
 
     """
 
-    def __init__(self, k=(1, 7),
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        k=(1, 7),
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(MedianBlur, self).__init__(
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed, name=name, random_state=random_state, deterministic=deterministic
+        )
 
         # TODO replace this by iap.handle_discrete_kernel_size()
         self.k = iap.handle_discrete_param(
-            k, "k", value_range=(1, None), tuple_to_uniform=True,
-            list_to_choice=True, allow_floats=False)
+            k,
+            "k",
+            value_range=(1, None),
+            tuple_to_uniform=True,
+            list_to_choice=True,
+            allow_floats=False,
+        )
         if ia.is_single_integer(k):
-            assert k % 2 != 0, (
-                "Expected k to be odd, got %d. Add or subtract 1." % (
-                    int(k),))
+            assert k % 2 != 0, "Expected k to be odd, got %d. Add or subtract 1." % (
+                int(k),
+            )
         elif ia.is_iterable(k):
             assert all([ki % 2 != 0 for ki in k]), (
                 "Expected all values in iterable k to be odd, but at least "
-                "one was not. Add or subtract 1 to/from that value.")
-        self.k = iap._wrap_leafs_of_param_in_prefetchers(
-            self.k, iap._NB_PREFETCH
-        )
+                "one was not. Add or subtract 1 to/from that value."
+            )
+        self.k = iap._wrap_leafs_of_param_in_prefetchers(self.k, iap._NB_PREFETCH)
 
     # Added in 0.4.0.
     def _augment_batch_(self, batch, random_state, parents, hooks):
@@ -891,12 +906,11 @@ class MedianBlur(meta.Augmenter):
         nb_images = len(images)
         samples = self.k.draw_samples((nb_images,), random_state=random_state)
         for i, (image, ksize) in enumerate(zip(images, samples)):
-            has_zero_sized_axes = (image.size == 0)
+            has_zero_sized_axes = image.size == 0
             if ksize > 1 and not has_zero_sized_axes:
                 ksize = ksize + 1 if ksize % 2 == 0 else ksize
                 if image.ndim == 2 or image.shape[-1] <= 512:
-                    image_aug = cv2.medianBlur(
-                        _normalize_cv2_input_arr_(image), ksize)
+                    image_aug = cv2.medianBlur(_normalize_cv2_input_arr_(image), ksize)
                     # cv2.medianBlur() removes channel axis for single-channel
                     # images
                     if image_aug.ndim == 2:
@@ -905,8 +919,7 @@ class MedianBlur(meta.Augmenter):
                     # TODO this is quite inefficient
                     # handling more than 512 channels in cv2.medainBlur()
                     channels = [
-                        cv2.medianBlur(
-                            _normalize_cv2_input_arr_(image[..., c]), ksize)
+                        cv2.medianBlur(_normalize_cv2_input_arr_(image[..., c]), ksize)
                         for c in sm.xrange(image.shape[-1])
                     ]
                     image_aug = np.stack(channels, axis=-1)
@@ -1025,23 +1038,43 @@ class BilateralBlur(meta.Augmenter):
 
     """
 
-    def __init__(self, d=(1, 9), sigma_color=(10, 250), sigma_space=(10, 250),
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        d=(1, 9),
+        sigma_color=(10, 250),
+        sigma_space=(10, 250),
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         # pylint: disable=invalid-name
         super(BilateralBlur, self).__init__(
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed, name=name, random_state=random_state, deterministic=deterministic
+        )
 
         self.d = iap.handle_discrete_param(
-            d, "d", value_range=(1, None), tuple_to_uniform=True,
-            list_to_choice=True, allow_floats=False)
+            d,
+            "d",
+            value_range=(1, None),
+            tuple_to_uniform=True,
+            list_to_choice=True,
+            allow_floats=False,
+        )
         self.sigma_color = iap.handle_continuous_param(
-            sigma_color, "sigma_color", value_range=(1, None),
-            tuple_to_uniform=True, list_to_choice=True)
+            sigma_color,
+            "sigma_color",
+            value_range=(1, None),
+            tuple_to_uniform=True,
+            list_to_choice=True,
+        )
         self.sigma_space = iap.handle_continuous_param(
-            sigma_space, "sigma_space", value_range=(1, None),
-            tuple_to_uniform=True, list_to_choice=True)
+            sigma_space,
+            "sigma_space",
+            value_range=(1, None),
+            tuple_to_uniform=True,
+            list_to_choice=True,
+        )
 
     # Added in 0.4.0.
     def _augment_batch_(self, batch, random_state, parents, hooks):
@@ -1054,24 +1087,27 @@ class BilateralBlur(meta.Augmenter):
         # Make sure that all images have 3 channels
         assert all([image.shape[2] == 3 for image in images]), (
             "BilateralBlur can currently only be applied to images with 3 "
-            "channels. Got channels: %s" % (
-                [image.shape[2] for image in images],))
+            "channels. Got channels: %s" % ([image.shape[2] for image in images],)
+        )
 
         nb_images = len(images)
         rss = random_state.duplicate(3)
         samples_d = self.d.draw_samples((nb_images,), random_state=rss[0])
         samples_sigma_color = self.sigma_color.draw_samples(
-            (nb_images,), random_state=rss[1])
+            (nb_images,), random_state=rss[1]
+        )
         samples_sigma_space = self.sigma_space.draw_samples(
-            (nb_images,), random_state=rss[2])
-        gen = enumerate(zip(images, samples_d, samples_sigma_color,
-                            samples_sigma_space))
+            (nb_images,), random_state=rss[2]
+        )
+        gen = enumerate(
+            zip(images, samples_d, samples_sigma_color, samples_sigma_space)
+        )
         for i, (image, di, sigma_color_i, sigma_space_i) in gen:
-            has_zero_sized_axes = (image.size == 0)
+            has_zero_sized_axes = image.size == 0
             if di != 1 and not has_zero_sized_axes:
                 batch.images[i] = cv2.bilateralFilter(
-                    _normalize_cv2_input_arr_(image),
-                    di, sigma_color_i, sigma_space_i)
+                    _normalize_cv2_input_arr_(image), di, sigma_color_i, sigma_space_i
+                )
         return batch
 
     def get_parameters(self):
@@ -1168,27 +1204,48 @@ class MotionBlur(iaa_convolutional.Convolve):
 
     """
 
-    def __init__(self, k=(3, 7), angle=(0, 360), direction=(-1.0, 1.0), order=1,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        k=(3, 7),
+        angle=(0, 360),
+        direction=(-1.0, 1.0),
+        order=1,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         # TODO allow (1, None) and set to identity matrix if k == 1
         k_param = iap.handle_discrete_param(
-            k, "k", value_range=(3, None), tuple_to_uniform=True,
-            list_to_choice=True, allow_floats=False)
+            k,
+            "k",
+            value_range=(3, None),
+            tuple_to_uniform=True,
+            list_to_choice=True,
+            allow_floats=False,
+        )
         angle_param = iap.handle_continuous_param(
-            angle, "angle", value_range=None, tuple_to_uniform=True,
-            list_to_choice=True)
+            angle, "angle", value_range=None, tuple_to_uniform=True, list_to_choice=True
+        )
         direction_param = iap.handle_continuous_param(
-            direction, "direction", value_range=(-1.0-1e-6, 1.0+1e-6),
-            tuple_to_uniform=True, list_to_choice=True)
+            direction,
+            "direction",
+            value_range=(-1.0 - 1e-6, 1.0 + 1e-6),
+            tuple_to_uniform=True,
+            list_to_choice=True,
+        )
 
-        matrix_gen = _MotionBlurMatrixGenerator(k_param, angle_param,
-                                                direction_param, order)
+        matrix_gen = _MotionBlurMatrixGenerator(
+            k_param, angle_param, direction_param, order
+        )
 
         super(MotionBlur, self).__init__(
             matrix_gen,
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed,
+            name=name,
+            random_state=random_state,
+            deterministic=deterministic,
+        )
 
 
 # Added in 0.4.0.
@@ -1207,31 +1264,26 @@ class _MotionBlurMatrixGenerator(object):
 
         # force discrete for k_sample via int() in case of stochastic
         # parameter
-        k_sample = int(
-            self.k.draw_sample(random_state=random_state))
-        angle_sample = self.angle.draw_sample(
-            random_state=random_state)
-        direction_sample = self.direction.draw_sample(
-            random_state=random_state)
+        k_sample = int(self.k.draw_sample(random_state=random_state))
+        angle_sample = self.angle.draw_sample(random_state=random_state)
+        direction_sample = self.direction.draw_sample(random_state=random_state)
 
         k_sample = k_sample if k_sample % 2 != 0 else k_sample + 1
         direction_sample = np.clip(direction_sample, -1.0, 1.0)
         direction_sample = (direction_sample + 1.0) / 2.0
 
         matrix = np.zeros((k_sample, k_sample), dtype=np.float32)
-        matrix[:, k_sample//2] = np.linspace(
-            float(direction_sample),
-            1.0 - float(direction_sample),
-            num=k_sample)
+        matrix[:, k_sample // 2] = np.linspace(
+            float(direction_sample), 1.0 - float(direction_sample), num=k_sample
+        )
         rot = iaa_geometric.Affine(rotate=angle_sample, order=self.order)
 
         matrix = (
-            rot.augment_image(
-                (matrix * 255).astype(np.uint8)
-            ).astype(np.float32) / 255.0
+            rot.augment_image((matrix * 255).astype(np.uint8)).astype(np.float32)
+            / 255.0
         )
 
-        return [matrix/np.sum(matrix)] * nb_channels
+        return [matrix / np.sum(matrix)] * nb_channels
 
 
 # TODO add a per_channel flag?
@@ -1307,20 +1359,32 @@ class MeanShiftBlur(meta.Augmenter):
     """
 
     # Added in 0.4.0.
-    def __init__(self, spatial_radius=(5.0, 40.0), color_radius=(5.0, 40.0),
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        spatial_radius=(5.0, 40.0),
+        color_radius=(5.0, 40.0),
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(MeanShiftBlur, self).__init__(
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed, name=name, random_state=random_state, deterministic=deterministic
+        )
         self.spatial_window_radius = iap.handle_continuous_param(
-            spatial_radius, "spatial_radius",
-            value_range=(0.01, None), tuple_to_uniform=True,
-            list_to_choice=True)
+            spatial_radius,
+            "spatial_radius",
+            value_range=(0.01, None),
+            tuple_to_uniform=True,
+            list_to_choice=True,
+        )
         self.color_window_radius = iap.handle_continuous_param(
-            color_radius, "color_radius",
-            value_range=(0.01, None), tuple_to_uniform=True,
-            list_to_choice=True)
+            color_radius,
+            "color_radius",
+            value_range=(0.01, None),
+            tuple_to_uniform=True,
+            list_to_choice=True,
+        )
 
     # Added in 0.4.0.
     def _augment_batch_(self, batch, random_state, parents, hooks):
@@ -1330,7 +1394,7 @@ class MeanShiftBlur(meta.Augmenter):
                 batch.images[i] = blur_mean_shift_(
                     image,
                     spatial_window_radius=samples[0][i],
-                    color_window_radius=samples[1][i]
+                    color_window_radius=samples[1][i],
                 )
 
         return batch
@@ -1339,10 +1403,12 @@ class MeanShiftBlur(meta.Augmenter):
     def _draw_samples(self, batch, random_state):
         nb_rows = batch.nb_rows
         return (
-            self.spatial_window_radius.draw_samples((nb_rows,),
-                                                    random_state=random_state),
-            self.color_window_radius.draw_samples((nb_rows,),
-                                                  random_state=random_state)
+            self.spatial_window_radius.draw_samples(
+                (nb_rows,), random_state=random_state
+            ),
+            self.color_window_radius.draw_samples(
+                (nb_rows,), random_state=random_state
+            ),
         )
 
     # Added in 0.4.0.

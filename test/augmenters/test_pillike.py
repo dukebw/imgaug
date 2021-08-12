@@ -2,6 +2,7 @@ from __future__ import print_function, division, absolute_import
 
 import functools
 import sys
+
 # unittest only added in 3.4 self.subTest()
 if sys.version_info[0] < 3 or sys.version_info[1] < 4:
     import unittest2 as unittest
@@ -26,7 +27,7 @@ from imgaug.testutils import reseed, runtest_pickleable_uint8_img, assertWarns
 
 
 def _test_shape_hw(func):
-    img = np.arange(20*10).reshape((20, 10)).astype(np.uint8)
+    img = np.arange(20 * 10).reshape((20, 10)).astype(np.uint8)
 
     observed = func(np.copy(img))
 
@@ -39,7 +40,7 @@ def _test_shape_hw(func):
 
 
 def _test_shape_hw1(func):
-    img = np.arange(20*10*1).reshape((20, 10, 1)).astype(np.uint8)
+    img = np.arange(20 * 10 * 1).reshape((20, 10, 1)).astype(np.uint8)
 
     observed = func(np.copy(img))
 
@@ -94,12 +95,11 @@ class Test_solarize(unittest.TestCase):
             return np.asarray(PIL.ImageOps.solarize(img, threshold))
 
         images = [
-            np.mod(np.arange(20*20*3), 255).astype(np.uint8)\
-                .reshape((20, 20, 3)),
+            np.mod(np.arange(20 * 20 * 3), 255).astype(np.uint8).reshape((20, 20, 3)),
             iarandom.RNG(0).integers(0, 256, size=(1, 1, 3), dtype="uint8"),
             iarandom.RNG(1).integers(0, 256, size=(20, 20, 3), dtype="uint8"),
             iarandom.RNG(2).integers(0, 256, size=(40, 40, 3), dtype="uint8"),
-            iarandom.RNG(0).integers(0, 256, size=(20, 20), dtype="uint8")
+            iarandom.RNG(0).integers(0, 256, size=(20, 20), dtype="uint8"),
         ]
 
         for image_idx, image in enumerate(images):
@@ -120,15 +120,12 @@ class Test_solarize(unittest.TestCase):
 
 class Test_posterize(unittest.TestCase):
     def test_by_comparison_with_pil(self):
-        image = np.arange(64*64*3).reshape((64, 64, 3))
+        image = np.arange(64 * 64 * 3).reshape((64, 64, 3))
         image = np.mod(image, 255).astype(np.uint8)
         for nb_bits in [1, 2, 3, 4, 5, 6, 7, 8]:
             image_iaa = iaa.pillike.posterize(np.copy(image), nb_bits)
             image_pil = np.asarray(
-                PIL.ImageOps.posterize(
-                    PIL.Image.fromarray(image),
-                    nb_bits
-                )
+                PIL.ImageOps.posterize(PIL.Image.fromarray(image), nb_bits)
             )
 
             assert np.array_equal(image_iaa, image_pil)
@@ -157,24 +154,22 @@ class Test_equalize(unittest.TestCase):
             (100, 100),
             (100, 200),
             (200, 100),
-            (200, 200)
+            (200, 200),
         ]
         shapes = shapes + [shape + (3,) for shape in shapes]
 
         rng = iarandom.RNG(0)
-        images = [rng.integers(0, 255, size=shape).astype(np.uint8)
-                  for shape in shapes]
+        images = [rng.integers(0, 255, size=shape).astype(np.uint8) for shape in shapes]
         images = images + [
             np.full((10, 10), 0, dtype=np.uint8),
             np.full((10, 10), 128, dtype=np.uint8),
-            np.full((10, 10), 255, dtype=np.uint8)
+            np.full((10, 10), 255, dtype=np.uint8),
         ]
 
         for i, image in enumerate(images):
-            mask_vals = [False, True] if image.size >= (100*100) else [False]
+            mask_vals = [False, True] if image.size >= (100 * 100) else [False]
             for use_mask in mask_vals:
-                with self.subTest(image_idx=i, shape=image.shape,
-                                  use_mask=use_mask):
+                with self.subTest(image_idx=i, shape=image.shape, use_mask=use_mask):
                     mask_np = None
                     mask_pil = None
                     if use_mask:
@@ -184,10 +179,7 @@ class Test_equalize(unittest.TestCase):
 
                     image_iaa = iaa.pillike.equalize(image, mask=mask_np)
                     image_pil = np.asarray(
-                        PIL.ImageOps.equalize(
-                            PIL.Image.fromarray(image),
-                            mask=mask_pil
-                        )
+                        PIL.ImageOps.equalize(PIL.Image.fromarray(image), mask=mask_pil)
                     )
 
                     assert np.array_equal(image_iaa, image_pil)
@@ -196,8 +188,7 @@ class Test_equalize(unittest.TestCase):
         nb_channels_lst = [1, 2, 4, 5, 512, 513]
         for nb_channels in nb_channels_lst:
             for size in [20, 100]:
-                with self.subTest(nb_channels=nb_channels,
-                                  size=size):
+                with self.subTest(nb_channels=nb_channels, size=size):
                     shape = (size, size, nb_channels)
                     image = iarandom.RNG(0).integers(50, 150, size=shape)
                     image = image.astype(np.uint8)
@@ -211,15 +202,7 @@ class Test_equalize(unittest.TestCase):
                     assert np.max(image_aug) > 150
 
     def test_zero_sized_axes(self):
-        shapes = [
-            (0, 0),
-            (0, 1),
-            (1, 0),
-            (0, 1, 0),
-            (1, 0, 0),
-            (0, 1, 1),
-            (1, 0, 1)
-        ]
+        shapes = [(0, 0), (0, 1), (1, 0), (0, 1, 0), (1, 0, 0), (0, 1, 1), (1, 0, 1)]
 
         for shape in shapes:
             with self.subTest(shape=shape):
@@ -260,21 +243,15 @@ class Test_autocontrast(unittest.TestCase):
             (20, 40, 3),
             (50, 60, 3),
             (100, 100, 3),
-            (200, 100, 3)
+            (200, 100, 3),
         ]
-        images = [
-            rng.integers(0, 255, size=shape).astype(np.uint8)
-            for shape in shapes
+        images = [rng.integers(0, 255, size=shape).astype(np.uint8) for shape in shapes]
+        images = images + [
+            np.full((1, 1, 3), 0, dtype=np.uint8),
+            np.full((1, 1, 3), 255, dtype=np.uint8),
+            np.full((20, 20, 3), 0, dtype=np.uint8),
+            np.full((20, 20, 3), 255, dtype=np.uint8),
         ]
-        images = (
-            images
-            + [
-                np.full((1, 1, 3), 0, dtype=np.uint8),
-                np.full((1, 1, 3), 255, dtype=np.uint8),
-                np.full((20, 20, 3), 0, dtype=np.uint8),
-                np.full((20, 20, 3), 255, dtype=np.uint8)
-            ]
-        )
 
         cutoffs = [0, 1, 2, 10, 50, 90, 99, 100]
         ignores = [None, 0, 1, 100, 255, [0, 1], [5, 10, 50], [99, 100]]
@@ -282,18 +259,20 @@ class Test_autocontrast(unittest.TestCase):
         for cutoff in cutoffs:
             for ignore in ignores:
                 for i, image in enumerate(images):
-                    with self.subTest(cutoff=cutoff, ignore=ignore,
-                                      image_idx=i, image_shape=image.shape):
+                    with self.subTest(
+                        cutoff=cutoff,
+                        ignore=ignore,
+                        image_idx=i,
+                        image_shape=image.shape,
+                    ):
                         result_pil = np.asarray(
                             PIL.ImageOps.autocontrast(
-                                PIL.Image.fromarray(image),
-                                cutoff=cutoff,
-                                ignore=ignore
+                                PIL.Image.fromarray(image), cutoff=cutoff, ignore=ignore
                             )
                         )
-                        result_iaa = iaa.pillike.autocontrast(image,
-                                                              cutoff=cutoff,
-                                                              ignore=ignore)
+                        result_iaa = iaa.pillike.autocontrast(
+                            image, cutoff=cutoff, ignore=ignore
+                        )
                         assert np.array_equal(result_pil, result_iaa)
 
     def test_unusual_channel_numbers(self):
@@ -301,15 +280,14 @@ class Test_autocontrast(unittest.TestCase):
         for nb_channels in nb_channels_lst:
             for size in [20]:
                 for cutoff in [0, 1, 10]:
-                    with self.subTest(nb_channels=nb_channels,
-                                      size=size,
-                                      cutoff=cutoff):
+                    with self.subTest(
+                        nb_channels=nb_channels, size=size, cutoff=cutoff
+                    ):
                         shape = (size, size, nb_channels)
                         image = iarandom.RNG(0).integers(50, 150, size=shape)
                         image = image.astype(np.uint8)
 
-                        image_aug = iaa.pillike.autocontrast(image,
-                                                             cutoff=cutoff)
+                        image_aug = iaa.pillike.autocontrast(image, cutoff=cutoff)
 
                         if size > 1:
                             channelwise_sums = np.sum(image_aug, axis=(0, 1))
@@ -318,26 +296,17 @@ class Test_autocontrast(unittest.TestCase):
                         assert np.max(image_aug) > 150
 
     def test_zero_sized_axes(self):
-        shapes = [
-            (0, 0),
-            (0, 1),
-            (1, 0),
-            (0, 1, 0),
-            (1, 0, 0),
-            (0, 1, 1),
-            (1, 0, 1)
-        ]
+        shapes = [(0, 0), (0, 1), (1, 0), (0, 1, 0), (1, 0, 0), (0, 1, 1), (1, 0, 1)]
 
         for shape in shapes:
             for cutoff in [0, 1, 10]:
                 for ignore in [None, 0, 1, [0, 1, 10]]:
-                    with self.subTest(shape=shape, cutoff=cutoff,
-                                      ignore=ignore):
+                    with self.subTest(shape=shape, cutoff=cutoff, ignore=ignore):
                         image = np.zeros(shape, dtype=np.uint8)
 
-                        image_aug = iaa.pillike.autocontrast(image,
-                                                             cutoff=cutoff,
-                                                             ignore=ignore)
+                        image_aug = iaa.pillike.autocontrast(
+                            image, cutoff=cutoff, ignore=ignore
+                        )
 
                         assert image_aug.dtype.name == "uint8"
                         assert image_aug.shape == shape
@@ -357,39 +326,30 @@ class Test_autocontrast(unittest.TestCase):
 # TODO add test for unusual channel numbers
 class _TestEnhanceFunc(unittest.TestCase):
     def _test_by_comparison_with_pil(
-            self, func, cls,
-            factors=(0.0, 0.01, 0.1, 0.5, 0.95, 0.99, 1.0, 1.05, 1.5, 2.0,
-                     3.0)):
-        shapes = [(224, 224, 3), (32, 32, 3), (16, 8, 3), (1, 1, 3),
-                  (32, 32, 4)]
+        self,
+        func,
+        cls,
+        factors=(0.0, 0.01, 0.1, 0.5, 0.95, 0.99, 1.0, 1.05, 1.5, 2.0, 3.0),
+    ):
+        shapes = [(224, 224, 3), (32, 32, 3), (16, 8, 3), (1, 1, 3), (32, 32, 4)]
         seeds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         for seed in seeds:
             for shape in shapes:
                 for factor in factors:
                     with self.subTest(shape=shape, seed=seed, factor=factor):
                         image = iarandom.RNG(seed).integers(
-                            0, 256, size=shape, dtype="uint8")
+                            0, 256, size=shape, dtype="uint8"
+                        )
 
                         image_iaa = func(image, factor)
                         image_pil = np.asarray(
-                            cls(
-                                PIL.Image.fromarray(image)
-                            ).enhance(factor)
+                            cls(PIL.Image.fromarray(image)).enhance(factor)
                         )
 
                         assert np.array_equal(image_iaa, image_pil)
 
-    def _test_zero_sized_axes(self, func,
-                              factors=(0.0, 0.4, 1.0)):
-        shapes = [
-            (0, 0),
-            (0, 1),
-            (1, 0),
-            (0, 1, 0),
-            (1, 0, 0),
-            (0, 1, 1),
-            (1, 0, 1)
-        ]
+    def _test_zero_sized_axes(self, func, factors=(0.0, 0.4, 1.0)):
+        shapes = [(0, 0), (0, 1), (1, 0), (0, 1, 0), (1, 0, 0), (0, 1, 1), (1, 0, 1)]
 
         for shape in shapes:
             for factor in factors:
@@ -414,8 +374,9 @@ class _TestEnhanceFunc(unittest.TestCase):
 
 class Test_enhance_color(_TestEnhanceFunc):
     def test_by_comparison_with_pil(self):
-        self._test_by_comparison_with_pil(iaa.pillike.enhance_color,
-                                          PIL.ImageEnhance.Color)
+        self._test_by_comparison_with_pil(
+            iaa.pillike.enhance_color, PIL.ImageEnhance.Color
+        )
 
     def test_zero_sized_axes(self):
         self._test_zero_sized_axes(iaa.pillike.enhance_color)
@@ -429,8 +390,9 @@ class Test_enhance_color(_TestEnhanceFunc):
 
 class Test_enhance_contrast(_TestEnhanceFunc):
     def test_by_comparison_with_pil(self):
-        self._test_by_comparison_with_pil(iaa.pillike.enhance_contrast,
-                                          PIL.ImageEnhance.Contrast)
+        self._test_by_comparison_with_pil(
+            iaa.pillike.enhance_contrast, PIL.ImageEnhance.Contrast
+        )
 
     def test_zero_sized_axes(self):
         self._test_zero_sized_axes(iaa.pillike.enhance_contrast)
@@ -444,8 +406,9 @@ class Test_enhance_contrast(_TestEnhanceFunc):
 
 class Test_enhance_brightness(_TestEnhanceFunc):
     def test_by_comparison_with_pil(self):
-        self._test_by_comparison_with_pil(iaa.pillike.enhance_brightness,
-                                          PIL.ImageEnhance.Brightness)
+        self._test_by_comparison_with_pil(
+            iaa.pillike.enhance_brightness, PIL.ImageEnhance.Brightness
+        )
 
     def test_zero_sized_axes(self):
         self._test_zero_sized_axes(iaa.pillike.enhance_brightness)
@@ -459,12 +422,14 @@ class Test_enhance_brightness(_TestEnhanceFunc):
 
 class Test_enhance_sharpness(_TestEnhanceFunc):
     def test_by_comparison_with_pil(self):
-        self._test_by_comparison_with_pil(iaa.pillike.enhance_sharpness,
-                                          PIL.ImageEnhance.Sharpness)
+        self._test_by_comparison_with_pil(
+            iaa.pillike.enhance_sharpness, PIL.ImageEnhance.Sharpness
+        )
 
     def test_zero_sized_axes(self):
-        self._test_zero_sized_axes(iaa.pillike.enhance_brightness,
-                                   factors=[0.0, 0.4, 1.0, 1.5, 2.0])
+        self._test_zero_sized_axes(
+            iaa.pillike.enhance_brightness, factors=[0.0, 0.4, 1.0, 1.5, 2.0]
+        )
 
     def test_image_shape_hw(self):
         self._test_image_shape_hw(iaa.pillike.enhance_sharpness)
@@ -475,14 +440,14 @@ class Test_enhance_sharpness(_TestEnhanceFunc):
 
 class _TestFilterFunc(unittest.TestCase):
     def _test_by_comparison_with_pil(self, func, pil_kernel):
-        shapes = [(224, 224, 3), (32, 32, 3), (16, 8, 3), (1, 1, 3),
-                  (32, 32, 4)]
+        shapes = [(224, 224, 3), (32, 32, 3), (16, 8, 3), (1, 1, 3), (32, 32, 4)]
         seeds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         for seed in seeds:
             for shape in shapes:
                 with self.subTest(shape=shape, seed=seed):
                     image = iarandom.RNG(seed).integers(
-                        0, 256, size=shape, dtype="uint8")
+                        0, 256, size=shape, dtype="uint8"
+                    )
 
                     image_iaa = func(image)
                     image_pil = np.asarray(
@@ -492,15 +457,7 @@ class _TestFilterFunc(unittest.TestCase):
                     assert np.array_equal(image_iaa, image_pil)
 
     def _test_zero_sized_axes(self, func):
-        shapes = [
-            (0, 0),
-            (0, 1),
-            (1, 0),
-            (0, 1, 0),
-            (1, 0, 0),
-            (0, 1, 1),
-            (1, 0, 1)
-        ]
+        shapes = [(0, 0), (0, 1), (1, 0), (0, 1, 0), (1, 0, 0), (0, 1, 1), (1, 0, 1)]
 
         for shape in shapes:
             with self.subTest(shape=shape):
@@ -522,8 +479,7 @@ class _TestFilterFunc(unittest.TestCase):
 
 class Test_filter_blur(_TestFilterFunc):
     def test_by_comparison_with_pil(self):
-        self._test_by_comparison_with_pil(iaa.pillike.filter_blur,
-                                          PIL.ImageFilter.BLUR)
+        self._test_by_comparison_with_pil(iaa.pillike.filter_blur, PIL.ImageFilter.BLUR)
 
     def test_zero_sized_axes(self):
         self._test_zero_sized_axes(iaa.pillike.filter_blur)
@@ -537,8 +493,9 @@ class Test_filter_blur(_TestFilterFunc):
 
 class Test_filter_smooth(_TestFilterFunc):
     def test_by_comparison_with_pil(self):
-        self._test_by_comparison_with_pil(iaa.pillike.filter_smooth,
-                                          PIL.ImageFilter.SMOOTH)
+        self._test_by_comparison_with_pil(
+            iaa.pillike.filter_smooth, PIL.ImageFilter.SMOOTH
+        )
 
     def test_zero_sized_axes(self):
         self._test_zero_sized_axes(iaa.pillike.filter_smooth)
@@ -552,8 +509,9 @@ class Test_filter_smooth(_TestFilterFunc):
 
 class Test_filter_smooth_more(_TestFilterFunc):
     def test_by_comparison_with_pil(self):
-        self._test_by_comparison_with_pil(iaa.pillike.filter_smooth_more,
-                                          PIL.ImageFilter.SMOOTH_MORE)
+        self._test_by_comparison_with_pil(
+            iaa.pillike.filter_smooth_more, PIL.ImageFilter.SMOOTH_MORE
+        )
 
     def test_zero_sized_axes(self):
         self._test_zero_sized_axes(iaa.pillike.filter_smooth_more)
@@ -567,8 +525,9 @@ class Test_filter_smooth_more(_TestFilterFunc):
 
 class Test_filter_edge_enhance(_TestFilterFunc):
     def test_by_comparison_with_pil(self):
-        self._test_by_comparison_with_pil(iaa.pillike.filter_edge_enhance,
-                                          PIL.ImageFilter.EDGE_ENHANCE)
+        self._test_by_comparison_with_pil(
+            iaa.pillike.filter_edge_enhance, PIL.ImageFilter.EDGE_ENHANCE
+        )
 
     def test_zero_sized_axes(self):
         self._test_zero_sized_axes(iaa.pillike.filter_edge_enhance)
@@ -582,8 +541,9 @@ class Test_filter_edge_enhance(_TestFilterFunc):
 
 class Test_filter_edge_enhance_more(_TestFilterFunc):
     def test_by_comparison_with_pil(self):
-        self._test_by_comparison_with_pil(iaa.pillike.filter_edge_enhance_more,
-                                          PIL.ImageFilter.EDGE_ENHANCE_MORE)
+        self._test_by_comparison_with_pil(
+            iaa.pillike.filter_edge_enhance_more, PIL.ImageFilter.EDGE_ENHANCE_MORE
+        )
 
     def test_zero_sized_axes(self):
         self._test_zero_sized_axes(iaa.pillike.filter_edge_enhance_more)
@@ -597,8 +557,9 @@ class Test_filter_edge_enhance_more(_TestFilterFunc):
 
 class Test_filter_find_edges(_TestFilterFunc):
     def test_by_comparison_with_pil(self):
-        self._test_by_comparison_with_pil(iaa.pillike.filter_find_edges,
-                                          PIL.ImageFilter.FIND_EDGES)
+        self._test_by_comparison_with_pil(
+            iaa.pillike.filter_find_edges, PIL.ImageFilter.FIND_EDGES
+        )
 
     def test_zero_sized_axes(self):
         self._test_zero_sized_axes(iaa.pillike.filter_find_edges)
@@ -612,8 +573,9 @@ class Test_filter_find_edges(_TestFilterFunc):
 
 class Test_filter_contour(_TestFilterFunc):
     def test_by_comparison_with_pil(self):
-        self._test_by_comparison_with_pil(iaa.pillike.filter_contour,
-                                          PIL.ImageFilter.CONTOUR)
+        self._test_by_comparison_with_pil(
+            iaa.pillike.filter_contour, PIL.ImageFilter.CONTOUR
+        )
 
     def test_zero_sized_axes(self):
         self._test_zero_sized_axes(iaa.pillike.filter_contour)
@@ -627,8 +589,9 @@ class Test_filter_contour(_TestFilterFunc):
 
 class Test_filter_emboss(_TestFilterFunc):
     def test_by_comparison_with_pil(self):
-        self._test_by_comparison_with_pil(iaa.pillike.filter_emboss,
-                                          PIL.ImageFilter.EMBOSS)
+        self._test_by_comparison_with_pil(
+            iaa.pillike.filter_emboss, PIL.ImageFilter.EMBOSS
+        )
 
     def test_zero_sized_axes(self):
         self._test_zero_sized_axes(iaa.pillike.filter_emboss)
@@ -642,8 +605,9 @@ class Test_filter_emboss(_TestFilterFunc):
 
 class Test_filter_sharpen(_TestFilterFunc):
     def test_by_comparison_with_pil(self):
-        self._test_by_comparison_with_pil(iaa.pillike.filter_sharpen,
-                                          PIL.ImageFilter.SHARPEN)
+        self._test_by_comparison_with_pil(
+            iaa.pillike.filter_sharpen, PIL.ImageFilter.SHARPEN
+        )
 
     def test_zero_sized_axes(self):
         self._test_zero_sized_axes(iaa.pillike.filter_sharpen)
@@ -657,8 +621,9 @@ class Test_filter_sharpen(_TestFilterFunc):
 
 class Test_filter_detail(_TestFilterFunc):
     def test_by_comparison_with_pil(self):
-        self._test_by_comparison_with_pil(iaa.pillike.filter_detail,
-                                          PIL.ImageFilter.DETAIL)
+        self._test_by_comparison_with_pil(
+            iaa.pillike.filter_detail, PIL.ImageFilter.DETAIL
+        )
 
     def test_zero_sized_axes(self):
         self._test_zero_sized_axes(iaa.pillike.filter_detail)
@@ -671,21 +636,23 @@ class Test_filter_detail(_TestFilterFunc):
 
 
 class Test_warp_affine(unittest.TestCase):
-    def _test_aff_by_comparison_with_pil(self, arg_name, arg_values,
-                                         matrix_gen):
-        shapes = [(64, 64, 3), (32, 32, 3), (16, 8, 3), (1, 1, 3),
-                  (32, 32, 4)]
+    def _test_aff_by_comparison_with_pil(self, arg_name, arg_values, matrix_gen):
+        shapes = [(64, 64, 3), (32, 32, 3), (16, 8, 3), (1, 1, 3), (32, 32, 4)]
         seeds = [1, 2, 3]
         fillcolors = [None, 0, 128, (0, 255, 0)]
         for shape in shapes:
             for seed in seeds:
                 for fillcolor in fillcolors:
                     for arg_value in arg_values:
-                        with self.subTest(shape=shape, seed=seed,
-                                          fillcolor=fillcolor,
-                                          **{arg_name: arg_value}):
+                        with self.subTest(
+                            shape=shape,
+                            seed=seed,
+                            fillcolor=fillcolor,
+                            **{arg_name: arg_value}
+                        ):
                             image = iarandom.RNG(seed).integers(
-                                0, 256, size=shape, dtype="uint8")
+                                0, 256, size=shape, dtype="uint8"
+                            )
 
                             matrix = matrix_gen(arg_value)
 
@@ -693,119 +660,79 @@ class Test_warp_affine(unittest.TestCase):
                                 image,
                                 fillcolor=fillcolor,
                                 center=(0.0, 0.0),
-                                **{arg_name: arg_value})
-
-                            image_warped_exp = np.asarray(
-                                PIL.Image.fromarray(
-                                    image
-                                ).transform(shape[0:2][::-1],
-                                            PIL.Image.AFFINE,
-                                            matrix[:2, :].flat,
-                                            fillcolor=fillcolor)
+                                **{arg_name: arg_value}
                             )
 
-                            assert np.array_equal(image_warped,
-                                                  image_warped_exp)
+                            image_warped_exp = np.asarray(
+                                PIL.Image.fromarray(image).transform(
+                                    shape[0:2][::-1],
+                                    PIL.Image.AFFINE,
+                                    matrix[:2, :].flat,
+                                    fillcolor=fillcolor,
+                                )
+                            )
+
+                            assert np.array_equal(image_warped, image_warped_exp)
 
     def test_scale_x_by_comparison_with_pil(self):
         def _matrix_gen(scale):
-            return np.float32([
-                [1/scale, 0, 0],
-                [0, 1, 0],
-                [0, 0, 1]
-            ])
+            return np.float32([[1 / scale, 0, 0], [0, 1, 0], [0, 0, 1]])
 
         self._test_aff_by_comparison_with_pil(
-            "scale_x",
-            [0.01, 0.1, 0.9, 1.0, 1.5, 3.0],
-            _matrix_gen
+            "scale_x", [0.01, 0.1, 0.9, 1.0, 1.5, 3.0], _matrix_gen
         )
 
     def test_scale_y_by_comparison_with_pil(self):
         def _matrix_gen(scale):
-            return np.float32([
-                [1, 0, 0],
-                [0, 1/scale, 0],
-                [0, 0, 1]
-            ])
+            return np.float32([[1, 0, 0], [0, 1 / scale, 0], [0, 0, 1]])
 
         self._test_aff_by_comparison_with_pil(
-            "scale_y",
-            [0.01, 0.1, 0.9, 1.0, 1.5, 3.0],
-            _matrix_gen
+            "scale_y", [0.01, 0.1, 0.9, 1.0, 1.5, 3.0], _matrix_gen
         )
 
     def test_translate_x_by_comparison_with_pil(self):
         def _matrix_gen(translate):
-            return np.float32([
-                [1, 0, -translate],
-                [0, 1, 0],
-                [0, 0, 1]
-            ])
+            return np.float32([[1, 0, -translate], [0, 1, 0], [0, 0, 1]])
 
         self._test_aff_by_comparison_with_pil(
-            "translate_x_px",
-            [-50, -10, -1, 0, 1, 10, 50],
-            _matrix_gen
+            "translate_x_px", [-50, -10, -1, 0, 1, 10, 50], _matrix_gen
         )
 
     def test_translate_y_by_comparison_with_pil(self):
         def _matrix_gen(translate):
-            return np.float32([
-                [1, 0, 0],
-                [0, 1, -translate],
-                [0, 0, 1]
-            ])
+            return np.float32([[1, 0, 0], [0, 1, -translate], [0, 0, 1]])
 
         self._test_aff_by_comparison_with_pil(
-            "translate_y_px",
-            [-50, -10, -1, 0, 1, 10, 50],
-            _matrix_gen
+            "translate_y_px", [-50, -10, -1, 0, 1, 10, 50], _matrix_gen
         )
 
     def test_rotate_by_comparison_with_pil(self):
         def _matrix_gen(rotate):
             r = np.deg2rad(rotate)
-            return np.float32([
-                [np.cos(r), np.sin(r), 0],
-                [-np.sin(r), np.cos(r), 0],
-                [0, 0, 1]
-            ])
+            return np.float32(
+                [[np.cos(r), np.sin(r), 0], [-np.sin(r), np.cos(r), 0], [0, 0, 1]]
+            )
 
         self._test_aff_by_comparison_with_pil(
-            "rotate_deg",
-            [-50, -10, -1, 0, 1, 10, 50],
-            _matrix_gen
+            "rotate_deg", [-50, -10, -1, 0, 1, 10, 50], _matrix_gen
         )
 
     def test_shear_x_by_comparison_with_pil(self):
         def _matrix_gen(shear):
             s = (-1) * np.deg2rad(shear)
-            return np.float32([
-                [1, np.tanh(s), 0],
-                [0, 1, 0],
-                [0, 0, 1]
-            ])
+            return np.float32([[1, np.tanh(s), 0], [0, 1, 0], [0, 0, 1]])
 
         self._test_aff_by_comparison_with_pil(
-            "shear_x_deg",
-            [-50, -10, -1, 0, 1, 10, 50],
-            _matrix_gen
+            "shear_x_deg", [-50, -10, -1, 0, 1, 10, 50], _matrix_gen
         )
 
     def test_shear_y_by_comparison_with_pil(self):
         def _matrix_gen(shear):
             s = (-1) * np.deg2rad(shear)
-            return np.float32([
-                [1, 0, 0],
-                [np.tanh(s), 1, 0],
-                [0, 0, 1]
-            ])
+            return np.float32([[1, 0, 0], [np.tanh(s), 1, 0], [0, 0, 1]])
 
         self._test_aff_by_comparison_with_pil(
-            "shear_y_deg",
-            [-50, -10, -1, 0, 1, 10, 50],
-            _matrix_gen
+            "shear_y_deg", [-50, -10, -1, 0, 1, 10, 50], _matrix_gen
         )
 
     def test_scale_x(self):
@@ -814,8 +741,7 @@ class Test_warp_affine(unittest.TestCase):
 
         image_aug = iaa.pillike.warp_affine(image, scale_x=1.5)
 
-        y, x = np.unravel_index(np.argmax(image_aug[..., 0]),
-                                image_aug.shape[0:2])
+        y, x = np.unravel_index(np.argmax(image_aug[..., 0]), image_aug.shape[0:2])
 
         assert 50 - 1 <= y <= 50 + 1
         assert x > 60
@@ -826,8 +752,7 @@ class Test_warp_affine(unittest.TestCase):
 
         image_aug = iaa.pillike.warp_affine(image, scale_y=1.5)
 
-        y, x = np.unravel_index(np.argmax(image_aug[..., 0]),
-                                image_aug.shape[0:2])
+        y, x = np.unravel_index(np.argmax(image_aug[..., 0]), image_aug.shape[0:2])
 
         assert 50 - 1 <= x <= 50 + 1
         assert y > 60
@@ -856,9 +781,7 @@ class Test_warp_affine(unittest.TestCase):
         image = np.zeros((20, 20, 3), dtype=np.uint8)
         image[0, 10] = 255
 
-        image_aug = iaa.pillike.warp_affine(image,
-                                            rotate_deg=45,
-                                            center=(0.0, 0.0))
+        image_aug = iaa.pillike.warp_affine(image, rotate_deg=45, center=(0.0, 0.0))
 
         assert image_aug[7, 7, 0] == 255
 
@@ -866,12 +789,9 @@ class Test_warp_affine(unittest.TestCase):
         image = np.zeros((20, 20, 3), dtype=np.uint8)
         image[5, 10] = 255
 
-        image_aug = iaa.pillike.warp_affine(image,
-                                            shear_x_deg=20,
-                                            center=(0.0, 0.0))
+        image_aug = iaa.pillike.warp_affine(image, shear_x_deg=20, center=(0.0, 0.0))
 
-        y, x = np.unravel_index(np.argmax(image_aug[..., 0]),
-                                image_aug.shape[0:2])
+        y, x = np.unravel_index(np.argmax(image_aug[..., 0]), image_aug.shape[0:2])
 
         assert y == 5
         assert x > 10
@@ -880,12 +800,9 @@ class Test_warp_affine(unittest.TestCase):
         image = np.zeros((20, 20, 3), dtype=np.uint8)
         image[10, 15] = 255
 
-        image_aug = iaa.pillike.warp_affine(image,
-                                            shear_y_deg=20,
-                                            center=(0.0, 0.0))
+        image_aug = iaa.pillike.warp_affine(image, shear_y_deg=20, center=(0.0, 0.0))
 
-        y, x = np.unravel_index(np.argmax(image_aug[..., 0]),
-                                image_aug.shape[0:2])
+        y, x = np.unravel_index(np.argmax(image_aug[..., 0]), image_aug.shape[0:2])
 
         assert y > 10
         assert x == 15
@@ -893,9 +810,7 @@ class Test_warp_affine(unittest.TestCase):
     def test_fillcolor_is_none(self):
         image = np.ones((20, 20, 3), dtype=np.uint8)
 
-        image_aug = iaa.pillike.warp_affine(image,
-                                            translate_x_px=1,
-                                            fillcolor=None)
+        image_aug = iaa.pillike.warp_affine(image, translate_x_px=1, fillcolor=None)
 
         assert np.all(image_aug[:, :1, :] == 0)
         assert np.all(image_aug[:, 1:, :] == 1)
@@ -903,9 +818,7 @@ class Test_warp_affine(unittest.TestCase):
     def test_fillcolor_is_int(self):
         image = np.ones((20, 20, 3), dtype=np.uint8)
 
-        image_aug = iaa.pillike.warp_affine(image,
-                                            translate_x_px=1,
-                                            fillcolor=128)
+        image_aug = iaa.pillike.warp_affine(image, translate_x_px=1, fillcolor=128)
 
         assert np.all(image_aug[:, :1, 0] == 128)
         assert np.all(image_aug[:, :1, 1] == 0)
@@ -915,9 +828,7 @@ class Test_warp_affine(unittest.TestCase):
     def test_fillcolor_is_int_grayscale(self):
         image = np.ones((20, 20), dtype=np.uint8)
 
-        image_aug = iaa.pillike.warp_affine(image,
-                                            translate_x_px=1,
-                                            fillcolor=128)
+        image_aug = iaa.pillike.warp_affine(image, translate_x_px=1, fillcolor=128)
 
         assert np.all(image_aug[:, :1] == 128)
         assert np.all(image_aug[:, 1:] == 1)
@@ -925,9 +836,9 @@ class Test_warp_affine(unittest.TestCase):
     def test_fillcolor_is_tuple(self):
         image = np.ones((20, 20, 3), dtype=np.uint8)
 
-        image_aug = iaa.pillike.warp_affine(image,
-                                            translate_x_px=1,
-                                            fillcolor=(2, 3, 4))
+        image_aug = iaa.pillike.warp_affine(
+            image, translate_x_px=1, fillcolor=(2, 3, 4)
+        )
 
         assert np.all(image_aug[:, :1, 0] == 2)
         assert np.all(image_aug[:, :1, 1] == 3)
@@ -937,9 +848,9 @@ class Test_warp_affine(unittest.TestCase):
     def test_fillcolor_is_tuple_more_values_than_channels(self):
         image = np.ones((20, 20, 3), dtype=np.uint8)
 
-        image_aug = iaa.pillike.warp_affine(image,
-                                            translate_x_px=1,
-                                            fillcolor=(2, 3, 4, 5))
+        image_aug = iaa.pillike.warp_affine(
+            image, translate_x_px=1, fillcolor=(2, 3, 4, 5)
+        )
 
         assert image_aug.shape == (20, 20, 3)
         assert np.all(image_aug[:, :1, 0] == 2)
@@ -951,9 +862,7 @@ class Test_warp_affine(unittest.TestCase):
         image = np.zeros((21, 21, 3), dtype=np.uint8)
         image[2, 10] = 255
 
-        image_aug = iaa.pillike.warp_affine(image,
-                                            rotate_deg=90,
-                                            center=(0.5, 0.5))
+        image_aug = iaa.pillike.warp_affine(image, rotate_deg=90, center=(0.5, 0.5))
 
         assert image_aug[10, 18, 0] == 255
 
@@ -1003,7 +912,7 @@ class TestEqualize(unittest.TestCase):
 
     @mock.patch("imgaug.augmenters.pillike.equalize_")
     def test_mocked(self, mock_eq):
-        image = np.arange(1*1*3).astype(np.uint8).reshape((1, 1, 3))
+        image = np.arange(1 * 1 * 3).astype(np.uint8).reshape((1, 1, 3))
         mock_eq.return_value = np.copy(image)
         aug = iaa.pillike.Equalize()
 
@@ -1039,7 +948,7 @@ class TestAutocontrast(unittest.TestCase):
 
     @mock.patch("imgaug.augmenters.pillike.autocontrast")
     def test_mocked(self, mock_auto):
-        image = np.mod(np.arange(10*10*3), 255)
+        image = np.mod(np.arange(10 * 10 * 3), 255)
         image = image.reshape((10, 10, 3)).astype(np.uint8)
         mock_auto.return_value = image
         aug = iaa.pillike.Autocontrast(15)
@@ -1051,7 +960,7 @@ class TestAutocontrast(unittest.TestCase):
 
     @mock.patch("imgaug.augmenters.pillike.autocontrast")
     def test_per_channel(self, mock_auto):
-        image = np.mod(np.arange(10*10*1), 255)
+        image = np.mod(np.arange(10 * 10 * 1), 255)
         image = image.reshape((10, 10, 1)).astype(np.uint8)
         image = np.tile(image, (1, 1, 100))
         mock_auto.return_value = image[..., 0]
@@ -1063,8 +972,7 @@ class TestAutocontrast(unittest.TestCase):
         assert mock_auto.call_count == 100
         cutoffs = []
         for i in np.arange(100):
-            assert np.array_equal(mock_auto.call_args_list[i][0][0],
-                                  image[..., i])
+            assert np.array_equal(mock_auto.call_args_list[i][0][0], image[..., i])
             cutoffs.append(mock_auto.call_args_list[i][0][1])
         assert len(set(cutoffs)) > 10
 
@@ -1117,8 +1025,7 @@ class TestEnhanceColor(unittest.TestCase):
 
         assert mock_pilcol.call_count == 1
         assert ia.is_np_array(mock_pilcol.call_args_list[0][0][0])
-        assert np.isclose(mock_pilcol.call_args_list[0][0][1], 0.75, rtol=0,
-                          atol=1e-4)
+        assert np.isclose(mock_pilcol.call_args_list[0][0][1], 0.75, rtol=0, atol=1e-4)
         assert np.all(image_aug == 128)
 
     def test_simple_image(self):
@@ -1168,8 +1075,7 @@ class TestEnhanceContrast(unittest.TestCase):
 
         assert mock_pilco.call_count == 1
         assert ia.is_np_array(mock_pilco.call_args_list[0][0][0])
-        assert np.isclose(mock_pilco.call_args_list[0][0][1], 0.75, rtol=0,
-                          atol=1e-4)
+        assert np.isclose(mock_pilco.call_args_list[0][0][1], 0.75, rtol=0, atol=1e-4)
         assert np.all(image_aug == 128)
 
     def test_simple_image(self):
@@ -1179,10 +1085,10 @@ class TestEnhanceContrast(unittest.TestCase):
 
         image_aug = aug(image=image)
 
-        diff_before = np.average(np.abs(image.astype(np.int32)
-                                        - np.average(image)))
-        diff_after = np.average(np.abs(image_aug.astype(np.int32)
-                                       - np.average(image_aug)))
+        diff_before = np.average(np.abs(image.astype(np.int32) - np.average(image)))
+        diff_after = np.average(
+            np.abs(image_aug.astype(np.int32) - np.average(image_aug))
+        )
         assert diff_after < diff_before
 
     def test_batch_contains_no_images(self):
@@ -1215,8 +1121,7 @@ class TestEnhanceBrightness(unittest.TestCase):
 
         assert mock_pilbr.call_count == 1
         assert ia.is_np_array(mock_pilbr.call_args_list[0][0][0])
-        assert np.isclose(mock_pilbr.call_args_list[0][0][1], 0.75, rtol=0,
-                          atol=1e-4)
+        assert np.isclose(mock_pilbr.call_args_list[0][0][1], 0.75, rtol=0, atol=1e-4)
         assert np.all(image_aug == 128)
 
     def test_simple_image(self):
@@ -1257,8 +1162,7 @@ class TestEnhanceSharpness(unittest.TestCase):
 
         assert mock_pilsh.call_count == 1
         assert ia.is_np_array(mock_pilsh.call_args_list[0][0][0])
-        assert np.isclose(mock_pilsh.call_args_list[0][0][1], 0.75, rtol=0,
-                          atol=1e-4)
+        assert np.isclose(mock_pilsh.call_args_list[0][0][1], 0.75, rtol=0, atol=1e-4)
         assert np.all(image_aug == 128)
 
     def test_simple_image(self):
@@ -1302,12 +1206,10 @@ class _TestFilter(unittest.TestCase):
 
 class FilterBlur(_TestFilter):
     def test___init__(self):
-        self._test___init__(iaa.pillike.FilterBlur,
-                            iaa.pillike.filter_blur)
+        self._test___init__(iaa.pillike.FilterBlur, iaa.pillike.filter_blur)
 
     def test_image(self):
-        self._test_image(iaa.pillike.FilterBlur,
-                         PIL.ImageFilter.BLUR)
+        self._test_image(iaa.pillike.FilterBlur, PIL.ImageFilter.BLUR)
 
     def test_pickleable(self):
         self._test_pickleable(iaa.pillike.FilterBlur)
@@ -1315,12 +1217,10 @@ class FilterBlur(_TestFilter):
 
 class FilterSmooth(_TestFilter):
     def test___init__(self):
-        self._test___init__(iaa.pillike.FilterSmooth,
-                            iaa.pillike.filter_smooth)
+        self._test___init__(iaa.pillike.FilterSmooth, iaa.pillike.filter_smooth)
 
     def test_image(self):
-        self._test_image(iaa.pillike.FilterSmooth,
-                         PIL.ImageFilter.SMOOTH)
+        self._test_image(iaa.pillike.FilterSmooth, PIL.ImageFilter.SMOOTH)
 
     def test_pickleable(self):
         self._test_pickleable(iaa.pillike.FilterSmooth)
@@ -1328,12 +1228,12 @@ class FilterSmooth(_TestFilter):
 
 class FilterSmoothMore(_TestFilter):
     def test___init__(self):
-        self._test___init__(iaa.pillike.FilterSmoothMore,
-                            iaa.pillike.filter_smooth_more)
+        self._test___init__(
+            iaa.pillike.FilterSmoothMore, iaa.pillike.filter_smooth_more
+        )
 
     def test_image(self):
-        self._test_image(iaa.pillike.FilterSmoothMore,
-                         PIL.ImageFilter.SMOOTH_MORE)
+        self._test_image(iaa.pillike.FilterSmoothMore, PIL.ImageFilter.SMOOTH_MORE)
 
     def test_pickleable(self):
         self._test_pickleable(iaa.pillike.FilterSmoothMore)
@@ -1341,12 +1241,12 @@ class FilterSmoothMore(_TestFilter):
 
 class FilterEdgeEnhance(_TestFilter):
     def test___init__(self):
-        self._test___init__(iaa.pillike.FilterEdgeEnhance,
-                            iaa.pillike.filter_edge_enhance)
+        self._test___init__(
+            iaa.pillike.FilterEdgeEnhance, iaa.pillike.filter_edge_enhance
+        )
 
     def test_image(self):
-        self._test_image(iaa.pillike.FilterEdgeEnhance,
-                         PIL.ImageFilter.EDGE_ENHANCE)
+        self._test_image(iaa.pillike.FilterEdgeEnhance, PIL.ImageFilter.EDGE_ENHANCE)
 
     def test_pickleable(self):
         self._test_pickleable(iaa.pillike.FilterEdgeEnhance)
@@ -1354,12 +1254,14 @@ class FilterEdgeEnhance(_TestFilter):
 
 class FilterEdgeEnhanceMore(_TestFilter):
     def test___init__(self):
-        self._test___init__(iaa.pillike.FilterEdgeEnhanceMore,
-                            iaa.pillike.filter_edge_enhance_more)
+        self._test___init__(
+            iaa.pillike.FilterEdgeEnhanceMore, iaa.pillike.filter_edge_enhance_more
+        )
 
     def test_image(self):
-        self._test_image(iaa.pillike.FilterEdgeEnhanceMore,
-                         PIL.ImageFilter.EDGE_ENHANCE_MORE)
+        self._test_image(
+            iaa.pillike.FilterEdgeEnhanceMore, PIL.ImageFilter.EDGE_ENHANCE_MORE
+        )
 
     def test_pickleable(self):
         self._test_pickleable(iaa.pillike.FilterEdgeEnhanceMore)
@@ -1367,12 +1269,10 @@ class FilterEdgeEnhanceMore(_TestFilter):
 
 class FilterFindEdges(_TestFilter):
     def test___init__(self):
-        self._test___init__(iaa.pillike.FilterFindEdges,
-                            iaa.pillike.filter_find_edges)
+        self._test___init__(iaa.pillike.FilterFindEdges, iaa.pillike.filter_find_edges)
 
     def test_image(self):
-        self._test_image(iaa.pillike.FilterFindEdges,
-                         PIL.ImageFilter.FIND_EDGES)
+        self._test_image(iaa.pillike.FilterFindEdges, PIL.ImageFilter.FIND_EDGES)
 
     def test_pickleable(self):
         self._test_pickleable(iaa.pillike.FilterFindEdges)
@@ -1380,12 +1280,10 @@ class FilterFindEdges(_TestFilter):
 
 class FilterContour(_TestFilter):
     def test___init__(self):
-        self._test___init__(iaa.pillike.FilterContour,
-                            iaa.pillike.filter_contour)
+        self._test___init__(iaa.pillike.FilterContour, iaa.pillike.filter_contour)
 
     def test_image(self):
-        self._test_image(iaa.pillike.FilterContour,
-                         PIL.ImageFilter.CONTOUR)
+        self._test_image(iaa.pillike.FilterContour, PIL.ImageFilter.CONTOUR)
 
     def test_pickleable(self):
         self._test_pickleable(iaa.pillike.FilterContour)
@@ -1393,12 +1291,10 @@ class FilterContour(_TestFilter):
 
 class FilterEmboss(_TestFilter):
     def test___init__(self):
-        self._test___init__(iaa.pillike.FilterEmboss,
-                            iaa.pillike.filter_emboss)
+        self._test___init__(iaa.pillike.FilterEmboss, iaa.pillike.filter_emboss)
 
     def test_image(self):
-        self._test_image(iaa.pillike.FilterEmboss,
-                         PIL.ImageFilter.EMBOSS)
+        self._test_image(iaa.pillike.FilterEmboss, PIL.ImageFilter.EMBOSS)
 
     def test_pickleable(self):
         self._test_pickleable(iaa.pillike.FilterEmboss)
@@ -1406,12 +1302,10 @@ class FilterEmboss(_TestFilter):
 
 class FilterSharpen(_TestFilter):
     def test___init__(self):
-        self._test___init__(iaa.pillike.FilterSharpen,
-                            iaa.pillike.filter_sharpen)
+        self._test___init__(iaa.pillike.FilterSharpen, iaa.pillike.filter_sharpen)
 
     def test_image(self):
-        self._test_image(iaa.pillike.FilterSharpen,
-                         PIL.ImageFilter.SHARPEN)
+        self._test_image(iaa.pillike.FilterSharpen, PIL.ImageFilter.SHARPEN)
 
     def test_pickleable(self):
         self._test_pickleable(iaa.pillike.FilterSharpen)
@@ -1419,12 +1313,10 @@ class FilterSharpen(_TestFilter):
 
 class FilterDetail(_TestFilter):
     def test___init__(self):
-        self._test___init__(iaa.pillike.FilterDetail,
-                            iaa.pillike.filter_detail)
+        self._test___init__(iaa.pillike.FilterDetail, iaa.pillike.filter_detail)
 
     def test_image(self):
-        self._test_image(iaa.pillike.FilterDetail,
-                         PIL.ImageFilter.DETAIL)
+        self._test_image(iaa.pillike.FilterDetail, PIL.ImageFilter.DETAIL)
 
     def test_pickleable(self):
         self._test_pickleable(iaa.pillike.FilterDetail)
@@ -1442,7 +1334,7 @@ class TestAffine(unittest.TestCase):
             rotate=30,
             shear={"x": 40, "y": 50},
             fillcolor=100,
-            center=(0.1, 0.2)
+            center=(0.1, 0.2),
         )
         image = np.zeros((3, 3, 3), dtype=np.uint8)
         mock_pilaff.return_value = np.full((3, 3, 3), 128, dtype=np.uint8)
@@ -1471,9 +1363,7 @@ class TestAffine(unittest.TestCase):
 
     @mock.patch("imgaug.augmenters.pillike.warp_affine")
     def test_mocked_translate_percent(self, mock_pilaff):
-        aug = iaa.pillike.Affine(
-            translate_percent={"x": 1.2, "y": 1.5}
-        )
+        aug = iaa.pillike.Affine(translate_percent={"x": 1.2, "y": 1.5})
         image = np.zeros((20, 50, 3), dtype=np.uint8)
         mock_pilaff.return_value = np.full((20, 50, 3), 128, dtype=np.uint8)
 
@@ -1487,8 +1377,8 @@ class TestAffine(unittest.TestCase):
         kwargs = mock_pilaff.call_args_list[0][1]
         assert np.isclose(kwargs["scale_x"], 1.0)
         assert np.isclose(kwargs["scale_y"], 1.0)
-        assert np.isclose(kwargs["translate_x_px"], 50*1.2)
-        assert np.isclose(kwargs["translate_y_px"], 20*1.5)
+        assert np.isclose(kwargs["translate_x_px"], 50 * 1.2)
+        assert np.isclose(kwargs["translate_y_px"], 20 * 1.5)
         assert np.isclose(kwargs["rotate_deg"], 0)
         assert np.isclose(kwargs["shear_x_deg"], 0)
         assert np.isclose(kwargs["shear_y_deg"], 0)
@@ -1509,7 +1399,7 @@ class TestAffine(unittest.TestCase):
             ("translate_percent", {"y": 0.4}),
             ("rotate", 10),
             ("shear", {"x": 20}),
-            ("shear", {"y": 20})
+            ("shear", {"y": 20}),
         ]
         image = ia.data.quokka_square((64, 64))
 
@@ -1541,7 +1431,7 @@ class TestAffine(unittest.TestCase):
             rotate=30,
             shear={"x": 40, "y": 50},
             fillcolor=100,
-            center=(0.1, 0.2)
+            center=(0.1, 0.2),
         )
         params = aug.get_parameters()
         assert params[0] is aug.scale
@@ -1558,6 +1448,6 @@ class TestAffine(unittest.TestCase):
             rotate=30,
             shear={"x": 40, "y": 50},
             fillcolor=(100, 200),
-            center="uniform"
+            center="uniform",
         )
         runtest_pickleable_uint8_img(aug)

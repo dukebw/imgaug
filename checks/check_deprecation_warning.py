@@ -19,8 +19,7 @@ class Dummy3(object):
     def __init__(self):
         pass
 
-    @ia.deprecated(alt_func="bar()",
-                   comment="Some example comment.")
+    @ia.deprecated(alt_func="bar()", comment="Some example comment.")
     def foo(self):
         pass
 

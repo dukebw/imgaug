@@ -166,12 +166,16 @@ def main():
         iaa.Flipud(0.5, name="Flipud"),
         iaa.Grayscale((0.0, 1.0), name="Grayscale"),
         iaa.GaussianBlur((0, 3.0), name="GaussianBlur"),
-        iaa.AdditiveGaussianNoise(loc=0, scale=(0.0, 0.1), name="AdditiveGaussianNoise"),
+        iaa.AdditiveGaussianNoise(
+            loc=0, scale=(0.0, 0.1), name="AdditiveGaussianNoise"
+        ),
         iaa.Dropout((0.0, 0.1), name="Dropout"),
         iaa.Multiply((0.5, 1.5), name="Multiply"),
         iaa.ContrastNormalization(alpha=(0.5, 2.0), name="ContrastNormalization"),
         iaa.Grayscale(alpha=(0.0, 1.0), name="Grayscale"),
-        iaa.ElasticTransformation(alpha=(0.5, 8.0), sigma=1.0, name="ElasticTransformation"),
+        iaa.ElasticTransformation(
+            alpha=(0.5, 8.0), sigma=1.0, name="ElasticTransformation"
+        ),
         iaa.Affine(
             scale={"x": (0.8, 1.2), "y": (0.8, 1.2)},
             translate_px={"x": (-16, 16), "y": (-16, 16)},
@@ -180,8 +184,8 @@ def main():
             order=0,
             cval=(0, 255),
             mode="constant",
-            name="AffineOrder0ModeConstant"
-        )
+            name="AffineOrder0ModeConstant",
+        ),
     ]
 
     for order in [0, 1]:
@@ -194,7 +198,7 @@ def main():
                 order=order,
                 cval=(0, 255),
                 mode=ia.ALL,
-                name="AffineOrder%d" % (order,)
+                name="AffineOrder%d" % (order,),
             )
         )
 
@@ -207,7 +211,7 @@ def main():
             order=ia.ALL,
             cval=(0, 255),
             mode=ia.ALL,
-            name="AffineAll"
+            name="AffineAll",
         )
     )
 
@@ -242,8 +246,16 @@ def main():
                 times.append(time_end - time_start)
             times = np.array(times)
             img_str = "{:20s}".format(keypoints[0].shape)
-            print("%s | SUM %.5fs | PER ITER avg %.5fs, min %.5fs, max %.5fs" % (
-                img_str, float(np.sum(times)), np.average(times), np.min(times), np.max(times)))
+            print(
+                "%s | SUM %.5fs | PER ITER avg %.5fs, min %.5fs, max %.5fs"
+                % (
+                    img_str,
+                    float(np.sum(times)),
+                    np.average(times),
+                    np.min(times),
+                    np.max(times),
+                )
+            )
 
     print("---------------------------")
     print("Images")
@@ -259,8 +271,16 @@ def main():
                 times.append(time_end - time_start)
             times = np.array(times)
             img_str = "{:20s}".format(images.shape)
-            print("%s | SUM %.5fs | PER ITER avg %.5fs, min %.5fs, max %.5fs" % (
-                img_str, float(np.sum(times)), np.average(times), np.min(times), np.max(times)))
+            print(
+                "%s | SUM %.5fs | PER ITER avg %.5fs, min %.5fs, max %.5fs"
+                % (
+                    img_str,
+                    float(np.sum(times)),
+                    np.average(times),
+                    np.min(times),
+                    np.max(times),
+                )
+            )
 
 
 if __name__ == "__main__":

@@ -16,40 +16,48 @@ _DEPRECATION_COMMENT = (
 )
 
 
-@ia.deprecated(alt_func="imgaug.augmenters.blend.blend_alpha()",
-               comment=_DEPRECATION_COMMENT)
+@ia.deprecated(
+    alt_func="imgaug.augmenters.blend.blend_alpha()", comment=_DEPRECATION_COMMENT
+)
 def blend_alpha(*args, **kwargs):
     """See :func:`~imgaug.augmenters.blend.blend_alpha`."""
     # pylint: disable=invalid-name
     return blend.blend_alpha(*args, **kwargs)
 
 
-@ia.deprecated(alt_func="imgaug.augmenters.blend.BlendAlpha",
-               comment=_DEPRECATION_COMMENT)
+@ia.deprecated(
+    alt_func="imgaug.augmenters.blend.BlendAlpha", comment=_DEPRECATION_COMMENT
+)
 def Alpha(*args, **kwargs):
     """See :class:`~imgaug.augmenters.blend.BlendAlpha`."""
     # pylint: disable=invalid-name
     return blend.Alpha(*args, **kwargs)
 
 
-@ia.deprecated(alt_func="imgaug.augmenters.blend.BlendAlphaElementwise",
-               comment=_DEPRECATION_COMMENT)
+@ia.deprecated(
+    alt_func="imgaug.augmenters.blend.BlendAlphaElementwise",
+    comment=_DEPRECATION_COMMENT,
+)
 def AlphaElementwise(*args, **kwargs):
     """See :class:`~imgaug.augmenters.blend.BlendAlphaElementwise`."""
     # pylint: disable=invalid-name
     return blend.AlphaElementwise(*args, **kwargs)
 
 
-@ia.deprecated(alt_func="imgaug.augmenters.blend.BlendAlphaSimplexNoise",
-               comment=_DEPRECATION_COMMENT)
+@ia.deprecated(
+    alt_func="imgaug.augmenters.blend.BlendAlphaSimplexNoise",
+    comment=_DEPRECATION_COMMENT,
+)
 def SimplexNoiseAlpha(*args, **kwargs):
     """See :class:`~imgaug.augmenters.blend.BlendAlphaSimplexNoise`."""
     # pylint: disable=invalid-name
     return blend.SimplexNoiseAlpha(*args, **kwargs)
 
 
-@ia.deprecated(alt_func="imgaug.augmenters.blend.BlendAlphaFrequencyNoise",
-               comment=_DEPRECATION_COMMENT)
+@ia.deprecated(
+    alt_func="imgaug.augmenters.blend.BlendAlphaFrequencyNoise",
+    comment=_DEPRECATION_COMMENT,
+)
 def FrequencyNoiseAlpha(*args, **kwargs):
     """See :class:`~imgaug.augmenters.blend.BlendAlphaFrequencyNoise`."""
     # pylint: disable=invalid-name

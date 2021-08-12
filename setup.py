@@ -18,11 +18,15 @@ INSTALL_REQUIRES = [
     "opencv-python-headless",
     "imageio<=2.6.1; python_version<'3.5'",
     "imageio; python_version>='3.5'",
-    "Shapely"
+    "Shapely",
 ]
 
 ALT_INSTALL_REQUIRES = {
-    "opencv-python-headless": ["opencv-python", "opencv-contrib-python", "opencv-contrib-python-headless"],
+    "opencv-python-headless": [
+        "opencv-python",
+        "opencv-contrib-python",
+        "opencv-contrib-python-headless",
+    ],
 }
 
 
@@ -48,7 +52,9 @@ def get_install_requirements(main_requires, alternative_requires):
     install_requires = []
     for main_require in main_requires:
         if main_require in alternative_requires:
-            main_require = check_alternative_installation(main_require, alternative_requires.get(main_require))
+            main_require = check_alternative_installation(
+                main_require, alternative_requires.get(main_require)
+            )
         install_requires.append(main_require)
 
     return install_requires
@@ -68,14 +74,27 @@ setup(
     include_package_data=True,
     package_data={
         "": ["LICENSE", "README.md", "requirements.txt"],
-        "imgaug": ["DejaVuSans.ttf", "quokka.jpg", "quokka_annotations.json", "quokka_depth_map_halfres.png"],
-        "imgaug.checks": ["README.md"]
+        "imgaug": [
+            "DejaVuSans.ttf",
+            "quokka.jpg",
+            "quokka_annotations.json",
+            "quokka_depth_map_halfres.png",
+        ],
+        "imgaug.checks": ["README.md"],
     },
     license="MIT",
     description="Image augmentation library for deep neural networks",
     long_description=long_description,
-    keywords=["augmentation", "image", "deep learning", "neural network", "CNN", "machine learning",
-              "computer vision", "overfitting"],
+    keywords=[
+        "augmentation",
+        "image",
+        "deep learning",
+        "neural network",
+        "CNN",
+        "machine learning",
+        "computer vision",
+        "overfitting",
+    ],
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Science/Research",
@@ -93,6 +112,6 @@ setup(
         "Programming Language :: Python :: 3.8",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
         "Topic :: Scientific/Engineering :: Image Recognition",
-        "Topic :: Software Development :: Libraries :: Python Modules"
-    ]
+        "Topic :: Software Development :: Libraries :: Python Modules",
+    ],
 )

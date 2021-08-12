@@ -18,10 +18,16 @@ def main():
     ia.imshow(np.hstack(images_aug))
 
     image = ia.data.quokka(size=0.5)
-    kps = [ia.KeypointsOnImage(
-        [ia.Keypoint(x=245, y=203), ia.Keypoint(x=365, y=195), ia.Keypoint(x=313, y=269)],
-        shape=(image.shape[0]*2, image.shape[1]*2)
-    )]
+    kps = [
+        ia.KeypointsOnImage(
+            [
+                ia.Keypoint(x=245, y=203),
+                ia.Keypoint(x=365, y=195),
+                ia.Keypoint(x=313, y=269),
+            ],
+            shape=(image.shape[0] * 2, image.shape[1] * 2),
+        )
+    ]
     kps[0] = kps[0].on(image.shape)
     print("image shape:", image.shape)
 
@@ -29,23 +35,33 @@ def main():
         iaa.Resize("keep", name="keep"),
         iaa.Resize(32, name="i32"),
         iaa.Resize(0.5, name="f05"),
-
         iaa.Resize({"height": 32}, name="height32"),
         iaa.Resize({"width": 32}, name="width32"),
         iaa.Resize({"height": "keep", "width": 32}, name="keep-width32"),
         iaa.Resize({"height": 32, "width": "keep"}, name="height32-keep"),
         iaa.Resize({"height": "keep", "width": "keep"}, name="keep-keep"),
         iaa.Resize({"height": 32, "width": 64}, name="height32width64"),
-        iaa.Resize({"height": 64, "width": "keep-aspect-ratio"}, name="height64width-kar"),
-        iaa.Resize({"height": "keep-aspect-ratio", "width": 64}, name="height-kar_width64")
+        iaa.Resize(
+            {"height": 64, "width": "keep-aspect-ratio"}, name="height64width-kar"
+        ),
+        iaa.Resize(
+            {"height": "keep-aspect-ratio", "width": 64}, name="height-kar_width64"
+        ),
     ]
 
     augs_many = [
         iaa.Resize((32, 128), name="tuple-32-128"),
         iaa.Resize([32, 64, 128], name="list-32-64-128"),
-        iaa.Resize({"height": (32, 128), "width": "keep"}, name="height-32-64_width-keep"),
-        iaa.Resize({"height": (32, 128), "width": "keep-aspect-ratio"}, name="height-32-128_width-kar"),
-        iaa.Resize({"height": (32, 128), "width": (32, 128)}, name="height-32-128_width-32-128")
+        iaa.Resize(
+            {"height": (32, 128), "width": "keep"}, name="height-32-64_width-keep"
+        ),
+        iaa.Resize(
+            {"height": (32, 128), "width": "keep-aspect-ratio"},
+            name="height-32-128_width-kar",
+        ),
+        iaa.Resize(
+            {"height": (32, 128), "width": (32, 128)}, name="height-32-128_width-32-128"
+        ),
     ]
 
     print("original", image.shape)
@@ -58,7 +74,7 @@ def main():
         img_aug = aug.augment_image(image)
         kps_aug = aug.augment_keypoints(kps)[0]
         img_aug_kps = kps_aug.draw_on_image(img_aug)
-        print(aug.name, img_aug_kps.shape, img_aug_kps.shape[1]/img_aug_kps.shape[0])
+        print(aug.name, img_aug_kps.shape, img_aug_kps.shape[1] / img_aug_kps.shape[0])
         ia.imshow(img_aug_kps)
 
     print("-----------------")
@@ -76,11 +92,15 @@ def main():
         ia.imshow(ia.draw_grid(images_aug))
 
     print("nearest/cv2.INTER_NEAREST/cubic")
-    ia.imshow(np.hstack([
-        iaa.Resize(64, interpolation="nearest").augment_image(image),
-        iaa.Resize(64, interpolation=cv2.INTER_NEAREST).augment_image(image),
-        iaa.Resize(64, interpolation="cubic").augment_image(image)
-    ]))
+    ia.imshow(
+        np.hstack(
+            [
+                iaa.Resize(64, interpolation="nearest").augment_image(image),
+                iaa.Resize(64, interpolation=cv2.INTER_NEAREST).augment_image(image),
+                iaa.Resize(64, interpolation="cubic").augment_image(image),
+            ]
+        )
+    )
 
     print("random nearest/cubic")
     iaa.Resize(64, interpolation=["nearest", "cubic"]).show_grid([image], 8, 8)

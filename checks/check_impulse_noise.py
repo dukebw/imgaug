@@ -8,12 +8,15 @@ def main():
     img = ia.data.quokka(0.5)
     mul = 0.01
     augs = [
-        ("iaa.ImpulseNoise(p=0*mul)", iaa.ImpulseNoise(p=0*mul)),
-        ("iaa.ImpulseNoise(p=1*mul)", iaa.ImpulseNoise(p=1*mul)),
-        ("iaa.ImpulseNoise(p=2*mul)", iaa.ImpulseNoise(p=2*mul)),
-        ("iaa.ImpulseNoise(p=3*mul)", iaa.ImpulseNoise(p=3*mul)),
-        ("iaa.ImpulseNoise(p=(0*mul, 1*mul))", iaa.ImpulseNoise(p=(0*mul, 1*mul))),
-        ("iaa.ImpulseNoise(p=[0*mul, 1*mul, 2*mul])", iaa.ImpulseNoise(p=[0*mul, 1*mul, 2*mul]))
+        ("iaa.ImpulseNoise(p=0*mul)", iaa.ImpulseNoise(p=0 * mul)),
+        ("iaa.ImpulseNoise(p=1*mul)", iaa.ImpulseNoise(p=1 * mul)),
+        ("iaa.ImpulseNoise(p=2*mul)", iaa.ImpulseNoise(p=2 * mul)),
+        ("iaa.ImpulseNoise(p=3*mul)", iaa.ImpulseNoise(p=3 * mul)),
+        ("iaa.ImpulseNoise(p=(0*mul, 1*mul))", iaa.ImpulseNoise(p=(0 * mul, 1 * mul))),
+        (
+            "iaa.ImpulseNoise(p=[0*mul, 1*mul, 2*mul])",
+            iaa.ImpulseNoise(p=[0 * mul, 1 * mul, 2 * mul]),
+        ),
     ]
     for descr, aug in augs:
         print(descr)

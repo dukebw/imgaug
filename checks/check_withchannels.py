@@ -19,18 +19,10 @@ def main():
         ("hflip", iaa.Fliplr(1)),
         ("add", iaa.Add(50)),
         ("dropout", iaa.Dropout(0.2)),
-        ("affine", iaa.Affine(rotate=35))
+        ("affine", iaa.Affine(rotate=35)),
     ]
 
-    channels_all = [
-        None,
-        0,
-        [],
-        [0],
-        [0, 1],
-        [1, 2],
-        [0, 1, 2]
-    ]
+    channels_all = [None, 0, [], [0], [0, 1], [1, 2], [0, 1, 2]]
 
     cv2.namedWindow("aug", cv2.WINDOW_NORMAL)
     cv2.imshow("aug", image[..., ::-1])
@@ -40,7 +32,12 @@ def main():
         for channels in channels_all:
             aug = iaa.WithChannels(channels=channels, children=children)
             img_aug = aug.augment_image(image)
-            print("dtype", img_aug.dtype, "averages", np.average(img_aug, axis=tuple(range(0, img_aug.ndim-1))))
+            print(
+                "dtype",
+                img_aug.dtype,
+                "averages",
+                np.average(img_aug, axis=tuple(range(0, img_aug.ndim - 1))),
+            )
 
             title = "children=%s | channels=%s" % (children_title, channels)
             img_aug = ia.draw_text(img_aug, x=5, y=5, text=title)

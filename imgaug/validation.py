@@ -69,18 +69,17 @@ def assert_is_iterable_of(iterable_var, classes):
         expected_types_str = (
             ", ".join([class_.__name__ for class_ in classes])
             if not isinstance(classes, type)
-            else classes.__name__)
+            else classes.__name__
+        )
         if not ia.is_iterable(iterable_var):
             raise AssertionError(
                 "Expected an iterable of the following types: %s. "
-                "Got instead a single instance of: %s." % (
-                    expected_types_str,
-                    type(iterable_var).__name__)
+                "Got instead a single instance of: %s."
+                % (expected_types_str, type(iterable_var).__name__)
             )
 
         raise AssertionError(
             "Expected an iterable of the following types: %s. "
-            "Got an iterable of types: %s." % (
-                expected_types_str,
-                convert_iterable_to_string_of_types(iterable_var))
+            "Got an iterable of types: %s."
+            % (expected_types_str, convert_iterable_to_string_of_types(iterable_var))
         )

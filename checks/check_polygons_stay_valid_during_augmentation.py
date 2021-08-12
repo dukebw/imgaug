@@ -9,16 +9,19 @@ from imgaug.augmentables.polys import Polygon, PolygonsOnImage
 def main():
     nb_checked = 0
 
-    augs = iaa.SomeOf((1, None), [
-        iaa.Resize({"height": (1, 100), "width": (1, 100)}),
-        iaa.Affine(
-            scale=(0.01, 2.0),
-            rotate=(-360, 360),
-            shear=(-360, 360),
-            translate_px={"x": (-50, 50), "y": (-50, 50)}
-        ),
-        iaa.PerspectiveTransform((0.01, 0.2))
-    ])
+    augs = iaa.SomeOf(
+        (1, None),
+        [
+            iaa.Resize({"height": (1, 100), "width": (1, 100)}),
+            iaa.Affine(
+                scale=(0.01, 2.0),
+                rotate=(-360, 360),
+                shear=(-360, 360),
+                translate_px={"x": (-50, 50), "y": (-50, 50)},
+            ),
+            iaa.PerspectiveTransform((0.01, 0.2)),
+        ],
+    )
 
     height, width = 100, 200
 
@@ -45,7 +48,7 @@ def create_random_polygon(height, width, seed):
     rs = np.random.RandomState(seed)
     nb_points = rs.randint(3, 50)
     coords = rs.rand(nb_points, 2)
-    coords = (coords * 2 - 0.5)  # allow coords outside of the image plane
+    coords = coords * 2 - 0.5  # allow coords outside of the image plane
     coords[:, 0] *= width
     coords[:, 1] *= height
     poly = Polygon(coords)

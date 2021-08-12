@@ -21,10 +21,15 @@ from .. import dtypes as iadt
 from .. import parameters as iap
 
 
-def stylize_cartoon(image, blur_ksize=3, segmentation_size=1.0,
-                    saturation=2.0, edge_prevalence=1.0,
-                    suppress_edges=True,
-                    from_colorspace=colorlib.CSPACE_RGB):
+def stylize_cartoon(
+    image,
+    blur_ksize=3,
+    segmentation_size=1.0,
+    saturation=2.0,
+    edge_prevalence=1.0,
+    suppress_edges=True,
+    from_colorspace=colorlib.CSPACE_RGB,
+):
     """Convert the style of an image to a more cartoonish one.
 
     This function was primarily designed for images with a size of ``200``
@@ -98,8 +103,9 @@ def stylize_cartoon(image, blur_ksize=3, segmentation_size=1.0,
     """
     iadt.allow_only_uint8({image.dtype})
 
-    assert image.ndim == 3 and image.shape[2] == 3, (
-        "Expected to get a (H,W,C) image, got shape %s." % (image.shape,))
+    assert (
+        image.ndim == 3 and image.shape[2] == 3
+    ), "Expected to get a (H,W,C) image, got shape %s." % (image.shape,)
 
     blur_ksize = max(int(np.round(blur_ksize)), 1)
     segmentation_size = max(segmentation_size, 0.0)
@@ -120,19 +126,17 @@ def stylize_cartoon(image, blur_ksize=3, segmentation_size=1.0,
     if segmentation_size <= 0:
         image_seg = image
     else:
-        cv2.pyrMeanShiftFiltering(_normalize_cv2_input_arr_(image),
-                                  sp=spatial_window_radius,
-                                  sr=color_window_radius,
-                                  dst=image_seg)
+        cv2.pyrMeanShiftFiltering(
+            _normalize_cv2_input_arr_(image),
+            sp=spatial_window_radius,
+            sr=color_window_radius,
+            dst=image_seg,
+        )
 
     if is_small_image:
-        edges_raw = _find_edges_canny(image_seg,
-                                      edge_prevalence,
-                                      from_colorspace)
+        edges_raw = _find_edges_canny(image_seg, edge_prevalence, from_colorspace)
     else:
-        edges_raw = _find_edges_laplacian(image_seg,
-                                          edge_prevalence,
-                                          from_colorspace)
+        edges_raw = _find_edges_laplacian(image_seg, edge_prevalence, from_colorspace)
 
     edges = edges_raw
 
@@ -146,33 +150,34 @@ def stylize_cartoon(image, blur_ksize=3, segmentation_size=1.0,
         # Suppress spurious few-pixel edges (5x5 size with <=3 edge pixels).
         edges = _suppress_edge_blobs(edges, 5, 3, inverse=True)
 
-    return _saturate(_blend_edges(image_seg, edges),
-                     saturation,
-                     from_colorspace)
+    return _saturate(_blend_edges(image_seg, edges), saturation, from_colorspace)
 
 
 # Added in 0.4.0.
 def _find_edges_canny(image, edge_multiplier, from_colorspace):
-    image_gray = colorlib.change_colorspace_(np.copy(image),
-                                             to_colorspace=colorlib.CSPACE_GRAY,
-                                             from_colorspace=from_colorspace)
+    image_gray = colorlib.change_colorspace_(
+        np.copy(image),
+        to_colorspace=colorlib.CSPACE_GRAY,
+        from_colorspace=from_colorspace,
+    )
     image_gray = image_gray[..., 0]
-    thresh = min(int(200 * (1/edge_multiplier)), 254)
+    thresh = min(int(200 * (1 / edge_multiplier)), 254)
     edges = cv2.Canny(_normalize_cv2_input_arr_(image_gray), thresh, thresh)
     return edges
 
 
 # Added in 0.4.0.
 def _find_edges_laplacian(image, edge_multiplier, from_colorspace):
-    image_gray = colorlib.change_colorspace_(np.copy(image),
-                                             to_colorspace=colorlib.CSPACE_GRAY,
-                                             from_colorspace=from_colorspace)
+    image_gray = colorlib.change_colorspace_(
+        np.copy(image),
+        to_colorspace=colorlib.CSPACE_GRAY,
+        from_colorspace=from_colorspace,
+    )
     image_gray = image_gray[..., 0]
-    edges_f = cv2.Laplacian(_normalize_cv2_input_arr_(image_gray / 255.0),
-                            cv2.CV_64F)
+    edges_f = cv2.Laplacian(_normalize_cv2_input_arr_(image_gray / 255.0), cv2.CV_64F)
     edges_f = np.abs(edges_f)
     edges_f = edges_f ** 2
-    vmax = np.percentile(edges_f, min(int(90 * (1/edge_multiplier)), 99))
+    vmax = np.percentile(edges_f, min(int(90 * (1 / edge_multiplier)), 99))
     edges_f = np.clip(edges_f, 0.0, vmax) / vmax
 
     edges_uint8 = np.clip(np.round(edges_f * 255), 0, 255.0).astype(np.uint8)
@@ -192,7 +197,7 @@ def _blur_median(image, ksize):
 
 # Added in 0.4.0.
 def _threshold(image, thresh):
-    mask = (image < thresh)
+    mask = image < thresh
     result = np.copy(image)
     result[mask] = 0
     return result
@@ -204,9 +209,9 @@ def _suppress_edge_blobs(edges, size, thresh, inverse):
     counts = cv2.filter2D(_normalize_cv2_input_arr_(edges / 255.0), -1, kernel)
 
     if inverse:
-        mask = (counts < thresh)
+        mask = counts < thresh
     else:
-        mask = (counts >= thresh)
+        mask = counts >= thresh
 
     edges = np.copy(edges)
     edges[mask] = 0
@@ -219,15 +224,15 @@ def _saturate(image, factor, from_colorspace):
     if np.isclose(factor, 1.0, atol=1e-2):
         return image
 
-    hsv = colorlib.change_colorspace_(image,
-                                      to_colorspace=colorlib.CSPACE_HSV,
-                                      from_colorspace=from_colorspace)
+    hsv = colorlib.change_colorspace_(
+        image, to_colorspace=colorlib.CSPACE_HSV, from_colorspace=from_colorspace
+    )
     sat = hsv[:, :, 1]
     sat = np.clip(sat.astype(np.int32) * factor, 0, 255).astype(np.uint8)
     hsv[:, :, 1] = sat
-    image_sat = colorlib.change_colorspace_(hsv,
-                                            to_colorspace=from_colorspace,
-                                            from_colorspace=colorlib.CSPACE_HSV)
+    image_sat = colorlib.change_colorspace_(
+        hsv, to_colorspace=from_colorspace, from_colorspace=colorlib.CSPACE_HSV
+    )
     return image_sat
 
 
@@ -235,10 +240,7 @@ def _saturate(image, factor, from_colorspace):
 def _blend_edges(image, image_edges):
     image_edges = 1.0 - (image_edges / 255.0)
     image_edges = np.tile(image_edges[..., np.newaxis], (1, 1, 3))
-    return np.clip(
-        np.round(image * image_edges),
-        0.0, 255.0
-    ).astype(np.uint8)
+    return np.clip(np.round(image * image_edges), 0.0, 255.0).astype(np.uint8)
 
 
 class Cartoon(meta.Augmenter):
@@ -349,27 +351,50 @@ class Cartoon(meta.Augmenter):
     """
 
     # Added in 0.4.0.
-    def __init__(self, blur_ksize=(1, 5), segmentation_size=(0.8, 1.2),
-                 saturation=(1.5, 2.5), edge_prevalence=(0.9, 1.1),
-                 from_colorspace=colorlib.CSPACE_RGB,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        blur_ksize=(1, 5),
+        segmentation_size=(0.8, 1.2),
+        saturation=(1.5, 2.5),
+        edge_prevalence=(0.9, 1.1),
+        from_colorspace=colorlib.CSPACE_RGB,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(Cartoon, self).__init__(
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed, name=name, random_state=random_state, deterministic=deterministic
+        )
 
         self.blur_ksize = iap.handle_continuous_param(
-            blur_ksize, "blur_ksize", value_range=(0, None),
-            tuple_to_uniform=True, list_to_choice=True)
+            blur_ksize,
+            "blur_ksize",
+            value_range=(0, None),
+            tuple_to_uniform=True,
+            list_to_choice=True,
+        )
         self.segmentation_size = iap.handle_continuous_param(
-            segmentation_size, "segmentation_size", value_range=(0.0, None),
-            tuple_to_uniform=True, list_to_choice=True)
+            segmentation_size,
+            "segmentation_size",
+            value_range=(0.0, None),
+            tuple_to_uniform=True,
+            list_to_choice=True,
+        )
         self.saturation = iap.handle_continuous_param(
-            saturation, "saturation", value_range=(0.0, None),
-            tuple_to_uniform=True, list_to_choice=True)
+            saturation,
+            "saturation",
+            value_range=(0.0, None),
+            tuple_to_uniform=True,
+            list_to_choice=True,
+        )
         self.edge_prevalence = iap.handle_continuous_param(
-            edge_prevalence, "edge_prevalence", value_range=(0.0, None),
-            tuple_to_uniform=True, list_to_choice=True)
+            edge_prevalence,
+            "edge_prevalence",
+            value_range=(0.0, None),
+            tuple_to_uniform=True,
+            list_to_choice=True,
+        )
         self.from_colorspace = from_colorspace
 
     # Added in 0.4.0.
@@ -383,7 +408,7 @@ class Cartoon(meta.Augmenter):
                     segmentation_size=samples[1][i],
                     saturation=samples[2][i],
                     edge_prevalence=samples[3][i],
-                    from_colorspace=self.from_colorspace
+                    from_colorspace=self.from_colorspace,
                 )
         return batch
 
@@ -392,15 +417,18 @@ class Cartoon(meta.Augmenter):
         nb_rows = batch.nb_rows
         return (
             self.blur_ksize.draw_samples((nb_rows,), random_state=random_state),
-            self.segmentation_size.draw_samples((nb_rows,),
-                                                random_state=random_state),
+            self.segmentation_size.draw_samples((nb_rows,), random_state=random_state),
             self.saturation.draw_samples((nb_rows,), random_state=random_state),
-            self.edge_prevalence.draw_samples((nb_rows,),
-                                              random_state=random_state)
+            self.edge_prevalence.draw_samples((nb_rows,), random_state=random_state),
         )
 
     # Added in 0.4.0.
     def get_parameters(self):
         """See :func:`~imgaug.augmenters.meta.Augmenter.get_parameters`."""
-        return [self.blur_ksize, self.segmentation_size, self.saturation,
-                self.edge_prevalence, self.from_colorspace]
+        return [
+            self.blur_ksize,
+            self.segmentation_size,
+            self.saturation,
+            self.edge_prevalence,
+            self.from_colorspace,
+        ]

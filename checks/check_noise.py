@@ -15,31 +15,44 @@ def main():
 
     noise_gens = [
         iap.SimplexNoise(),
-        iap.FrequencyNoise(exponent=-4, size_px_max=sample_size, upscale_method="cubic"),
-        iap.FrequencyNoise(exponent=-2, size_px_max=sample_size, upscale_method="cubic"),
+        iap.FrequencyNoise(
+            exponent=-4, size_px_max=sample_size, upscale_method="cubic"
+        ),
+        iap.FrequencyNoise(
+            exponent=-2, size_px_max=sample_size, upscale_method="cubic"
+        ),
         iap.FrequencyNoise(exponent=0, size_px_max=sample_size, upscale_method="cubic"),
         iap.FrequencyNoise(exponent=2, size_px_max=sample_size, upscale_method="cubic"),
         iap.FrequencyNoise(exponent=4, size_px_max=sample_size, upscale_method="cubic"),
-        iap.FrequencyNoise(exponent=(-4, 4), size_px_max=(4, sample_size),
-                           upscale_method=["nearest", "linear", "cubic"]),
+        iap.FrequencyNoise(
+            exponent=(-4, 4),
+            size_px_max=(4, sample_size),
+            upscale_method=["nearest", "linear", "cubic"],
+        ),
         iap.IterativeNoiseAggregator(
-            other_param=iap.FrequencyNoise(exponent=(-4, 4), size_px_max=(4, sample_size),
-                                           upscale_method=["nearest", "linear", "cubic"]),
+            other_param=iap.FrequencyNoise(
+                exponent=(-4, 4),
+                size_px_max=(4, sample_size),
+                upscale_method=["nearest", "linear", "cubic"],
+            ),
             iterations=(1, 3),
-            aggregation_method=["max", "avg"]
+            aggregation_method=["max", "avg"],
         ),
         iap.IterativeNoiseAggregator(
             other_param=iap.Sigmoid(
-                iap.FrequencyNoise(exponent=(-4, 4), size_px_max=(4, sample_size),
-                                   upscale_method=["nearest", "linear", "cubic"]),
+                iap.FrequencyNoise(
+                    exponent=(-4, 4),
+                    size_px_max=(4, sample_size),
+                    upscale_method=["nearest", "linear", "cubic"],
+                ),
                 threshold=(-10, 10),
                 activated=0.33,
                 mul=20,
-                add=-10
+                add=-10,
             ),
             iterations=(1, 3),
-            aggregation_method=["max", "avg"]
-        )
+            aggregation_method=["max", "avg"],
+        ),
     ]
 
     samples = [[] for _ in range(len(noise_gens))]
@@ -49,14 +62,14 @@ def main():
 
     rows = [np.hstack(row) for row in samples]
     grid = np.vstack(rows)
-    ia.imshow((grid*255).astype(np.uint8))
+    ia.imshow((grid * 255).astype(np.uint8))
 
     images = [ia.quokka_square(size=(128, 128)) for _ in range(16)]
     seqs = [
         iaa.SimplexNoiseAlpha(first=iaa.EdgeDetect(1.0)),
         iaa.SimplexNoiseAlpha(first=iaa.EdgeDetect(1.0), per_channel=True),
         iaa.FrequencyNoiseAlpha(first=iaa.EdgeDetect(1.0)),
-        iaa.FrequencyNoiseAlpha(first=iaa.EdgeDetect(1.0), per_channel=True)
+        iaa.FrequencyNoiseAlpha(first=iaa.EdgeDetect(1.0), per_channel=True),
     ]
     images_aug = []
 

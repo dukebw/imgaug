@@ -2,6 +2,7 @@ from __future__ import print_function, division, absolute_import
 
 import warnings
 import sys
+
 # unittest only added in 3.4 self.subTest()
 if sys.version_info[0] < 3 or sys.version_info[1] < 4:
     import unittest2 as unittest
@@ -88,20 +89,17 @@ class Test_normalize_dtype(unittest.TestCase):
 # so were don't have to be very thorough here
 class Test_change_dtype_(unittest.TestCase):
     def test_no_clip_no_round(self):
-        arr = np.array([[0.0, 0.1, 0.9, 127.0+1.0, -128.0-1.0]],
-                       dtype=np.float32)
+        arr = np.array([[0.0, 0.1, 0.9, 127.0 + 1.0, -128.0 - 1.0]], dtype=np.float32)
         dtype = np.int8
 
-        observed = iadt.change_dtype_(np.copy(arr), dtype,
-                                      clip=False, round=False)
+        observed = iadt.change_dtype_(np.copy(arr), dtype, clip=False, round=False)
 
-        expected = np.array([[0, 0, 0, -128+1-1, 127-1+1]], dtype=np.int8)
+        expected = np.array([[0, 0, 0, -128 + 1 - 1, 127 - 1 + 1]], dtype=np.int8)
         assert observed.dtype.name == "int8"
         assert np.array_equal(observed, expected)
 
     def test_clip_and_round(self):
-        arr = np.array([[0.0, 0.1, 0.9, 127.0+1.0, -128.0-1.0]],
-                       dtype=np.float32)
+        arr = np.array([[0.0, 0.1, 0.9, 127.0 + 1.0, -128.0 - 1.0]], dtype=np.float32)
         dtype = np.int8
 
         observed = iadt.restore_dtypes_(np.copy(arr), dtype)
@@ -114,12 +112,11 @@ class Test_change_dtype_(unittest.TestCase):
         arr = np.array([[-128, -1, 0, 1, 127]], dtype=np.int8)
         dtype = np.int8
 
-        observed = iadt.restore_dtypes_(arr, dtype,
-                                        clip=False, round=False)
+        observed = iadt.restore_dtypes_(arr, dtype, clip=False, round=False)
 
         assert observed is arr
 
-    @mock.patch('numpy.round')
+    @mock.patch("numpy.round")
     def test_no_round_if_dtype_not_changed(self, mock_round):
         arr = np.array([[-128, -1, 0, 1, 127]], dtype=np.int8)
         dtype = np.int8
@@ -139,7 +136,7 @@ class Test_change_dtype_(unittest.TestCase):
         assert observed.dtype.name == "int8"
         assert np.array_equal(observed, expected)
 
-    @mock.patch('numpy.round')
+    @mock.patch("numpy.round")
     def test_dont_round_non_float_dtypes(self, mock_round):
         arr = np.array([[-128, -1, 0, 1, 127]], dtype=np.int8)
         dtype = np.float32
@@ -186,71 +183,67 @@ class Test_change_dtype_(unittest.TestCase):
 
 class Test_change_dtypes_(unittest.TestCase):
     def test_array_input_single_dtype_no_clip_no_round(self):
-        arr = np.array([[0.0, 0.1, 0.9, 127.0+1.0, -128.0-1.0]],
-                       dtype=np.float32)
+        arr = np.array([[0.0, 0.1, 0.9, 127.0 + 1.0, -128.0 - 1.0]], dtype=np.float32)
         dtype = np.int8
 
-        observed = iadt.restore_dtypes_(np.copy(arr), dtype,
-                                        clip=False, round=False)
+        observed = iadt.restore_dtypes_(np.copy(arr), dtype, clip=False, round=False)
 
-        expected = np.array([[0, 0, 0, -128+1-1, 127-1+1]], dtype=np.int8)
+        expected = np.array([[0, 0, 0, -128 + 1 - 1, 127 - 1 + 1]], dtype=np.int8)
         assert observed.dtype.name == "int8"
         assert np.array_equal(observed, expected)
 
     def test_array_input_single_dtype_with_clip_no_round(self):
-        arr = np.array([[0.0, 0.1, 0.9, 127.0+1.0, -128.0-1.0]],
-                       dtype=np.float32)
+        arr = np.array([[0.0, 0.1, 0.9, 127.0 + 1.0, -128.0 - 1.0]], dtype=np.float32)
         dtype = np.int8
 
-        observed = iadt.restore_dtypes_(np.copy(arr), dtype,
-                                        clip=True, round=False)
+        observed = iadt.restore_dtypes_(np.copy(arr), dtype, clip=True, round=False)
 
         expected = np.array([[0, 0, 0, 127, -128]], dtype=np.int8)
         assert observed.dtype.name == "int8"
         assert np.array_equal(observed, expected)
 
     def test_array_input_single_dtype_no_clip_with_round(self):
-        arr = np.array([[0.0, 0.1, 0.9, 127.0+1.0, -128.0-1.0]],
-                       dtype=np.float32)
+        arr = np.array([[0.0, 0.1, 0.9, 127.0 + 1.0, -128.0 - 1.0]], dtype=np.float32)
         dtype = np.int8
 
-        observed = iadt.restore_dtypes_(np.copy(arr), dtype,
-                                        clip=False, round=True)
+        observed = iadt.restore_dtypes_(np.copy(arr), dtype, clip=False, round=True)
 
-        expected = np.array([[0, 0, 1, -128+1-1, 127-1+1]], dtype=np.int8)
+        expected = np.array([[0, 0, 1, -128 + 1 - 1, 127 - 1 + 1]], dtype=np.int8)
         assert observed.dtype.name == "int8"
         assert np.array_equal(observed, expected)
 
     def test_array_input_fail_if_many_different_dtypes(self):
-        arr = np.array([
-            [0.0, 0.1, 0.9, 127.0+1.0, -128.0-1.0],
-            [0.0, 0.1, 0.9, 127.0+1.0, -128.0-1.0],
-        ], dtype=np.float32)
+        arr = np.array(
+            [
+                [0.0, 0.1, 0.9, 127.0 + 1.0, -128.0 - 1.0],
+                [0.0, 0.1, 0.9, 127.0 + 1.0, -128.0 - 1.0],
+            ],
+            dtype=np.float32,
+        )
         dtypes = [np.int8, np.int16]
 
         with self.assertRaises(AssertionError) as context:
-            _observed = iadt.restore_dtypes_(np.copy(arr), dtypes,
-                                             clip=False, round=False)
+            _observed = iadt.restore_dtypes_(
+                np.copy(arr), dtypes, clip=False, round=False
+            )
 
-        assert (
-            "or an iterable of N times the *same* dtype"
-            in str(context.exception)
-        )
+        assert "or an iterable of N times the *same* dtype" in str(context.exception)
 
     def test_array_input_many_dtypes_no_clip_no_round(self):
-        arr = np.array([
-            [0.0, 0.1, 0.9, 127.0+0.0, -128.0-0.0],
-            [0.0, 0.1, 0.9, 127.0+1.0, -128.0-1.0],
-        ], dtype=np.float32)
+        arr = np.array(
+            [
+                [0.0, 0.1, 0.9, 127.0 + 0.0, -128.0 - 0.0],
+                [0.0, 0.1, 0.9, 127.0 + 1.0, -128.0 - 1.0],
+            ],
+            dtype=np.float32,
+        )
         dtypes = [np.int8, np.int8]
 
-        observed = iadt.restore_dtypes_(np.copy(arr), dtypes,
-                                        clip=False, round=False)
+        observed = iadt.restore_dtypes_(np.copy(arr), dtypes, clip=False, round=False)
 
-        expected = np.array([
-            [0, 0, 0, 127, -128],
-            [0, 0, 0, -128+1-1, 127-1+1]
-        ], dtype=np.int8)
+        expected = np.array(
+            [[0, 0, 0, 127, -128], [0, 0, 0, -128 + 1 - 1, 127 - 1 + 1]], dtype=np.int8
+        )
         assert observed.dtype.name == "int8"
         assert np.array_equal(observed, expected)
 
@@ -258,8 +251,7 @@ class Test_change_dtypes_(unittest.TestCase):
         arr = np.zeros((0, 5), dtype=np.float32)
         dtypes = np.int8
 
-        observed = iadt.restore_dtypes_(np.copy(arr), dtypes,
-                                        clip=False, round=False)
+        observed = iadt.restore_dtypes_(np.copy(arr), dtypes, clip=False, round=False)
 
         assert observed.dtype.name == "int8"
         assert observed.shape == (0, 5)
@@ -268,27 +260,24 @@ class Test_change_dtypes_(unittest.TestCase):
         arrs = []
         dtypes = np.int8
 
-        observed = iadt.restore_dtypes_(arrs, dtypes,
-                                        clip=False, round=False)
+        observed = iadt.restore_dtypes_(arrs, dtypes, clip=False, round=False)
 
         assert len(observed) == 0
 
     def test_many_items_list_input_single_dtype(self):
         arrs = [
-            np.array([0.0, 0.1, 0.9, 127.0+0.0, -128.0-0.0], dtype=np.float32),
-            np.array([0.0, 0.1, 0.9, 127.0+1.0, -128.0-1.0], dtype=np.float32)
+            np.array([0.0, 0.1, 0.9, 127.0 + 0.0, -128.0 - 0.0], dtype=np.float32),
+            np.array([0.0, 0.1, 0.9, 127.0 + 1.0, -128.0 - 1.0], dtype=np.float32),
         ]
         dtypes = np.int8
 
         observed = iadt.restore_dtypes_(
-            [np.copy(arr) for arr in arrs],
-            dtypes,
-            clip=False,
-            round=False)
+            [np.copy(arr) for arr in arrs], dtypes, clip=False, round=False
+        )
 
         expected = [
             np.array([0, 0, 0, 127, -128], dtype=np.int8),
-            np.array([0, 0, 0, -128+1-1, 127-1+1], dtype=np.int8)
+            np.array([0, 0, 0, -128 + 1 - 1, 127 - 1 + 1], dtype=np.int8),
         ]
         assert len(observed) == 2
         assert observed[0].dtype.name == "int8"
@@ -298,20 +287,18 @@ class Test_change_dtypes_(unittest.TestCase):
 
     def test_many_items_list_input_many_dtypes(self):
         arrs = [
-            np.array([0.0, 0.1, 0.9, 127.0+1.0, -128.0-1.0], dtype=np.float32),
-            np.array([0.0, 0.1, 0.9, 127.0+1.0, -128.0-1.0], dtype=np.float32)
+            np.array([0.0, 0.1, 0.9, 127.0 + 1.0, -128.0 - 1.0], dtype=np.float32),
+            np.array([0.0, 0.1, 0.9, 127.0 + 1.0, -128.0 - 1.0], dtype=np.float32),
         ]
         dtypes = [np.int8, np.int16]
 
         observed = iadt.restore_dtypes_(
-            [np.copy(arr) for arr in arrs],
-            dtypes,
-            clip=False,
-            round=False)
+            [np.copy(arr) for arr in arrs], dtypes, clip=False, round=False
+        )
 
         expected = [
-            np.array([0, 0, 0, -128+1-1, 127-1+1], dtype=np.int8),
-            np.array([0, 0, 0, 127+1, -128-1], dtype=np.int16)
+            np.array([0, 0, 0, -128 + 1 - 1, 127 - 1 + 1], dtype=np.int8),
+            np.array([0, 0, 0, 127 + 1, -128 - 1], dtype=np.int16),
         ]
         assert len(observed) == 2
         assert observed[0].dtype.name == "int8"
@@ -331,11 +318,9 @@ class Test_change_dtypes_(unittest.TestCase):
         arr = np.array([[-100, -1, 0, 1, 100]], dtype=np.int8)
         dtype = np.float32
 
-        observed = iadt.restore_dtypes_(np.copy(arr), dtype,
-                                        clip=False, round=False)
+        observed = iadt.restore_dtypes_(np.copy(arr), dtype, clip=False, round=False)
 
-        expected = np.array([[-100.0, -1.0, 0.0, 1.0, 100.0]],
-                            dtype=np.float32)
+        expected = np.array([[-100.0, -1.0, 0.0, 1.0, 100.0]], dtype=np.float32)
         assert observed.dtype.name == "float32"
         assert np.allclose(observed, expected)
 
@@ -343,11 +328,9 @@ class Test_change_dtypes_(unittest.TestCase):
         arr = np.array([[-100.0, -1.0, 0.0, 1.0, 100.0]], dtype=np.float32)
         dtype = np.float64
 
-        observed = iadt.restore_dtypes_(np.copy(arr), dtype,
-                                        clip=False, round=False)
+        observed = iadt.restore_dtypes_(np.copy(arr), dtype, clip=False, round=False)
 
-        expected = np.array([[-100.0, -1.0, 0.0, 1.0, 100.0]],
-                            dtype=np.float32)
+        expected = np.array([[-100.0, -1.0, 0.0, 1.0, 100.0]], dtype=np.float32)
         assert observed.dtype.name == "float64"
         assert np.allclose(observed, expected)
 
@@ -355,11 +338,9 @@ class Test_change_dtypes_(unittest.TestCase):
         arr = np.array([[-100, -1, 0, 1, 100]], dtype=np.int8)
         dtype = np.uint8
 
-        observed = iadt.restore_dtypes_(np.copy(arr), dtype,
-                                        clip=False, round=False)
+        observed = iadt.restore_dtypes_(np.copy(arr), dtype, clip=False, round=False)
 
-        expected = np.array([[255-100+1, 255-1+1, 0, 1, 100]],
-                            dtype=np.uint8)
+        expected = np.array([[255 - 100 + 1, 255 - 1 + 1, 0, 1, 100]], dtype=np.uint8)
         assert observed.dtype.name == "uint8"
         assert np.allclose(observed, expected)
 
@@ -367,8 +348,7 @@ class Test_change_dtypes_(unittest.TestCase):
         arr = np.array([[-100, -1, 0, 1, 100]], dtype=np.int8)
         dtype = np.uint8
 
-        observed = iadt.restore_dtypes_(np.copy(arr), dtype,
-                                        clip=True, round=False)
+        observed = iadt.restore_dtypes_(np.copy(arr), dtype, clip=True, round=False)
 
         expected = np.array([[0, 0, 0, 1, 100]], dtype=np.uint8)
         assert observed.dtype.name == "uint8"
@@ -384,18 +364,18 @@ class Test_copy_dtypes_for_restore(unittest.TestCase):
         images = [
             np.zeros((1, 1, 3), dtype=np.uint8),
             np.zeros((10, 16, 3), dtype=np.float32),
-            np.zeros((20, 10, 6), dtype=np.int32)
+            np.zeros((20, 10, 6), dtype=np.int32),
         ]
 
         dtypes_copy = iadt.copy_dtypes_for_restore(images, force_list=False)
-        assert np.all([
-            dtype_observed.name == dtype_expected
-            for dtype_observed, dtype_expected
-            in zip(
-                dtypes_copy,
-                ["uint8", "float32", "int32"]
-            )
-        ])
+        assert np.all(
+            [
+                dtype_observed.name == dtype_expected
+                for dtype_observed, dtype_expected in zip(
+                    dtypes_copy, ["uint8", "float32", "int32"]
+                )
+            ]
+        )
 
     def test_images_as_single_array(self):
         dts = ["uint8", "float32", "int32"]
@@ -411,8 +391,7 @@ class Test_copy_dtypes_for_restore(unittest.TestCase):
         for dt in dts:
             with self.subTest(dtype=dt):
                 images = np.zeros((10, 16, 32, 3), dtype=dt)
-                dtypes_copy = iadt.copy_dtypes_for_restore(images,
-                                                           force_list=True)
+                dtypes_copy = iadt.copy_dtypes_for_restore(images, force_list=True)
                 assert isinstance(dtypes_copy, list)
                 assert np.all([dtype_i.name == dt for dtype_i in dtypes_copy])
 
@@ -420,9 +399,17 @@ class Test_copy_dtypes_for_restore(unittest.TestCase):
 class Test_increase_itemsize_of_dtype(unittest.TestCase):
     def test_factor_is_1(self):
         dts = [
-            np.int8, np.int16, np.int32, np.int64,
-            np.uint8, np.uint16, np.uint32, np.uint64,
-            np.float16, np.float32, np.float64
+            np.int8,
+            np.int16,
+            np.int32,
+            np.int64,
+            np.uint8,
+            np.uint16,
+            np.uint32,
+            np.uint64,
+            np.float16,
+            np.float32,
+            np.float64,
         ]
         for dt in dts:
             dt = np.dtype(dt)
@@ -432,14 +419,24 @@ class Test_increase_itemsize_of_dtype(unittest.TestCase):
 
     def test_factor_is_2(self):
         dts = [
-            np.int8, np.int16, np.int32,
-            np.uint8, np.uint16, np.uint32,
-            np.float16, np.float32
+            np.int8,
+            np.int16,
+            np.int32,
+            np.uint8,
+            np.uint16,
+            np.uint32,
+            np.float16,
+            np.float32,
         ]
         expecteds = [
-            np.int16, np.int32, np.int64,
-            np.uint16, np.uint32, np.uint64,
-            np.float32, np.float64
+            np.int16,
+            np.int32,
+            np.int64,
+            np.uint16,
+            np.uint32,
+            np.uint64,
+            np.float32,
+            np.float64,
         ]
         for dt, expected in zip(dts, expecteds):
             dt = np.dtype(dt)
@@ -450,14 +447,24 @@ class Test_increase_itemsize_of_dtype(unittest.TestCase):
 
     def test_dtype_as_string(self):
         dt_names = [
-            "int8", "int16", "int32",
-            "uint8", "uint16", "uint32",
-            "float16", "float32"
+            "int8",
+            "int16",
+            "int32",
+            "uint8",
+            "uint16",
+            "uint32",
+            "float16",
+            "float32",
         ]
         expecteds = [
-            np.int16, np.int32, np.int64,
-            np.uint16, np.uint32, np.uint64,
-            np.float32, np.float64
+            np.int16,
+            np.int32,
+            np.int64,
+            np.uint16,
+            np.uint32,
+            np.uint64,
+            np.float32,
+            np.float64,
         ]
         for dt_name, expected in zip(dt_names, expecteds):
             expected = np.dtype(expected)
@@ -469,18 +476,24 @@ class Test_increase_itemsize_of_dtype(unittest.TestCase):
         with self.assertRaises(TypeError) as context:
             _ = iadt.increase_itemsize_of_dtype(np.uint64, 2)
 
-        assert (
-            "Unable to create a numpy dtype matching"
-            in str(context.exception))
+        assert "Unable to create a numpy dtype matching" in str(context.exception)
 
 
 class Test_get_minimal_dtype(unittest.TestCase):
     def test_with_dtype_function(self):
         dt_funcs = [
-            np.int8, np.int16, np.int32, np.int64,
-            np.uint8, np.uint16, np.uint32, np.uint64,
-            np.float16, np.float32, np.float64,
-            np.bool_
+            np.int8,
+            np.int16,
+            np.int32,
+            np.int64,
+            np.uint8,
+            np.uint16,
+            np.uint32,
+            np.uint64,
+            np.float16,
+            np.float32,
+            np.float64,
+            np.bool_,
         ]
 
         for dt_func in dt_funcs:
@@ -491,10 +504,18 @@ class Test_get_minimal_dtype(unittest.TestCase):
 
     def test_with_lists_of_identical_dtypes(self):
         dts = [
-            np.int8, np.int16, np.int32, np.int64,
-            np.uint8, np.uint16, np.uint32, np.uint64,
-            np.float16, np.float32, np.float64,
-            np.bool_
+            np.int8,
+            np.int16,
+            np.int32,
+            np.int64,
+            np.uint8,
+            np.uint16,
+            np.uint32,
+            np.uint64,
+            np.float16,
+            np.float32,
+            np.float64,
+            np.bool_,
         ]
 
         for dt in dts:
@@ -507,18 +528,25 @@ class Test_get_minimal_dtype(unittest.TestCase):
 
     def test_with_lists_of_identical_dtype_arrays(self):
         dts = [
-            np.int8, np.int16, np.int32, np.int64,
-            np.uint8, np.uint16, np.uint32, np.uint64,
-            np.float16, np.float32, np.float64,
-            np.bool_
+            np.int8,
+            np.int16,
+            np.int32,
+            np.int64,
+            np.uint8,
+            np.uint16,
+            np.uint32,
+            np.uint64,
+            np.float16,
+            np.float32,
+            np.float64,
+            np.bool_,
         ]
 
         for dt in dts:
             dt = np.dtype(dt)
             for length in [1, 2, 3]:
                 with self.subTest(dtype=dt.name, length=length):
-                    inputs = [np.zeros((1, 1, 3), dtype=dt)
-                              for _ in range(length)]
+                    inputs = [np.zeros((1, 1, 3), dtype=dt) for _ in range(length)]
                     promoted_dt = iadt.get_minimal_dtype(inputs)
                     assert promoted_dt.name == dt.name
 
@@ -545,7 +573,7 @@ class Test_get_minimal_dtype(unittest.TestCase):
             np.float32,
             np.int16,
             np.int16,
-            np.float32
+            np.float32,
         ]
         for dt_list, expected in zip(dt_lists, expecteds):
             expected = np.dtype(expected)
@@ -590,9 +618,7 @@ class Test_promote_array_dtypes_(unittest.TestCase):
         mock_cd.return_value = "foo"
         arrays = [np.zeros((1,), dtype=np.int8)]
 
-        observed = iadt.promote_array_dtypes_(
-            arrays,
-            dtypes=["float32"])
+        observed = iadt.promote_array_dtypes_(arrays, dtypes=["float32"])
 
         assert mock_gmd.call_count == 1
         assert mock_cd.call_count == 1
@@ -604,15 +630,12 @@ class Test_promote_array_dtypes_(unittest.TestCase):
 
     @mock.patch("imgaug.dtypes.get_minimal_dtype")
     @mock.patch("imgaug.dtypes.change_dtypes_")
-    def test_calls_subfunctions_increase_itemsize_factor_set(self, mock_cd,
-                                                             mock_gmd):
+    def test_calls_subfunctions_increase_itemsize_factor_set(self, mock_cd, mock_gmd):
         mock_gmd.return_value = np.dtype("int16")
         mock_cd.return_value = "foo"
         arrays = [np.zeros((1,), dtype=np.int8)]
 
-        observed = iadt.promote_array_dtypes_(
-            arrays,
-            increase_itemsize_factor=2)
+        observed = iadt.promote_array_dtypes_(arrays, increase_itemsize_factor=2)
 
         assert mock_gmd.call_count == 1
         assert mock_cd.call_count == 1
@@ -644,32 +667,28 @@ class Test_promote_array_dtypes_(unittest.TestCase):
 
     def test_promote_list_of_single_array(self):
         arrays = [np.zeros((1,), dtype=np.int8)]
-        observed = iadt.promote_array_dtypes_(arrays,
-                                              increase_itemsize_factor=2)
+        observed = iadt.promote_array_dtypes_(arrays, increase_itemsize_factor=2)
         assert observed[0].dtype.name == "int16"
 
     def test_promote_list_of_two_arrays(self):
-        arrays = [np.zeros((1,), dtype=np.int8),
-                  np.zeros((1,), dtype=np.int16)]
-        observed = iadt.promote_array_dtypes_(arrays,
-                                              increase_itemsize_factor=2)
+        arrays = [np.zeros((1,), dtype=np.int8), np.zeros((1,), dtype=np.int16)]
+        observed = iadt.promote_array_dtypes_(arrays, increase_itemsize_factor=2)
         assert observed[0].dtype.name == "int32"
         assert observed[1].dtype.name == "int32"
 
     def test_promote_list_of_two_arrays_dtypes_set(self):
-        arrays = [np.zeros((1,), dtype=np.int8),
-                  np.zeros((1,), dtype=np.int16)]
-        observed = iadt.promote_array_dtypes_(arrays,
-                                              dtypes=[np.float32, np.float64])
+        arrays = [np.zeros((1,), dtype=np.int8), np.zeros((1,), dtype=np.int16)]
+        observed = iadt.promote_array_dtypes_(arrays, dtypes=[np.float32, np.float64])
         assert observed[0].dtype.name == "float64"
         assert observed[1].dtype.name == "float64"
 
     def test_promote_list_of_three_arrays(self):
-        arrays = [np.zeros((1,), dtype=np.int8),
-                  np.zeros((1,), dtype=np.int16),
-                  np.zeros((1,), dtype=np.uint8)]
-        observed = iadt.promote_array_dtypes_(arrays,
-                                              increase_itemsize_factor=2)
+        arrays = [
+            np.zeros((1,), dtype=np.int8),
+            np.zeros((1,), dtype=np.int16),
+            np.zeros((1,), dtype=np.uint8),
+        ]
+        observed = iadt.promote_array_dtypes_(arrays, increase_itemsize_factor=2)
         assert observed[0].dtype.name == "int32"
         assert observed[1].dtype.name == "int32"
         assert observed[2].dtype.name == "int32"
@@ -692,10 +711,7 @@ class Test_increase_array_resolutions_(unittest.TestCase):
         assert observed[0].dtype.name == "int16"
 
     def test_list_of_two_arrays(self):
-        arrays = [
-            np.zeros((1,), dtype=np.int8),
-            np.zeros((1,), dtype=np.int16)
-        ]
+        arrays = [np.zeros((1,), dtype=np.int8), np.zeros((1,), dtype=np.int16)]
         observed = iadt.increase_array_resolutions_(arrays, 2)
         assert observed[0].dtype.name == "int16"
         assert observed[1].dtype.name == "int32"
@@ -709,21 +725,20 @@ class Test_get_value_range_of_dtype(unittest.TestCase):
         assert maxv == 1
 
     def test_uint8_string_name(self):
-        assert (
-            iadt.get_value_range_of_dtype("uint8")
-            == iadt.get_value_range_of_dtype(np.dtype("uint8"))
+        assert iadt.get_value_range_of_dtype("uint8") == iadt.get_value_range_of_dtype(
+            np.dtype("uint8")
         )
 
     def test_uint8(self):
         minv, center, maxv = iadt.get_value_range_of_dtype(np.dtype("uint8"))
         assert minv == 0
-        assert np.isclose(center, 0.5*255)
+        assert np.isclose(center, 0.5 * 255)
         assert maxv == 255
 
     def test_uint16(self):
         minv, center, maxv = iadt.get_value_range_of_dtype(np.dtype("uint16"))
         assert minv == 0
-        assert np.isclose(center, 0.5*65535)
+        assert np.isclose(center, 0.5 * 65535)
         assert maxv == 65535
 
     def test_int8(self):
@@ -860,7 +875,8 @@ class Test_clip_to_dtype_value_range(unittest.TestCase):
         arr = np.array([-10, -1, 0, 1, 10, 255, 256], dtype=np.int16)
 
         arr_clipped = iadt.clip_to_dtype_value_range_(
-            np.copy(arr), np.int32, validate=False)
+            np.copy(arr), np.int32, validate=False
+        )
 
         assert np.array_equal(arr_clipped, arr)
         assert arr_clipped.dtype.name == "int16"
@@ -869,7 +885,8 @@ class Test_clip_to_dtype_value_range(unittest.TestCase):
         arr = np.array([-10, -1, 0, 1, 10, 255, 256], dtype=np.int16)
 
         arr_clipped = iadt.clip_to_dtype_value_range_(
-            np.copy(arr), "int32", validate=False)
+            np.copy(arr), "int32", validate=False
+        )
 
         assert np.array_equal(arr_clipped, arr)
         assert arr_clipped.dtype.name == "int16"
@@ -878,7 +895,8 @@ class Test_clip_to_dtype_value_range(unittest.TestCase):
         arr = np.array([-10, -1, 0, 1, 10, 255, 256], dtype=np.int16)
 
         arr_clipped = iadt.clip_to_dtype_value_range_(
-            np.copy(arr), np.float64, validate=False)
+            np.copy(arr), np.float64, validate=False
+        )
 
         assert np.array_equal(arr_clipped, arr)
         assert arr_clipped.dtype.name == "int16"
@@ -887,7 +905,8 @@ class Test_clip_to_dtype_value_range(unittest.TestCase):
         arr = np.array([-10, -1, 0, 1, 10, 255, 256], dtype=np.int16)
 
         arr_clipped = iadt.clip_to_dtype_value_range_(
-            np.copy(arr), np.int16, validate=False)
+            np.copy(arr), np.int16, validate=False
+        )
 
         assert np.array_equal(arr_clipped, arr)
         assert arr_clipped.dtype.name == "int16"
@@ -896,7 +915,8 @@ class Test_clip_to_dtype_value_range(unittest.TestCase):
         arr = np.array([-10, -1, 0, 1, 10, 255, 256], dtype=np.int16)
 
         arr_clipped = iadt.clip_to_dtype_value_range_(
-            np.copy(arr), np.int8, validate=False)
+            np.copy(arr), np.int8, validate=False
+        )
 
         expected = np.array([-10, -1, 0, 1, 10, 127, 127], dtype=np.int16)
         assert np.array_equal(arr_clipped, expected)
@@ -907,7 +927,8 @@ class Test_clip_to_dtype_value_range(unittest.TestCase):
         dt_arr = np.array([1], dtype=np.int32)
 
         arr_clipped = iadt.clip_to_dtype_value_range_(
-            np.copy(arr), dt_arr, validate=False)
+            np.copy(arr), dt_arr, validate=False
+        )
 
         assert np.array_equal(arr_clipped, arr)
         assert arr_clipped.dtype.name == "int16"
@@ -916,7 +937,8 @@ class Test_clip_to_dtype_value_range(unittest.TestCase):
         arr = np.array([-10, -1, 0, 1, 10, 126, 127], dtype=np.int16)
 
         arr_clipped = iadt.clip_to_dtype_value_range_(
-            np.copy(arr), np.int8, validate=True)
+            np.copy(arr), np.int8, validate=True
+        )
 
         assert np.array_equal(arr_clipped, arr)
         assert arr_clipped.dtype.name == "int16"
@@ -925,23 +947,23 @@ class Test_clip_to_dtype_value_range(unittest.TestCase):
         arr = np.array([-200, -1, 0, 1, 10, 126, 127], dtype=np.int16)
 
         with self.assertRaises(AssertionError) as context:
-            _ = iadt.clip_to_dtype_value_range_(
-                np.copy(arr), np.int8, validate=True)
+            _ = iadt.clip_to_dtype_value_range_(np.copy(arr), np.int8, validate=True)
 
         assert (
             "Minimum value of array is outside of allowed value range "
-            "(-200.0000 vs -128.0000 to 127.0000)." in str(context.exception))
+            "(-200.0000 vs -128.0000 to 127.0000)." in str(context.exception)
+        )
 
     def test_validate_true_max_value_outside_value_range(self):
         arr = np.array([-10, -1, 0, 1, 10, 126, 200], dtype=np.int16)
 
         with self.assertRaises(AssertionError) as context:
-            _ = iadt.clip_to_dtype_value_range_(
-                np.copy(arr), np.int8, validate=True)
+            _ = iadt.clip_to_dtype_value_range_(np.copy(arr), np.int8, validate=True)
 
         assert (
             "Maximum value of array is outside of allowed value range "
-            "(200.0000 vs -128.0000 to 127.0000)." in str(context.exception))
+            "(200.0000 vs -128.0000 to 127.0000)." in str(context.exception)
+        )
 
     def test_validate_too_few_values(self):
         arr = np.array([-10, 0, 200], dtype=np.int16)
@@ -952,42 +974,47 @@ class Test_clip_to_dtype_value_range(unittest.TestCase):
         arr = np.array([-10, 0, 200], dtype=np.int16)
 
         with self.assertRaises(AssertionError) as context:
-            _ = iadt.clip_to_dtype_value_range_(
-                np.copy(arr), np.int8, validate=3)
+            _ = iadt.clip_to_dtype_value_range_(np.copy(arr), np.int8, validate=3)
 
         assert (
             "Maximum value of array is outside of allowed value range "
-            "(200.0000 vs -128.0000 to 127.0000)." in str(context.exception))
+            "(200.0000 vs -128.0000 to 127.0000)." in str(context.exception)
+        )
 
     def test_validate_too_many_values(self):
         arr = np.array([-10, 0, 200], dtype=np.int16)
 
         with self.assertRaises(AssertionError) as context:
-            _ = iadt.clip_to_dtype_value_range_(
-                np.copy(arr), np.int8, validate=100)
+            _ = iadt.clip_to_dtype_value_range_(np.copy(arr), np.int8, validate=100)
 
         assert (
             "Maximum value of array is outside of allowed value range "
-            "(200.0000 vs -128.0000 to 127.0000)." in str(context.exception))
+            "(200.0000 vs -128.0000 to 127.0000)." in str(context.exception)
+        )
 
     def test_validate_values_set(self):
         arr = np.array([-10, -1, 0, 1, 10, 126, 200], dtype=np.int16)
 
         with self.assertRaises(AssertionError) as context:
             _ = iadt.clip_to_dtype_value_range_(
-                np.copy(arr), np.int8, validate=True,
-                validate_values=(-5, 201))
+                np.copy(arr), np.int8, validate=True, validate_values=(-5, 201)
+            )
 
         assert (
             "Maximum value of array is outside of allowed value range "
-            "(201.0000 vs -128.0000 to 127.0000)." in str(context.exception))
+            "(201.0000 vs -128.0000 to 127.0000)." in str(context.exception)
+        )
 
 
 class Test_gate_dtypes_strs(unittest.TestCase):
     def test_standard_scenario_all_allowed(self):
         for _ in range(3):
-            dtypes = {np.dtype("uint8"), np.dtype("uint8"),
-                      np.dtype("float32"), np.dtype("int64")}
+            dtypes = {
+                np.dtype("uint8"),
+                np.dtype("uint8"),
+                np.dtype("float32"),
+                np.dtype("int64"),
+            }
             allowed = "uint8 float32 int64"
             disallowed = "bool"
 
@@ -995,8 +1022,12 @@ class Test_gate_dtypes_strs(unittest.TestCase):
 
     def test_standard_scenario_one_disallowed(self):
         for _ in range(3):
-            dtypes = {np.dtype("uint8"), np.dtype("uint8"),
-                      np.dtype("float32"), np.dtype("int64")}
+            dtypes = {
+                np.dtype("uint8"),
+                np.dtype("uint8"),
+                np.dtype("float32"),
+                np.dtype("int64"),
+            }
             allowed = "uint8 float32"
             disallowed = "bool int64"
 
@@ -1058,7 +1089,7 @@ class Test_gate_dtypes_strs(unittest.TestCase):
     def test_list_of_two_arrays_same_dtypes(self):
         arrays = [
             np.zeros((1, 1, 3), dtype=np.int8),
-            np.zeros((1, 1, 3), dtype=np.int8)
+            np.zeros((1, 1, 3), dtype=np.int8),
         ]
 
         iadt.gate_dtypes_strs(arrays, "int8", "")
@@ -1066,7 +1097,7 @@ class Test_gate_dtypes_strs(unittest.TestCase):
     def test_list_of_two_arrays_different_dtypes(self):
         arrays = [
             np.zeros((1, 1, 3), dtype=np.int8),
-            np.zeros((1, 1, 3), dtype=np.uint8)
+            np.zeros((1, 1, 3), dtype=np.uint8),
         ]
 
         iadt.gate_dtypes_strs(arrays, "int8 uint8", "")
@@ -1074,7 +1105,7 @@ class Test_gate_dtypes_strs(unittest.TestCase):
     def test_list_of_two_arrays_same_dtypes_one_disallowed(self):
         arrays = [
             np.zeros((1, 1, 3), dtype=np.int8),
-            np.zeros((1, 1, 3), dtype=np.uint8)
+            np.zeros((1, 1, 3), dtype=np.uint8),
         ]
 
         with self.assertRaises(ValueError) as context:
@@ -1086,18 +1117,25 @@ class Test_gate_dtypes_strs(unittest.TestCase):
 class Test_gate_dtypes(unittest.TestCase):
     @ensure_deprecation_warning("imgaug.dtypes.gate_dtypes_strs")
     def test_standard_scenario_all_allowed(self):
-        dtypes = [np.dtype("uint8"), np.dtype("uint8"),
-                  np.dtype("float32"), np.dtype("int64")]
-        allowed = [np.dtype("uint8"), np.dtype("float32"),
-                   np.dtype("int64")]
+        dtypes = [
+            np.dtype("uint8"),
+            np.dtype("uint8"),
+            np.dtype("float32"),
+            np.dtype("int64"),
+        ]
+        allowed = [np.dtype("uint8"), np.dtype("float32"), np.dtype("int64")]
         disallowed = [np.dtype("bool")]
 
         iadt.gate_dtypes(dtypes, allowed, disallowed)
 
     @ensure_deprecation_warning("imgaug.dtypes.gate_dtypes_strs")
     def test_standard_scenario_one_disallowed(self):
-        dtypes = [np.dtype("uint8"), np.dtype("uint8"),
-                  np.dtype("float32"), np.dtype("int64")]
+        dtypes = [
+            np.dtype("uint8"),
+            np.dtype("uint8"),
+            np.dtype("float32"),
+            np.dtype("int64"),
+        ]
         allowed = [np.dtype("uint8"), np.dtype("float32")]
         disallowed = [np.dtype("bool"), np.dtype("int64")]
 
@@ -1107,8 +1145,12 @@ class Test_gate_dtypes(unittest.TestCase):
 
     @ensure_deprecation_warning("imgaug.dtypes.gate_dtypes_strs")
     def test_standard_scenario_all_allowed_dtype_names(self):
-        dtypes = [np.dtype("uint8"), np.dtype("uint8"), np.dtype("float32"),
-                  np.dtype("int64")]
+        dtypes = [
+            np.dtype("uint8"),
+            np.dtype("uint8"),
+            np.dtype("float32"),
+            np.dtype("int64"),
+        ]
         allowed = ["uint8", "float32", "int64"]
         disallowed = ["bool"]
 
@@ -1116,8 +1158,12 @@ class Test_gate_dtypes(unittest.TestCase):
 
     @ensure_deprecation_warning("imgaug.dtypes.gate_dtypes_strs")
     def test_standard_scenario_one_disallowed_dtype_names(self):
-        dtypes = [np.dtype("uint8"), np.dtype("uint8"), np.dtype("float32"),
-                  np.dtype("int64")]
+        dtypes = [
+            np.dtype("uint8"),
+            np.dtype("uint8"),
+            np.dtype("float32"),
+            np.dtype("int64"),
+        ]
         allowed = ["uint8", "float32"]
         disallowed = ["bool", "int64"]
 
@@ -1127,8 +1173,12 @@ class Test_gate_dtypes(unittest.TestCase):
 
     @ensure_deprecation_warning("imgaug.dtypes.gate_dtypes_strs")
     def test_standard_scenario_all_allowed_dtype_functions(self):
-        dtypes = [np.dtype("uint8"), np.dtype("uint8"), np.dtype("float32"),
-                  np.dtype("int64")]
+        dtypes = [
+            np.dtype("uint8"),
+            np.dtype("uint8"),
+            np.dtype("float32"),
+            np.dtype("int64"),
+        ]
         allowed = [np.uint8, np.float32, np.int64]
         disallowed = [np.bool_]
 
@@ -1136,8 +1186,12 @@ class Test_gate_dtypes(unittest.TestCase):
 
     @ensure_deprecation_warning("imgaug.dtypes.gate_dtypes_strs")
     def test_standard_scenario_one_disallowed_dtype_functions(self):
-        dtypes = [np.dtype("uint8"), np.dtype("uint8"), np.dtype("float32"),
-                  np.dtype("int64")]
+        dtypes = [
+            np.dtype("uint8"),
+            np.dtype("uint8"),
+            np.dtype("float32"),
+            np.dtype("int64"),
+        ]
         allowed = [np.uint8, np.float32]
         disallowed = [np.bool_, np.int64]
 
@@ -1170,7 +1224,7 @@ class Test_gate_dtypes(unittest.TestCase):
     def test_list_of_two_arrays_same_dtypes(self):
         arrays = [
             np.zeros((1, 1, 3), dtype=np.int8),
-            np.zeros((1, 1, 3), dtype=np.int8)
+            np.zeros((1, 1, 3), dtype=np.int8),
         ]
 
         iadt.gate_dtypes(arrays, [np.dtype("int8")], [])
@@ -1179,7 +1233,7 @@ class Test_gate_dtypes(unittest.TestCase):
     def test_list_of_two_arrays_different_dtypes(self):
         arrays = [
             np.zeros((1, 1, 3), dtype=np.int8),
-            np.zeros((1, 1, 3), dtype=np.uint8)
+            np.zeros((1, 1, 3), dtype=np.uint8),
         ]
 
         iadt.gate_dtypes(arrays, ["int8", "uint8"], [])
@@ -1188,7 +1242,7 @@ class Test_gate_dtypes(unittest.TestCase):
     def test_list_of_two_arrays_same_dtypes_one_disallowed(self):
         arrays = [
             np.zeros((1, 1, 3), dtype=np.int8),
-            np.zeros((1, 1, 3), dtype=np.uint8)
+            np.zeros((1, 1, 3), dtype=np.uint8),
         ]
 
         with self.assertRaises(ValueError) as context:
@@ -1205,16 +1259,24 @@ class Test_gate_dtypes(unittest.TestCase):
 
 class Test__gate_dtypes(unittest.TestCase):
     def test_standard_scenario_all_allowed(self):
-        dtypes = {np.dtype("uint8"), np.dtype("uint8"), np.dtype("float32"),
-                  np.dtype("int64")}
+        dtypes = {
+            np.dtype("uint8"),
+            np.dtype("uint8"),
+            np.dtype("float32"),
+            np.dtype("int64"),
+        }
         allowed = {np.dtype("uint8"), np.dtype("float32"), np.dtype("int64")}
         disallowed = {np.dtype("bool")}
 
         iadt._gate_dtypes(dtypes, allowed, disallowed)
 
     def test_standard_scenario_one_disallowed(self):
-        dtypes = {np.dtype("uint8"), np.dtype("uint8"), np.dtype("float32"),
-                  np.dtype("int64")}
+        dtypes = {
+            np.dtype("uint8"),
+            np.dtype("uint8"),
+            np.dtype("float32"),
+            np.dtype("int64"),
+        }
         allowed = {np.dtype("uint8"), np.dtype("float32")}
         disallowed = {np.dtype("bool"), np.dtype("int64")}
 
@@ -1223,16 +1285,24 @@ class Test__gate_dtypes(unittest.TestCase):
         assert "Got dtype 'int64'" in str(context.exception)
 
     def test_all_allowed_input_is_list_of_dtypes(self):
-        dtypes = {np.dtype("uint8"), np.dtype("uint8"), np.dtype("float32"),
-                  np.dtype("int64")}
+        dtypes = {
+            np.dtype("uint8"),
+            np.dtype("uint8"),
+            np.dtype("float32"),
+            np.dtype("int64"),
+        }
         allowed = {np.dtype("uint8"), np.dtype("float32"), np.dtype("int64")}
         disallowed = {np.dtype("bool")}
 
         iadt._gate_dtypes(dtypes, allowed, disallowed)
 
     def test_all_allowed_input_is_list_of_dtype_functions(self):
-        dtypes = {np.dtype("uint8"), np.dtype("uint8"), np.dtype("float32"),
-                  np.dtype("int64")}
+        dtypes = {
+            np.dtype("uint8"),
+            np.dtype("uint8"),
+            np.dtype("float32"),
+            np.dtype("int64"),
+        }
         allowed = {np.dtype("uint8"), np.dtype("float32"), np.dtype("int64")}
         disallowed = {np.dtype("bool")}
 
@@ -1271,32 +1341,23 @@ class Test__gate_dtypes(unittest.TestCase):
                 {dtype},
                 {np.dtype("uint8")},
                 {np.dtype("int8")},
-                augmenter=dummy_augmenter
+                augmenter=dummy_augmenter,
             )
 
         assert "Got dtype 'int8' in augmenter 'foo'" in str(context.exception)
 
     def test_list_of_two_dtypes_both_same(self):
-        dtypes = {
-            np.dtype("int8"),
-            np.dtype("int8")
-        }
+        dtypes = {np.dtype("int8"), np.dtype("int8")}
 
         iadt._gate_dtypes(dtypes, {np.dtype("int8")}, None)
 
     def test_list_of_two_dtypes_both_different(self):
-        dtypes = {
-            np.dtype("int8"),
-            np.dtype("uint8")
-        }
+        dtypes = {np.dtype("int8"), np.dtype("uint8")}
 
         iadt._gate_dtypes(dtypes, {np.dtype("int8"), np.dtype("uint8")}, None)
 
     def test_list_of_two_dtypes_both_different_one_disallowed(self):
-        dtypes = {
-            np.dtype("int8"),
-            np.dtype("uint8")
-        }
+        dtypes = {np.dtype("int8"), np.dtype("uint8")}
 
         with self.assertRaises(ValueError) as context:
             iadt._gate_dtypes(dtypes, {np.dtype("int8")}, {np.dtype("uint8")})
@@ -1304,28 +1365,21 @@ class Test__gate_dtypes(unittest.TestCase):
         assert "Got dtype 'uint8', which" in str(context.exception)
 
     def test_dtype_not_in_allowed_or_disallowed(self):
-        dtypes = {
-            np.dtype("int8"),
-            np.dtype("float32")
-        }
+        dtypes = {np.dtype("int8"), np.dtype("float32")}
 
         with warnings.catch_warnings(record=True) as caught_warnings:
             warnings.simplefilter("always")
             iadt._gate_dtypes(dtypes, {np.dtype("int8")}, {np.dtype("uint8")})
 
         assert len(caught_warnings) == 1
-        assert (
-            "Got dtype 'float32', which" in str(caught_warnings[-1].message))
+        assert "Got dtype 'float32', which" in str(caught_warnings[-1].message)
 
     def test_dtype_not_in_allowed_or_disallowed_augmenter_set(self):
         class _DummyAugmenter(object):
             def __init__(self):
                 self.name = "foo"
 
-        dtypes = {
-            np.dtype("int8"),
-            np.dtype("float32")
-        }
+        dtypes = {np.dtype("int8"), np.dtype("float32")}
         dummy_augmenter = _DummyAugmenter()
 
         with warnings.catch_warnings(record=True) as caught_warnings:
@@ -1334,10 +1388,10 @@ class Test__gate_dtypes(unittest.TestCase):
                 dtypes,
                 {np.dtype("int8")},
                 {np.dtype("uint8")},
-                augmenter=dummy_augmenter
+                augmenter=dummy_augmenter,
             )
 
         assert len(caught_warnings) == 1
-        assert (
-            "Got dtype 'float32' in augmenter 'foo'"
-            in str(caught_warnings[-1].message))
+        assert "Got dtype 'float32' in augmenter 'foo'" in str(
+            caught_warnings[-1].message
+        )

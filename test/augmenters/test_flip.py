@@ -2,6 +2,7 @@ from __future__ import print_function, division, absolute_import
 
 from abc import ABCMeta, abstractproperty, abstractmethod
 import sys
+
 # unittest only added in 3.4 self.subTest()
 if sys.version_info[0] < 3 or sys.version_info[1] < 4:
     import unittest2 as unittest
@@ -21,9 +22,12 @@ import imgaug as ia
 from imgaug import augmenters as iaa
 from imgaug import parameters as iap
 from imgaug import dtypes as iadt
-from imgaug.testutils import (reseed, assert_cbaois_equal,
-                              runtest_pickleable_uint8_img,
-                              is_parameter_instance)
+from imgaug.testutils import (
+    reseed,
+    assert_cbaois_equal,
+    runtest_pickleable_uint8_img,
+    is_parameter_instance,
+)
 from imgaug.augmentables.heatmaps import HeatmapsOnImage
 from imgaug.augmentables.segmaps import SegmentationMapsOnImage
 import imgaug.augmenters.flip as fliplib
@@ -192,10 +196,8 @@ class _TestFliplrAndFlipudBase(object):
         heatmaps = self.heatmaps
         observed = aug.augment_heatmaps(heatmaps)
         assert observed.shape == heatmaps.shape
-        assert np.isclose(observed.min_value, heatmaps.min_value,
-                          rtol=0, atol=1e-6)
-        assert np.isclose(observed.max_value, heatmaps.max_value,
-                          rtol=0, atol=1e-6)
+        assert np.isclose(observed.min_value, heatmaps.min_value, rtol=0, atol=1e-6)
+        assert np.isclose(observed.max_value, heatmaps.max_value, rtol=0, atol=1e-6)
         assert np.array_equal(observed.get_arr(), heatmaps.get_arr())
 
     def test_segmaps_p_is_0(self):
@@ -222,38 +224,41 @@ class _TestFliplrAndFlipudBase(object):
 
     def test_keypoints_p_is_1(self):
         self._test_cbaoi_p_is_1(
-            "augment_keypoints", self.kpsoi, self.kpsoi_flipped, False)
+            "augment_keypoints", self.kpsoi, self.kpsoi_flipped, False
+        )
 
     def test_keypoints_p_is_1__deterministic(self):
         self._test_cbaoi_p_is_1(
-            "augment_keypoints", self.kpsoi, self.kpsoi_flipped, True)
+            "augment_keypoints", self.kpsoi, self.kpsoi_flipped, True
+        )
 
     def test_polygons_p_is_1(self):
-        self._test_cbaoi_p_is_1(
-            "augment_polygons", self.psoi, self.psoi_flipped, False)
+        self._test_cbaoi_p_is_1("augment_polygons", self.psoi, self.psoi_flipped, False)
 
     def test_polygons_p_is_1__deterministic(self):
-        self._test_cbaoi_p_is_1(
-            "augment_polygons", self.psoi, self.psoi_flipped, True)
+        self._test_cbaoi_p_is_1("augment_polygons", self.psoi, self.psoi_flipped, True)
 
     def test_line_strings_p_is_1(self):
         self._test_cbaoi_p_is_1(
-            "augment_line_strings", self.lsoi, self.lsoi_flipped, False)
+            "augment_line_strings", self.lsoi, self.lsoi_flipped, False
+        )
 
     def test_line_strings_p_is_1__deterministic(self):
         self._test_cbaoi_p_is_1(
-            "augment_line_strings", self.lsoi, self.lsoi_flipped, True)
+            "augment_line_strings", self.lsoi, self.lsoi_flipped, True
+        )
 
     def test_bounding_boxes_p_is_1(self):
         self._test_cbaoi_p_is_1(
-            "augment_bounding_boxes", self.bbsoi, self.bbsoi_flipped, False)
+            "augment_bounding_boxes", self.bbsoi, self.bbsoi_flipped, False
+        )
 
     def test_bounding_boxes_p_is_1__deterministic(self):
         self._test_cbaoi_p_is_1(
-            "augment_bounding_boxes", self.bbsoi, self.bbsoi_flipped, True)
+            "augment_bounding_boxes", self.bbsoi, self.bbsoi_flipped, True
+        )
 
-    def _test_cbaoi_p_is_1(self, augf_name, cbaoi, cbaoi_flipped,
-                           deterministic):
+    def _test_cbaoi_p_is_1(self, augf_name, cbaoi, cbaoi_flipped, deterministic):
         aug = self.create_aug(1.0)
         if deterministic:
             aug = aug.to_deterministic()
@@ -267,19 +272,15 @@ class _TestFliplrAndFlipudBase(object):
         heatmaps = self.heatmaps
         observed = aug.augment_heatmaps(heatmaps)
         assert observed.shape == heatmaps.shape
-        assert np.isclose(observed.min_value, heatmaps.min_value,
-                          rtol=0, atol=1e-6)
-        assert np.isclose(observed.max_value, heatmaps.max_value,
-                          rtol=0, atol=1e-6)
-        assert np.array_equal(observed.get_arr(),
-                              self.heatmaps_flipped.get_arr())
+        assert np.isclose(observed.min_value, heatmaps.min_value, rtol=0, atol=1e-6)
+        assert np.isclose(observed.max_value, heatmaps.max_value, rtol=0, atol=1e-6)
+        assert np.array_equal(observed.get_arr(), self.heatmaps_flipped.get_arr())
 
     def test_segmaps_p_is_1(self):
         aug = self.create_aug(1.0)
         observed = aug.augment_segmentation_maps(self.segmaps)
         assert observed.shape == self.segmaps.shape
-        assert np.array_equal(observed.get_arr(),
-                              self.segmaps_flipped.get_arr())
+        assert np.array_equal(observed.get_arr(), self.segmaps_flipped.get_arr())
 
     def test_images_p_is_050(self):
         aug = self.create_aug(0.5)
@@ -291,8 +292,7 @@ class _TestFliplrAndFlipudBase(object):
             if np.array_equal(observed, self.images_flipped):
                 nb_images_flipped += 1
 
-        assert np.isclose(nb_images_flipped/nb_iterations,
-                          0.5, rtol=0, atol=0.1)
+        assert np.isclose(nb_images_flipped / nb_iterations, 0.5, rtol=0, atol=0.1)
 
     def test_images_p_is_050__deterministic(self):
         aug = self.create_aug(0.5).to_deterministic()
@@ -307,36 +307,38 @@ class _TestFliplrAndFlipudBase(object):
         assert nb_images_flipped_det in [0, nb_iterations]
 
     def test_keypoints_p_is_050(self):
-        self._test_cbaoi_p_is_050(
-            "augment_keypoints", self.kpsoi, self.kpsoi_flipped)
+        self._test_cbaoi_p_is_050("augment_keypoints", self.kpsoi, self.kpsoi_flipped)
 
     def test_keypoints_p_is_050__deterministic(self):
         self._test_cbaoi_p_is_050__deterministic(
-            "augment_keypoints", self.kpsoi, self.kpsoi_flipped)
+            "augment_keypoints", self.kpsoi, self.kpsoi_flipped
+        )
 
     def test_polygons_p_is_050(self):
-        self._test_cbaoi_p_is_050(
-            "augment_polygons", self.psoi, self.psoi_flipped)
+        self._test_cbaoi_p_is_050("augment_polygons", self.psoi, self.psoi_flipped)
 
     def test_polygons_p_is_050__deterministic(self):
         self._test_cbaoi_p_is_050__deterministic(
-            "augment_polygons", self.psoi, self.psoi_flipped)
+            "augment_polygons", self.psoi, self.psoi_flipped
+        )
 
     def test_line_strings_p_is_050(self):
-        self._test_cbaoi_p_is_050(
-            "augment_line_strings", self.lsoi, self.lsoi_flipped)
+        self._test_cbaoi_p_is_050("augment_line_strings", self.lsoi, self.lsoi_flipped)
 
     def test_line_strings_p_is_050__deterministic(self):
         self._test_cbaoi_p_is_050__deterministic(
-            "augment_line_strings", self.lsoi, self.lsoi_flipped)
+            "augment_line_strings", self.lsoi, self.lsoi_flipped
+        )
 
     def test_bounding_boxes_p_is_050(self):
         self._test_cbaoi_p_is_050(
-            "augment_bounding_boxes", self.bbsoi, self.bbsoi_flipped)
+            "augment_bounding_boxes", self.bbsoi, self.bbsoi_flipped
+        )
 
     def test_bounding_boxes_p_is_050__deterministic(self):
         self._test_cbaoi_p_is_050__deterministic(
-            "augment_bounding_boxes", self.bbsoi, self.bbsoi_flipped)
+            "augment_bounding_boxes", self.bbsoi, self.bbsoi_flipped
+        )
 
     def _test_cbaoi_p_is_050(self, augf_name, cbaoi, cbaoi_flipped):
         aug = self.create_aug(0.5)
@@ -345,23 +347,23 @@ class _TestFliplrAndFlipudBase(object):
         nb_cbaoi_flipped = 0
         for _ in sm.xrange(nb_iterations):
             observed = getattr(aug, augf_name)(cbaoi)
-            if np.allclose(observed[0].items[0].coords,
-                           cbaoi_flipped[0].items[0].coords):
+            if np.allclose(
+                observed[0].items[0].coords, cbaoi_flipped[0].items[0].coords
+            ):
                 nb_cbaoi_flipped += 1
 
-        assert np.isclose(nb_cbaoi_flipped/nb_iterations,
-                          0.5, rtol=0, atol=0.2)
+        assert np.isclose(nb_cbaoi_flipped / nb_iterations, 0.5, rtol=0, atol=0.2)
 
-    def _test_cbaoi_p_is_050__deterministic(self, augf_name, cbaoi,
-                                            cbaoi_flipped):
+    def _test_cbaoi_p_is_050__deterministic(self, augf_name, cbaoi, cbaoi_flipped):
         aug = self.create_aug(0.5).to_deterministic()
 
         nb_iterations = 10
         nb_cbaoi_flipped = 0
         for _ in sm.xrange(nb_iterations):
             observed = getattr(aug, augf_name)(cbaoi)
-            if np.allclose(observed[0].items[0].coords,
-                           cbaoi_flipped[0].items[0].coords):
+            if np.allclose(
+                observed[0].items[0].coords, cbaoi_flipped[0].items[0].coords
+            ):
                 nb_cbaoi_flipped += 1
 
         assert nb_cbaoi_flipped in [0, nb_iterations]
@@ -377,8 +379,7 @@ class _TestFliplrAndFlipudBase(object):
                 if np.array_equal(observed[i], self.image_flipped):
                     nb_flipped_by_pos[i] += 1
 
-        assert np.allclose(nb_flipped_by_pos,
-                           500, rtol=0, atol=100)
+        assert np.allclose(nb_flipped_by_pos, 500, rtol=0, atol=100)
 
     def test_list_of_images_p_is_050__deterministic(self):
         images_multi = [self.image, self.image]
@@ -425,7 +426,7 @@ class _TestFliplrAndFlipudBase(object):
             (0, 2, 0),
             (2, 0, 0),
             (0, 2, 1),
-            (2, 0, 1)
+            (2, 0, 1),
         ]
 
         for shape in shapes:
@@ -455,12 +456,12 @@ class _TestFliplrAndFlipudBase(object):
 
     def test_other_dtypes_uint_int(self):
         aug = self.create_aug(1.0)
-        dtypes = ["uint8", "uint16", "uint32", "uint64",
-                  "int8", "int32", "int64"]
+        dtypes = ["uint8", "uint16", "uint32", "uint64", "int8", "int32", "int64"]
         for dtype in dtypes:
             with self.subTest(dtype=dtype):
-                min_value, center_value, max_value = \
-                    iadt.get_value_range_of_dtype(dtype)
+                min_value, center_value, max_value = iadt.get_value_range_of_dtype(
+                    dtype
+                )
                 value = max_value
                 image = self.create_arr(value, dtype)
                 expected = self.create_arr_flipped(value, dtype)
@@ -475,12 +476,10 @@ class _TestFliplrAndFlipudBase(object):
         except TypeError:
             f128 = []  # float128 not known by user system
         dtypes = ["float16", "float32", "float64"] + f128
-        values = [5000, 1000**2, 1000**3, 1000**4]
+        values = [5000, 1000 ** 2, 1000 ** 3, 1000 ** 4]
         for dtype, value in zip(dtypes, values):
             with self.subTest(dtype=dtype):
-                atol = (1e-9 * value
-                        if dtype != "float16"
-                        else 1e-3 * value)
+                atol = 1e-9 * value if dtype != "float16" else 1e-3 * value
                 image = self.create_arr(value, dtype)
                 expected = self.create_arr_flipped(value, dtype)
                 image_aug = aug.augment_image(image)
@@ -498,66 +497,70 @@ class TestFliplr(_TestFliplrAndFlipudBase, unittest.TestCase):
 
     @property
     def image(self):
-        base_img = np.array([[0, 0, 1],
-                             [0, 0, 1],
-                             [0, 1, 1]], dtype=np.uint8)
+        base_img = np.array([[0, 0, 1], [0, 0, 1], [0, 1, 1]], dtype=np.uint8)
         return base_img[:, :, np.newaxis]
 
     @property
     def image_flipped(self):
-        base_img_flipped = np.array([[1, 0, 0],
-                                     [1, 0, 0],
-                                     [1, 1, 0]], dtype=np.uint8)
+        base_img_flipped = np.array([[1, 0, 0], [1, 0, 0], [1, 1, 0]], dtype=np.uint8)
         return base_img_flipped[:, :, np.newaxis]
 
     @property
     def heatmaps(self):
-        heatmaps_arr = np.float32([
-            [0.00, 0.50, 0.75],
-            [0.00, 0.50, 0.75],
-            [0.75, 0.75, 0.75],
-        ])
+        heatmaps_arr = np.float32(
+            [
+                [0.00, 0.50, 0.75],
+                [0.00, 0.50, 0.75],
+                [0.75, 0.75, 0.75],
+            ]
+        )
         return HeatmapsOnImage(heatmaps_arr, shape=(3, 3, 3))
 
     @property
     def heatmaps_flipped(self):
-        heatmaps_arr = np.float32([
-            [0.75, 0.50, 0.00],
-            [0.75, 0.50, 0.00],
-            [0.75, 0.75, 0.75],
-        ])
+        heatmaps_arr = np.float32(
+            [
+                [0.75, 0.50, 0.00],
+                [0.75, 0.50, 0.00],
+                [0.75, 0.75, 0.75],
+            ]
+        )
         return HeatmapsOnImage(heatmaps_arr, shape=(3, 3, 3))
 
     @property
     def segmaps(self):
-        segmaps_arr = np.int32([
-            [0, 1, 2],
-            [0, 1, 2],
-            [2, 2, 2],
-        ])
+        segmaps_arr = np.int32(
+            [
+                [0, 1, 2],
+                [0, 1, 2],
+                [2, 2, 2],
+            ]
+        )
         return SegmentationMapsOnImage(segmaps_arr, shape=(3, 3, 3))
 
     @property
     def segmaps_flipped(self):
-        segmaps_arr = np.int32([
-            [2, 1, 0],
-            [2, 1, 0],
-            [2, 2, 2],
-        ])
+        segmaps_arr = np.int32(
+            [
+                [2, 1, 0],
+                [2, 1, 0],
+                [2, 2, 2],
+            ]
+        )
         return SegmentationMapsOnImage(segmaps_arr, shape=(3, 3, 3))
 
     @property
     def kpsoi(self):
-        kps = [ia.Keypoint(x=0, y=0),
-               ia.Keypoint(x=1, y=1),
-               ia.Keypoint(x=2, y=2)]
+        kps = [ia.Keypoint(x=0, y=0), ia.Keypoint(x=1, y=1), ia.Keypoint(x=2, y=2)]
         return [ia.KeypointsOnImage(kps, shape=self.image.shape)]
 
     @property
     def kpsoi_flipped(self):
-        kps = [ia.Keypoint(x=3-0, y=0),
-               ia.Keypoint(x=3-1, y=1),
-               ia.Keypoint(x=3-2, y=2)]
+        kps = [
+            ia.Keypoint(x=3 - 0, y=0),
+            ia.Keypoint(x=3 - 1, y=1),
+            ia.Keypoint(x=3 - 2, y=2),
+        ]
         return [ia.KeypointsOnImage(kps, shape=self.image.shape)]
 
     @property
@@ -567,7 +570,7 @@ class TestFliplr(_TestFliplrAndFlipudBase, unittest.TestCase):
 
     @property
     def psoi_flipped(self):
-        polygons = [ia.Polygon([(3-0, 0), (3-2, 0), (3-2, 2)])]
+        polygons = [ia.Polygon([(3 - 0, 0), (3 - 2, 0), (3 - 2, 2)])]
         return [ia.PolygonsOnImage(polygons, shape=self.image.shape)]
 
     @property
@@ -577,7 +580,7 @@ class TestFliplr(_TestFliplrAndFlipudBase, unittest.TestCase):
 
     @property
     def lsoi_flipped(self):
-        ls = [ia.LineString([(3-0, 0), (3-2, 0), (3-2, 2)])]
+        ls = [ia.LineString([(3 - 0, 0), (3 - 2, 0), (3 - 2, 2)])]
         return [ia.LineStringsOnImage(ls, shape=self.image.shape)]
 
     @property
@@ -588,7 +591,7 @@ class TestFliplr(_TestFliplrAndFlipudBase, unittest.TestCase):
     @property
     def bbsoi_flipped(self):
         # note that x1 and x2 were inverted (otherwise would be x1>x2)
-        bbs = [ia.BoundingBox(x1=3-2, y1=1, x2=3-0, y2=3)]
+        bbs = [ia.BoundingBox(x1=3 - 2, y1=1, x2=3 - 0, y2=3)]
         return [ia.BoundingBoxesOnImage(bbs, shape=self.image.shape)]
 
     def create_aug(self, *args, **kwargs):
@@ -611,66 +614,70 @@ class TestFlipud(_TestFliplrAndFlipudBase, unittest.TestCase):
 
     @property
     def image(self):
-        base_img = np.array([[0, 0, 1],
-                             [0, 0, 1],
-                             [0, 1, 1]], dtype=np.uint8)
+        base_img = np.array([[0, 0, 1], [0, 0, 1], [0, 1, 1]], dtype=np.uint8)
         return base_img[:, :, np.newaxis]
 
     @property
     def image_flipped(self):
-        base_img_flipped = np.array([[0, 1, 1],
-                                     [0, 0, 1],
-                                     [0, 0, 1]], dtype=np.uint8)
+        base_img_flipped = np.array([[0, 1, 1], [0, 0, 1], [0, 0, 1]], dtype=np.uint8)
         return base_img_flipped[:, :, np.newaxis]
 
     @property
     def heatmaps(self):
-        heatmaps_arr = np.float32([
-            [0.00, 0.50, 0.75],
-            [0.00, 0.50, 0.75],
-            [0.75, 0.75, 0.75],
-        ])
+        heatmaps_arr = np.float32(
+            [
+                [0.00, 0.50, 0.75],
+                [0.00, 0.50, 0.75],
+                [0.75, 0.75, 0.75],
+            ]
+        )
         return HeatmapsOnImage(heatmaps_arr, shape=(3, 3, 3))
 
     @property
     def heatmaps_flipped(self):
-        heatmaps_arr = np.float32([
-            [0.75, 0.75, 0.75],
-            [0.00, 0.50, 0.75],
-            [0.00, 0.50, 0.75],
-        ])
+        heatmaps_arr = np.float32(
+            [
+                [0.75, 0.75, 0.75],
+                [0.00, 0.50, 0.75],
+                [0.00, 0.50, 0.75],
+            ]
+        )
         return HeatmapsOnImage(heatmaps_arr, shape=(3, 3, 3))
 
     @property
     def segmaps(self):
-        segmaps_arr = np.int32([
-            [0, 1, 2],
-            [0, 1, 2],
-            [2, 2, 2],
-        ])
+        segmaps_arr = np.int32(
+            [
+                [0, 1, 2],
+                [0, 1, 2],
+                [2, 2, 2],
+            ]
+        )
         return SegmentationMapsOnImage(segmaps_arr, shape=(3, 3, 3))
 
     @property
     def segmaps_flipped(self):
-        segmaps_arr = np.int32([
-            [2, 2, 2],
-            [0, 1, 2],
-            [0, 1, 2],
-        ])
+        segmaps_arr = np.int32(
+            [
+                [2, 2, 2],
+                [0, 1, 2],
+                [0, 1, 2],
+            ]
+        )
         return SegmentationMapsOnImage(segmaps_arr, shape=(3, 3, 3))
 
     @property
     def kpsoi(self):
-        kps = [ia.Keypoint(x=0, y=0),
-               ia.Keypoint(x=1, y=1),
-               ia.Keypoint(x=2, y=2)]
+        kps = [ia.Keypoint(x=0, y=0), ia.Keypoint(x=1, y=1), ia.Keypoint(x=2, y=2)]
         return [ia.KeypointsOnImage(kps, shape=self.image.shape)]
 
     @property
     def kpsoi_flipped(self):
-        kps = [ia.Keypoint(x=0, y=3-0),
-               ia.Keypoint(x=1, y=3-1),
-               ia.Keypoint(x=2, y=3-2)]
+        kps = [
+            ia.Keypoint(x=0, y=3 - 0),
+            ia.Keypoint(x=1, y=3 - 1),
+            ia.Keypoint(x=2, y=3 - 2),
+        ]
         return [ia.KeypointsOnImage(kps, shape=self.image.shape)]
 
     @property
@@ -680,7 +687,7 @@ class TestFlipud(_TestFliplrAndFlipudBase, unittest.TestCase):
 
     @property
     def psoi_flipped(self):
-        polygons = [ia.Polygon([(0, 3-0), (2, 3-0), (2, 3-2)])]
+        polygons = [ia.Polygon([(0, 3 - 0), (2, 3 - 0), (2, 3 - 2)])]
         return [ia.PolygonsOnImage(polygons, shape=self.image.shape)]
 
     @property
@@ -690,7 +697,7 @@ class TestFlipud(_TestFliplrAndFlipudBase, unittest.TestCase):
 
     @property
     def lsoi_flipped(self):
-        ls = [ia.LineString([(0, 3-0), (2, 3-0), (2, 3-2)])]
+        ls = [ia.LineString([(0, 3 - 0), (2, 3 - 0), (2, 3 - 2)])]
         return [ia.LineStringsOnImage(ls, shape=self.image.shape)]
 
     @property
@@ -701,7 +708,7 @@ class TestFlipud(_TestFliplrAndFlipudBase, unittest.TestCase):
     @property
     def bbsoi_flipped(self):
         # note that y1 and y2 were inverted (otherwise would be y1>y2)
-        bbs = [ia.BoundingBox(x1=0, y1=3-3, x2=2, y2=3-1)]
+        bbs = [ia.BoundingBox(x1=0, y1=3 - 3, x2=2, y2=3 - 1)]
         return [ia.BoundingBoxesOnImage(bbs, shape=self.image.shape)]
 
     def create_aug(self, *args, **kwargs):
@@ -745,9 +752,13 @@ class Test_fliplr(unittest.TestCase):
 
         dtypes = [
             "bool",
-            "uint32", "uint64",
-            "int32", "int64",
-            "float16", "float32", "float64"
+            "uint32",
+            "uint64",
+            "int32",
+            "int64",
+            "float16",
+            "float32",
+            "float64",
         ] + f128
 
         for dtype in dtypes:
@@ -789,11 +800,7 @@ class Test_fliplr(unittest.TestCase):
 
     @classmethod
     def _test__fliplr_subfunc_n_channels(cls, func, nb_channels):
-        arr = np.uint8([
-            [0, 1, 2, 3],
-            [4, 5, 6, 7],
-            [10, 11, 12, 13]
-        ])
+        arr = np.uint8([[0, 1, 2, 3], [4, 5, 6, 7], [10, 11, 12, 13]])
         if nb_channels is not None:
             arr = np.tile(arr[..., np.newaxis], (1, 1, nb_channels))
             for c in sm.xrange(nb_channels):
@@ -801,11 +808,7 @@ class Test_fliplr(unittest.TestCase):
 
         arr_flipped = func(arr)
 
-        expected = np.uint8([
-            [3, 2, 1, 0],
-            [7, 6, 5, 4],
-            [13, 12, 11, 10]
-        ])
+        expected = np.uint8([[3, 2, 1, 0], [7, 6, 5, 4], [13, 12, 11, 10]])
         if nb_channels is not None:
             expected = np.tile(expected[..., np.newaxis], (1, 1, nb_channels))
             for c in sm.xrange(nb_channels):
@@ -899,8 +902,7 @@ class Test_fliplr(unittest.TestCase):
         assert np.array_equal(arr_flipped, expected)
 
     def test_uint_int_faithful(self):
-        dts = ["uint8", "uint16", "uint32", "uint64",
-               "int8", "int16", "int32", "int64"]
+        dts = ["uint8", "uint16", "uint32", "uint64", "int8", "int16", "int32", "int64"]
         for dt in dts:
             with self.subTest(dtype=dt):
                 dt = np.dtype(dt)
@@ -946,10 +948,10 @@ class Test_fliplr(unittest.TestCase):
 
         dts = ["float16", "float32", "float64"] + f128
         values = [
-            [0.01, 0.1, 1.0, 10.0**1, 10.0**2],  # float16
-            [0.01, 0.1, 1.0, 10.0**1, 10.0**2, 10.0**4, 10.0**6],  # float32
-            [0.01, 0.1, 1.0, 10.0**1, 10.0**2, 10.0**6, 10.0**10],  # float64
-            [0.01, 0.1, 1.0, 10.0**1, 10.0**2, 10.0**7, 10.0**11],  # float128
+            [0.01, 0.1, 1.0, 10.0 ** 1, 10.0 ** 2],  # float16
+            [0.01, 0.1, 1.0, 10.0 ** 1, 10.0 ** 2, 10.0 ** 4, 10.0 ** 6],  # float32
+            [0.01, 0.1, 1.0, 10.0 ** 1, 10.0 ** 2, 10.0 ** 6, 10.0 ** 10],  # float64
+            [0.01, 0.1, 1.0, 10.0 ** 1, 10.0 ** 2, 10.0 ** 7, 10.0 ** 11],  # float128
         ]
         for dt, values_i in zip(dts, values):
             for value in values_i:
@@ -985,11 +987,7 @@ class Test_flipud(unittest.TestCase):
 
     @classmethod
     def _test__flipud_subfunc_n_channels(cls, func, nb_channels):
-        arr = np.uint8([
-            [0, 1, 2, 3],
-            [4, 5, 6, 7],
-            [10, 11, 12, 13]
-        ])
+        arr = np.uint8([[0, 1, 2, 3], [4, 5, 6, 7], [10, 11, 12, 13]])
         if nb_channels is not None:
             arr = np.tile(arr[..., np.newaxis], (1, 1, nb_channels))
             for c in sm.xrange(nb_channels):
@@ -997,11 +995,7 @@ class Test_flipud(unittest.TestCase):
 
         arr_flipped = func(arr)
 
-        expected = np.uint8([
-            [10, 11, 12, 13],
-            [4, 5, 6, 7],
-            [0, 1, 2, 3]
-        ])
+        expected = np.uint8([[10, 11, 12, 13], [4, 5, 6, 7], [0, 1, 2, 3]])
         if nb_channels is not None:
             expected = np.tile(expected[..., np.newaxis], (1, 1, nb_channels))
             for c in sm.xrange(nb_channels):
@@ -1037,8 +1031,7 @@ class Test_flipud(unittest.TestCase):
         assert np.array_equal(arr_flipped, expected)
 
     def test_uint_int_faithful(self):
-        dts = ["uint8", "uint16", "uint32", "uint64",
-               "int8", "int16", "int32", "int64"]
+        dts = ["uint8", "uint16", "uint32", "uint64", "int8", "int16", "int32", "int64"]
         for dt in dts:
             with self.subTest(dtype=dt):
                 dt = np.dtype(dt)
@@ -1081,10 +1074,10 @@ class Test_flipud(unittest.TestCase):
             f128 = []  # float128 not known by user system
         dts = ["float16", "float32", "float64"] + f128
         values = [
-            [0.01, 0.1, 1.0, 10.0**1, 10.0**2],  # float16
-            [0.01, 0.1, 1.0, 10.0**1, 10.0**2, 10.0**4, 10.0**6],  # float32
-            [0.01, 0.1, 1.0, 10.0**1, 10.0**2, 10.0**6, 10.0**10],  # float64
-            [0.01, 0.1, 1.0, 10.0**1, 10.0**2, 10.0**7, 10.0**11],  # float128
+            [0.01, 0.1, 1.0, 10.0 ** 1, 10.0 ** 2],  # float16
+            [0.01, 0.1, 1.0, 10.0 ** 1, 10.0 ** 2, 10.0 ** 4, 10.0 ** 6],  # float32
+            [0.01, 0.1, 1.0, 10.0 ** 1, 10.0 ** 2, 10.0 ** 6, 10.0 ** 10],  # float64
+            [0.01, 0.1, 1.0, 10.0 ** 1, 10.0 ** 2, 10.0 ** 7, 10.0 ** 11],  # float128
         ]
         for dt, values_i in zip(dts, values):
             for value in values_i:

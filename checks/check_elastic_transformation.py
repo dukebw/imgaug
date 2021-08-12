@@ -19,8 +19,12 @@ def main():
 
     # check if scipy and cv2 remap similarly
     rs = iarandom.RNG(1)
-    aug_scipy = ElasticTransformationScipy(alpha=30, sigma=3, random_state=rs, deterministic=True)
-    aug_cv2 = ElasticTransformationCv2(alpha=30, sigma=3, random_state=rs, deterministic=True)
+    aug_scipy = ElasticTransformationScipy(
+        alpha=30, sigma=3, random_state=rs, deterministic=True
+    )
+    aug_cv2 = ElasticTransformationCv2(
+        alpha=30, sigma=3, random_state=rs, deterministic=True
+    )
     augs_scipy = aug_scipy.augment_images([image] * 8)
     augs_cv2 = aug_cv2.augment_images([image] * 8)
     ia.imshow(ia.draw_grid(augs_scipy + augs_cv2, rows=2))
@@ -33,41 +37,67 @@ def main():
     ia.imshow(ia.draw_grid(images1 + images2 + images3, rows=3))
 
     print("alpha=vary, sigma=0.25")
-    augs = [iaa.ElasticTransformation(alpha=alpha, sigma=0.25) for alpha in np.arange(0.0, 50.0, 0.1)]
+    augs = [
+        iaa.ElasticTransformation(alpha=alpha, sigma=0.25)
+        for alpha in np.arange(0.0, 50.0, 0.1)
+    ]
     images_aug = [aug.augment_image(image) for aug in augs]
     ia.imshow(ia.draw_grid(images_aug, cols=10))
 
     print("alpha=vary, sigma=1.0")
-    augs = [iaa.ElasticTransformation(alpha=alpha, sigma=1.0) for alpha in np.arange(0.0, 50.0, 0.1)]
+    augs = [
+        iaa.ElasticTransformation(alpha=alpha, sigma=1.0)
+        for alpha in np.arange(0.0, 50.0, 0.1)
+    ]
     images_aug = [aug.augment_image(image) for aug in augs]
     ia.imshow(ia.draw_grid(images_aug, cols=10))
 
     print("alpha=vary, sigma=3.0")
-    augs = [iaa.ElasticTransformation(alpha=alpha, sigma=3.0) for alpha in np.arange(0.0, 50.0, 0.1)]
+    augs = [
+        iaa.ElasticTransformation(alpha=alpha, sigma=3.0)
+        for alpha in np.arange(0.0, 50.0, 0.1)
+    ]
     images_aug = [aug.augment_image(image) for aug in augs]
     ia.imshow(ia.draw_grid(images_aug, cols=10))
 
     print("alpha=vary, sigma=5.0")
-    augs = [iaa.ElasticTransformation(alpha=alpha, sigma=5.0) for alpha in np.arange(0.0, 50.0, 0.1)]
+    augs = [
+        iaa.ElasticTransformation(alpha=alpha, sigma=5.0)
+        for alpha in np.arange(0.0, 50.0, 0.1)
+    ]
     images_aug = [aug.augment_image(image) for aug in augs]
     ia.imshow(ia.draw_grid(images_aug, cols=10))
 
     print("alpha=1.0, sigma=vary")
-    augs = [iaa.ElasticTransformation(alpha=1.0, sigma=sigma) for sigma in np.arange(0.0, 50.0, 0.1)]
+    augs = [
+        iaa.ElasticTransformation(alpha=1.0, sigma=sigma)
+        for sigma in np.arange(0.0, 50.0, 0.1)
+    ]
     images_aug = [aug.augment_image(image) for aug in augs]
     ia.imshow(ia.draw_grid(images_aug, cols=10))
 
     print("alpha=10.0, sigma=vary")
-    augs = [iaa.ElasticTransformation(alpha=10.0, sigma=sigma) for sigma in np.arange(0.0, 50.0, 0.1)]
+    augs = [
+        iaa.ElasticTransformation(alpha=10.0, sigma=sigma)
+        for sigma in np.arange(0.0, 50.0, 0.1)
+    ]
     images_aug = [aug.augment_image(image) for aug in augs]
     ia.imshow(ia.draw_grid(images_aug, cols=10))
 
     kps = ia.KeypointsOnImage(
-        [ia.Keypoint(x=1, y=1),
-         ia.Keypoint(x=50, y=24), ia.Keypoint(x=42, y=96), ia.Keypoint(x=88, y=106), ia.Keypoint(x=88, y=53),
-         ia.Keypoint(x=0, y=0), ia.Keypoint(x=128, y=128), ia.Keypoint(x=-20, y=30), ia.Keypoint(x=20, y=-30),
-         ia.Keypoint(x=-20, y=-30)],
-        shape=image.shape
+        [
+            ia.Keypoint(x=1, y=1),
+            ia.Keypoint(x=50, y=24),
+            ia.Keypoint(x=42, y=96),
+            ia.Keypoint(x=88, y=106),
+            ia.Keypoint(x=88, y=53),
+            ia.Keypoint(x=0, y=0),
+            ia.Keypoint(x=128, y=128),
+            ia.Keypoint(x=-20, y=30),
+            ia.Keypoint(x=20, y=-30),
+            ia.Keypoint(x=-20, y=-30),
+        ],
+        shape=image.shape,
     )
 
     images = []
@@ -81,33 +111,67 @@ def main():
         (12.0, 3.0),
         (50.0, 5.0),
         (100.0, 5.0),
-        (100.0, 10.0)
+        (100.0, 10.0),
     ]
 
     for (alpha, sigma) in params:
         images_row = []
         seqs_row = [
-            iaa.ElasticTransformation(alpha=alpha, sigma=sigma, mode="constant", cval=0, order=0),
-            iaa.ElasticTransformation(alpha=alpha, sigma=sigma, mode="constant", cval=128, order=0),
-            iaa.ElasticTransformation(alpha=alpha, sigma=sigma, mode="constant", cval=255, order=0),
-            iaa.ElasticTransformation(alpha=alpha, sigma=sigma, mode="constant", cval=0, order=1),
-            iaa.ElasticTransformation(alpha=alpha, sigma=sigma, mode="constant", cval=128, order=1),
-            iaa.ElasticTransformation(alpha=alpha, sigma=sigma, mode="constant", cval=255, order=1),
-            iaa.ElasticTransformation(alpha=alpha, sigma=sigma, mode="constant", cval=0, order=3),
-            iaa.ElasticTransformation(alpha=alpha, sigma=sigma, mode="constant", cval=128, order=3),
-            iaa.ElasticTransformation(alpha=alpha, sigma=sigma, mode="constant", cval=255, order=3),
-            iaa.ElasticTransformation(alpha=alpha, sigma=sigma, mode="nearest", order=0),
-            iaa.ElasticTransformation(alpha=alpha, sigma=sigma, mode="nearest", order=1),
-            iaa.ElasticTransformation(alpha=alpha, sigma=sigma, mode="nearest", order=2),
-            iaa.ElasticTransformation(alpha=alpha, sigma=sigma, mode="nearest", order=3),
-            iaa.ElasticTransformation(alpha=alpha, sigma=sigma, mode="reflect", order=0),
-            iaa.ElasticTransformation(alpha=alpha, sigma=sigma, mode="reflect", order=1),
-            iaa.ElasticTransformation(alpha=alpha, sigma=sigma, mode="reflect", order=2),
-            iaa.ElasticTransformation(alpha=alpha, sigma=sigma, mode="reflect", order=3),
+            iaa.ElasticTransformation(
+                alpha=alpha, sigma=sigma, mode="constant", cval=0, order=0
+            ),
+            iaa.ElasticTransformation(
+                alpha=alpha, sigma=sigma, mode="constant", cval=128, order=0
+            ),
+            iaa.ElasticTransformation(
+                alpha=alpha, sigma=sigma, mode="constant", cval=255, order=0
+            ),
+            iaa.ElasticTransformation(
+                alpha=alpha, sigma=sigma, mode="constant", cval=0, order=1
+            ),
+            iaa.ElasticTransformation(
+                alpha=alpha, sigma=sigma, mode="constant", cval=128, order=1
+            ),
+            iaa.ElasticTransformation(
+                alpha=alpha, sigma=sigma, mode="constant", cval=255, order=1
+            ),
+            iaa.ElasticTransformation(
+                alpha=alpha, sigma=sigma, mode="constant", cval=0, order=3
+            ),
+            iaa.ElasticTransformation(
+                alpha=alpha, sigma=sigma, mode="constant", cval=128, order=3
+            ),
+            iaa.ElasticTransformation(
+                alpha=alpha, sigma=sigma, mode="constant", cval=255, order=3
+            ),
+            iaa.ElasticTransformation(
+                alpha=alpha, sigma=sigma, mode="nearest", order=0
+            ),
+            iaa.ElasticTransformation(
+                alpha=alpha, sigma=sigma, mode="nearest", order=1
+            ),
+            iaa.ElasticTransformation(
+                alpha=alpha, sigma=sigma, mode="nearest", order=2
+            ),
+            iaa.ElasticTransformation(
+                alpha=alpha, sigma=sigma, mode="nearest", order=3
+            ),
+            iaa.ElasticTransformation(
+                alpha=alpha, sigma=sigma, mode="reflect", order=0
+            ),
+            iaa.ElasticTransformation(
+                alpha=alpha, sigma=sigma, mode="reflect", order=1
+            ),
+            iaa.ElasticTransformation(
+                alpha=alpha, sigma=sigma, mode="reflect", order=2
+            ),
+            iaa.ElasticTransformation(
+                alpha=alpha, sigma=sigma, mode="reflect", order=3
+            ),
             iaa.ElasticTransformation(alpha=alpha, sigma=sigma, mode="wrap", order=0),
             iaa.ElasticTransformation(alpha=alpha, sigma=sigma, mode="wrap", order=1),
             iaa.ElasticTransformation(alpha=alpha, sigma=sigma, mode="wrap", order=2),
-            iaa.ElasticTransformation(alpha=alpha, sigma=sigma, mode="wrap", order=3)
+            iaa.ElasticTransformation(alpha=alpha, sigma=sigma, mode="wrap", order=3),
         ]
 
         for seq in seqs_row:
@@ -136,8 +200,13 @@ class ElasticTransformationScipy(iaa.ElasticTransformation):
         print("map_coordinates() with scipy")
 
         if order == 0 and image.dtype.name in ["uint64", "int64"]:
-            raise Exception(("dtypes uint64 and int64 are only supported in ElasticTransformation for order=0, "
-                             + "got order=%d with dtype=%s.") % (order, image.dtype.name))
+            raise Exception(
+                (
+                    "dtypes uint64 and int64 are only supported in ElasticTransformation for order=0, "
+                    + "got order=%d with dtype=%s."
+                )
+                % (order, image.dtype.name)
+            )
 
         input_dtype = image.dtype
         if image.dtype.name == "bool":
@@ -152,15 +221,37 @@ class ElasticTransformationScipy(iaa.ElasticTransformation):
         shrt_max = 32767
         backend = "cv2"
         if order == 0:
-            bad_dtype_cv2 = (image.dtype.name in ["uint32", "uint64", "int64", "float128", "bool"])
+            bad_dtype_cv2 = image.dtype.name in [
+                "uint32",
+                "uint64",
+                "int64",
+                "float128",
+                "bool",
+            ]
         elif order == 1:
-            bad_dtype_cv2 = (image.dtype.name in ["uint32", "uint64", "int8", "int16", "int32", "int64", "float128",
-                                                  "bool"])
+            bad_dtype_cv2 = image.dtype.name in [
+                "uint32",
+                "uint64",
+                "int8",
+                "int16",
+                "int32",
+                "int64",
+                "float128",
+                "bool",
+            ]
         else:
-            bad_dtype_cv2 = (image.dtype.name in ["uint32", "uint64", "int8", "int32", "int64", "float128", "bool"])
+            bad_dtype_cv2 = image.dtype.name in [
+                "uint32",
+                "uint64",
+                "int8",
+                "int32",
+                "int64",
+                "float128",
+                "bool",
+            ]
 
-        bad_dx_shape_cv2 = (dx.shape[0] >= shrt_max or dx.shape[1] >= shrt_max)
-        bad_dy_shape_cv2 = (dy.shape[0] >= shrt_max or dy.shape[1] >= shrt_max)
+        bad_dx_shape_cv2 = dx.shape[0] >= shrt_max or dx.shape[1] >= shrt_max
+        bad_dy_shape_cv2 = dy.shape[0] >= shrt_max or dy.shape[1] >= shrt_max
         if bad_dtype_cv2 or bad_dx_shape_cv2 or bad_dy_shape_cv2:
             backend = "scipy"
 
@@ -170,7 +261,11 @@ class ElasticTransformationScipy(iaa.ElasticTransformation):
         # True was added here, only difference to usual code
         if True or backend == "scipy":
             h, w = image.shape[0:2]
-            y, x = np.meshgrid(np.arange(h).astype(np.float32), np.arange(w).astype(np.float32), indexing='ij')
+            y, x = np.meshgrid(
+                np.arange(h).astype(np.float32),
+                np.arange(w).astype(np.float32),
+                indexing="ij",
+            )
             x_shifted = x + (-1) * dx
             y_shifted = y + (-1) * dy
 
@@ -180,14 +275,18 @@ class ElasticTransformationScipy(iaa.ElasticTransformation):
                     (y_shifted.flatten(), x_shifted.flatten()),
                     order=order,
                     cval=cval,
-                    mode=mode
+                    mode=mode,
                 )
                 remapped = remapped_flat.reshape((height, width))
                 result[..., c] = remapped
         else:
             h, w, nb_channels = image.shape
 
-            y, x = np.meshgrid(np.arange(h).astype(np.float32), np.arange(w).astype(np.float32), indexing='ij')
+            y, x = np.meshgrid(
+                np.arange(h).astype(np.float32),
+                np.arange(w).astype(np.float32),
+                indexing="ij",
+            )
             x_shifted = x + (-1) * dx
             y_shifted = y + (-1) * dy
 
@@ -198,20 +297,35 @@ class ElasticTransformationScipy(iaa.ElasticTransformation):
             border_mode = cls._MAPPING_MODE_SCIPY_CV2[mode]
             interpolation = cls._MAPPING_ORDER_SCIPY_CV2[order]
 
-            is_nearest_neighbour = (interpolation == cv2.INTER_NEAREST)
-            map1, map2 = cv2.convertMaps(x_shifted, y_shifted, cv2.CV_16SC2, nninterpolation=is_nearest_neighbour)
+            is_nearest_neighbour = interpolation == cv2.INTER_NEAREST
+            map1, map2 = cv2.convertMaps(
+                x_shifted, y_shifted, cv2.CV_16SC2, nninterpolation=is_nearest_neighbour
+            )
             # remap only supports up to 4 channels
             if nb_channels <= 4:
-                result = cv2.remap(image, map1, map2, interpolation=interpolation, borderMode=border_mode, borderValue=cval)
+                result = cv2.remap(
+                    image,
+                    map1,
+                    map2,
+                    interpolation=interpolation,
+                    borderMode=border_mode,
+                    borderValue=cval,
+                )
                 if image.ndim == 3 and result.ndim == 2:
                     result = result[..., np.newaxis]
             else:
                 current_chan_idx = 0
                 result = []
                 while current_chan_idx < nb_channels:
-                    channels = image[..., current_chan_idx:current_chan_idx+4]
-                    result_c =  cv2.remap(channels, map1, map2, interpolation=interpolation, borderMode=border_mode,
-                                          borderValue=cval)
+                    channels = image[..., current_chan_idx : current_chan_idx + 4]
+                    result_c = cv2.remap(
+                        channels,
+                        map1,
+                        map2,
+                        interpolation=interpolation,
+                        borderMode=border_mode,
+                        borderValue=cval,
+                    )
                     if result_c.ndim == 2:
                         result_c = result_c[..., np.newaxis]
                     result.append(result_c)
@@ -231,8 +345,13 @@ class ElasticTransformationCv2(iaa.ElasticTransformation):
         print("map_coordinates() with cv2")
 
         if order == 0 and image.dtype.name in ["uint64", "int64"]:
-            raise Exception(("dtypes uint64 and int64 are only supported in ElasticTransformation for order=0, "
-                             + "got order=%d with dtype=%s.") % (order, image.dtype.name))
+            raise Exception(
+                (
+                    "dtypes uint64 and int64 are only supported in ElasticTransformation for order=0, "
+                    + "got order=%d with dtype=%s."
+                )
+                % (order, image.dtype.name)
+            )
 
         input_dtype = image.dtype
         if image.dtype.name == "bool":
@@ -247,15 +366,37 @@ class ElasticTransformationCv2(iaa.ElasticTransformation):
         shrt_max = 32767
         backend = "cv2"
         if order == 0:
-            bad_dtype_cv2 = (image.dtype.name in ["uint32", "uint64", "int64", "float128", "bool"])
+            bad_dtype_cv2 = image.dtype.name in [
+                "uint32",
+                "uint64",
+                "int64",
+                "float128",
+                "bool",
+            ]
         elif order == 1:
-            bad_dtype_cv2 = (image.dtype.name in ["uint32", "uint64", "int8", "int16", "int32", "int64", "float128",
-                                                  "bool"])
+            bad_dtype_cv2 = image.dtype.name in [
+                "uint32",
+                "uint64",
+                "int8",
+                "int16",
+                "int32",
+                "int64",
+                "float128",
+                "bool",
+            ]
         else:
-            bad_dtype_cv2 = (image.dtype.name in ["uint32", "uint64", "int8", "int32", "int64", "float128", "bool"])
+            bad_dtype_cv2 = image.dtype.name in [
+                "uint32",
+                "uint64",
+                "int8",
+                "int32",
+                "int64",
+                "float128",
+                "bool",
+            ]
 
-        bad_dx_shape_cv2 = (dx.shape[0] >= shrt_max or dx.shape[1] >= shrt_max)
-        bad_dy_shape_cv2 = (dy.shape[0] >= shrt_max or dy.shape[1] >= shrt_max)
+        bad_dx_shape_cv2 = dx.shape[0] >= shrt_max or dx.shape[1] >= shrt_max
+        bad_dy_shape_cv2 = dy.shape[0] >= shrt_max or dy.shape[1] >= shrt_max
         if bad_dtype_cv2 or bad_dx_shape_cv2 or bad_dy_shape_cv2:
             backend = "scipy"
 
@@ -265,7 +406,11 @@ class ElasticTransformationCv2(iaa.ElasticTransformation):
         # False was added here, only difference to usual code
         if False or backend == "scipy":
             h, w = image.shape[0:2]
-            y, x = np.meshgrid(np.arange(h).astype(np.float32), np.arange(w).astype(np.float32), indexing='ij')
+            y, x = np.meshgrid(
+                np.arange(h).astype(np.float32),
+                np.arange(w).astype(np.float32),
+                indexing="ij",
+            )
             x_shifted = x + (-1) * dx
             y_shifted = y + (-1) * dy
 
@@ -275,14 +420,18 @@ class ElasticTransformationCv2(iaa.ElasticTransformation):
                     (x_shifted.flatten(), y_shifted.flatten()),
                     order=order,
                     cval=cval,
-                    mode=mode
+                    mode=mode,
                 )
                 remapped = remapped_flat.reshape((height, width))
                 result[..., c] = remapped
         else:
             h, w, nb_channels = image.shape
 
-            y, x = np.meshgrid(np.arange(h).astype(np.float32), np.arange(w).astype(np.float32), indexing='ij')
+            y, x = np.meshgrid(
+                np.arange(h).astype(np.float32),
+                np.arange(w).astype(np.float32),
+                indexing="ij",
+            )
             x_shifted = x + (-1) * dx
             y_shifted = y + (-1) * dy
 
@@ -293,20 +442,35 @@ class ElasticTransformationCv2(iaa.ElasticTransformation):
             border_mode = cls._MAPPING_MODE_SCIPY_CV2[mode]
             interpolation = cls._MAPPING_ORDER_SCIPY_CV2[order]
 
-            is_nearest_neighbour = (interpolation == cv2.INTER_NEAREST)
-            map1, map2 = cv2.convertMaps(x_shifted, y_shifted, cv2.CV_16SC2, nninterpolation=is_nearest_neighbour)
+            is_nearest_neighbour = interpolation == cv2.INTER_NEAREST
+            map1, map2 = cv2.convertMaps(
+                x_shifted, y_shifted, cv2.CV_16SC2, nninterpolation=is_nearest_neighbour
+            )
             # remap only supports up to 4 channels
             if nb_channels <= 4:
-                result = cv2.remap(image, map1, map2, interpolation=interpolation, borderMode=border_mode, borderValue=cval)
+                result = cv2.remap(
+                    image,
+                    map1,
+                    map2,
+                    interpolation=interpolation,
+                    borderMode=border_mode,
+                    borderValue=cval,
+                )
                 if image.ndim == 3 and result.ndim == 2:
                     result = result[..., np.newaxis]
             else:
                 current_chan_idx = 0
                 result = []
                 while current_chan_idx < nb_channels:
-                    channels = image[..., current_chan_idx:current_chan_idx+4]
-                    result_c =  cv2.remap(channels, map1, map2, interpolation=interpolation, borderMode=border_mode,
-                                          borderValue=cval)
+                    channels = image[..., current_chan_idx : current_chan_idx + 4]
+                    result_c = cv2.remap(
+                        channels,
+                        map1,
+                        map2,
+                        interpolation=interpolation,
+                        borderMode=border_mode,
+                        borderValue=cval,
+                    )
                     if result_c.ndim == 2:
                         result_c = result_c[..., np.newaxis]
                     result.append(result_c)

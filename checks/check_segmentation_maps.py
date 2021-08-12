@@ -25,12 +25,7 @@ def main():
     segmaps_drawn = segmap.draw_on_image(quokka)[0]
     segmaps_aug_drawn = segmaps_aug.draw_on_image(quokka_aug)[0]
 
-    ia.imshow(
-        np.hstack([
-            segmaps_drawn,
-            segmaps_aug_drawn
-        ])
-    )
+    ia.imshow(np.hstack([segmaps_drawn, segmaps_aug_drawn]))
 
     print("Affine with mode=edge...")
     aug = iaa.Affine(translate_px={"x": 20}, mode="edge")
@@ -39,12 +34,7 @@ def main():
     segmaps_drawn = segmap.draw_on_image(quokka)[0]
     segmaps_aug_drawn = segmaps_aug.draw_on_image(quokka_aug)[0]
 
-    ia.imshow(
-        np.hstack([
-            segmaps_drawn,
-            segmaps_aug_drawn
-        ])
-    )
+    ia.imshow(np.hstack([segmaps_drawn, segmaps_aug_drawn]))
 
     print("PiecewiseAffine...")
     aug = iaa.PiecewiseAffine(scale=0.04)
@@ -54,12 +44,7 @@ def main():
     segmaps_drawn = segmap.draw_on_image(quokka)[0]
     segmaps_aug_drawn = segmaps_aug.draw_on_image(quokka_aug)[0]
 
-    ia.imshow(
-        np.hstack([
-            segmaps_drawn,
-            segmaps_aug_drawn
-        ])
-    )
+    ia.imshow(np.hstack([segmaps_drawn, segmaps_aug_drawn]))
 
     print("PerspectiveTransform...")
     aug = iaa.PerspectiveTransform(scale=0.04)
@@ -69,12 +54,7 @@ def main():
     segmaps_drawn = segmap.draw_on_image(quokka)[0]
     segmaps_aug_drawn = segmaps_aug.draw_on_image(quokka_aug)[0]
 
-    ia.imshow(
-        np.hstack([
-            segmaps_drawn,
-            segmaps_aug_drawn
-        ])
-    )
+    ia.imshow(np.hstack([segmaps_drawn, segmaps_aug_drawn]))
 
     print("ElasticTransformation alpha=3, sig=0.5...")
     aug = iaa.ElasticTransformation(alpha=3.0, sigma=0.5)
@@ -84,12 +64,7 @@ def main():
     segmaps_drawn = segmap.draw_on_image(quokka)[0]
     segmaps_aug_drawn = segmaps_aug.draw_on_image(quokka_aug)[0]
 
-    ia.imshow(
-        np.hstack([
-            segmaps_drawn,
-            segmaps_aug_drawn
-        ])
-    )
+    ia.imshow(np.hstack([segmaps_drawn, segmaps_aug_drawn]))
 
     print("ElasticTransformation alpha=10, sig=3...")
     aug = iaa.ElasticTransformation(alpha=10.0, sigma=3.0)
@@ -99,12 +74,7 @@ def main():
     segmaps_drawn = segmap.draw_on_image(quokka)[0]
     segmaps_aug_drawn = segmaps_aug.draw_on_image(quokka_aug)[0]
 
-    ia.imshow(
-        np.hstack([
-            segmaps_drawn,
-            segmaps_aug_drawn
-        ])
-    )
+    ia.imshow(np.hstack([segmaps_drawn, segmaps_aug_drawn]))
 
     print("ElasticTransformation alpha=200, sig=20...")
     aug = iaa.ElasticTransformation(alpha=200.0, sigma=20.0)
@@ -114,12 +84,7 @@ def main():
     segmaps_drawn = segmap.draw_on_image(quokka)[0]
     segmaps_aug_drawn = segmaps_aug.draw_on_image(quokka_aug)[0]
 
-    ia.imshow(
-        np.hstack([
-            segmaps_drawn,
-            segmaps_aug_drawn
-        ])
-    )
+    ia.imshow(np.hstack([segmaps_drawn, segmaps_aug_drawn]))
 
     print("CopAndPad mode=constant...")
     aug = iaa.CropAndPad(px=(-10, 10, 15, -15), pad_mode="constant", pad_cval=128)
@@ -129,12 +94,7 @@ def main():
     segmaps_drawn = segmap.draw_on_image(quokka)[0]
     segmaps_aug_drawn = segmaps_aug.draw_on_image(quokka_aug)[0]
 
-    ia.imshow(
-        np.hstack([
-            segmaps_drawn,
-            segmaps_aug_drawn
-        ])
-    )
+    ia.imshow(np.hstack([segmaps_drawn, segmaps_aug_drawn]))
 
     print("CropAndPad mode=edge...")
     aug = iaa.CropAndPad(px=(-10, 10, 15, -15), pad_mode="edge")
@@ -144,12 +104,7 @@ def main():
     segmaps_drawn = segmap.draw_on_image(quokka)[0]
     segmaps_aug_drawn = segmaps_aug.draw_on_image(quokka_aug)[0]
 
-    ia.imshow(
-        np.hstack([
-            segmaps_drawn,
-            segmaps_aug_drawn
-        ])
-    )
+    ia.imshow(np.hstack([segmaps_drawn, segmaps_aug_drawn]))
 
     print("Resize...")
     aug = iaa.Resize(0.5, interpolation="nearest")
@@ -169,12 +124,7 @@ def main():
     segmaps_drawn = segmap.draw_on_image(quokka)[0]
     segmaps_aug_drawn = segmaps_aug.draw_on_image(quokka_aug)[0]
 
-    ia.imshow(
-        np.hstack([
-            segmaps_drawn,
-            segmaps_aug_drawn
-        ])
-    )
+    ia.imshow(np.hstack([segmaps_drawn, segmaps_aug_drawn]))
 
 
 if __name__ == "__main__":

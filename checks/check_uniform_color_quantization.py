@@ -7,14 +7,17 @@ import imgaug.augmenters as iaa
 def main():
     image = ia.quokka_square((256, 256))
     ia.imshow(
-        ia.draw_grid([
-            iaa.quantize_uniform(image, 2),
-            iaa.quantize_uniform(image, 4),
-            iaa.quantize_uniform(image, 8),
-            iaa.quantize_uniform(image, 16),
-            iaa.quantize_uniform(image, 32),
-            iaa.quantize_uniform(image, 64)
-        ], cols=6)
+        ia.draw_grid(
+            [
+                iaa.quantize_uniform(image, 2),
+                iaa.quantize_uniform(image, 4),
+                iaa.quantize_uniform(image, 8),
+                iaa.quantize_uniform(image, 16),
+                iaa.quantize_uniform(image, 32),
+                iaa.quantize_uniform(image, 64),
+            ],
+            cols=6,
+        )
     )
 
     aug = iaa.UniformColorQuantization((2, 16))

@@ -7,16 +7,15 @@ from imgaug import augmenters as iaa
 
 
 def main():
-    augs = [
-        iaa.Rain(speed=(0.1, 0.3)),
-        iaa.Rain(),
-        iaa.Rain(drop_size=(0.1, 0.2))
-    ]
+    augs = [iaa.Rain(speed=(0.1, 0.3)), iaa.Rain(), iaa.Rain(drop_size=(0.1, 0.2))]
 
     image = imageio.imread(
-        ("https://upload.wikimedia.org/wikipedia/commons/8/89/"
-         "Kukle%2CCzech_Republic..jpg"),
-        format="jpg")
+        (
+            "https://upload.wikimedia.org/wikipedia/commons/8/89/"
+            "Kukle%2CCzech_Republic..jpg"
+        ),
+        format="jpg",
+    )
 
     for aug, size in zip(augs, [0.1, 0.2, 1.0]):
         image_rs = ia.imresize_single_image(image, size, "cubic")

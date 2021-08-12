@@ -13,7 +13,8 @@ def main():
                 setup=(
                     "import imgaug as ia; "
                     "import imgaug.augmenters as iaa; "
-                    "image = ia.quokka_square((%d, %d))" % (size, size))
+                    "image = ia.quokka_square((%d, %d))" % (size, size)
+                ),
             )
             time_pil = timeit.timeit(
                 "np.asarray("
@@ -25,15 +26,19 @@ def main():
                     "import PIL.Image; "
                     "import PIL.ImageOps; "
                     "import imgaug as ia; "
-                    "image = ia.quokka_square((%d, %d))" % (size, size))
+                    "image = ia.quokka_square((%d, %d))" % (size, size)
+                ),
             )
-            print("[size=%04d, bits=%d] iaa=%.4f pil=%.4f" % (
-                size, nb_bits, time_iaa, time_pil))
+            print(
+                "[size=%04d, bits=%d] iaa=%.4f pil=%.4f"
+                % (size, nb_bits, time_iaa, time_pil)
+            )
 
     image = ia.quokka_square((128, 128))
-    images_q = [iaa.quantize_uniform_to_n_bits(image, nb_bits)
-                for nb_bits
-                in [1, 2, 3, 4, 5, 6, 7, 8]]
+    images_q = [
+        iaa.quantize_uniform_to_n_bits(image, nb_bits)
+        for nb_bits in [1, 2, 3, 4, 5, 6, 7, 8]
+    ]
 
     ia.imshow(ia.draw_grid(images_q, cols=8, rows=1))
 
@@ -42,6 +47,7 @@ def posterize(arr, n_bits):
     import numpy as np
     import PIL.Image
     import PIL.ImageOps
+
     img = PIL.Image.fromarray(arr)
     img_q = PIL.ImageOps.posterize(img, n_bits)
     return np.asarray(img_q)

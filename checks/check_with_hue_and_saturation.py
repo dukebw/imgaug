@@ -8,11 +8,11 @@ def main():
     images = []
 
     for i in range(15):
-        aug = iaa.WithHueAndSaturation(iaa.WithChannels(0, iaa.Add(i*20)))
+        aug = iaa.WithHueAndSaturation(iaa.WithChannels(0, iaa.Add(i * 20)))
         images.append(aug.augment_image(image))
 
     for i in range(15):
-        aug = iaa.WithHueAndSaturation(iaa.WithChannels(1, iaa.Add(i*20)))
+        aug = iaa.WithHueAndSaturation(iaa.WithChannels(1, iaa.Add(i * 20)))
         images.append(aug.augment_image(image))
 
     ia.imshow(ia.draw_grid(images, rows=2))

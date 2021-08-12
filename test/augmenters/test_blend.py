@@ -2,6 +2,7 @@ from __future__ import print_function, division, absolute_import
 
 import warnings
 import sys
+
 # unittest only added in 3.4 self.subTest()
 if sys.version_info[0] < 3 or sys.version_info[1] < 4:
     import unittest2 as unittest
@@ -26,8 +27,12 @@ from imgaug import parameters as iap
 from imgaug import dtypes as iadt
 from imgaug.augmenters import blend
 from imgaug.testutils import (
-    keypoints_equal, reseed, assert_cbaois_equal,
-    runtest_pickleable_uint8_img, is_parameter_instance)
+    keypoints_equal,
+    reseed,
+    assert_cbaois_equal,
+    runtest_pickleable_uint8_img,
+    is_parameter_instance,
+)
 from imgaug.augmentables.heatmaps import HeatmapsOnImage
 from imgaug.augmentables.segmaps import SegmentationMapsOnImage
 from imgaug.augmentables.batches import _BatchInAugmentation
@@ -85,7 +90,7 @@ class Test_blend_alpha(unittest.TestCase):
                 img_blend = blend.blend_alpha(img_fg, img_bg, 0.3, eps=0)
                 assert img_blend.dtype.name == dtype
                 assert img_blend.shape == (3, 3, 1)
-                assert np.allclose(img_blend, 0.7*255, atol=1.01, rtol=0)
+                assert np.allclose(img_blend, 0.7 * 255, atol=1.01, rtol=0)
 
     def test_alpha_is_030_2d_arrays(self):
         for dtype in ["uint8", "float32"]:
@@ -95,7 +100,7 @@ class Test_blend_alpha(unittest.TestCase):
                 img_blend = blend.blend_alpha(img_fg, img_bg, 0.3, eps=0)
                 assert img_blend.dtype.name == dtype
                 assert img_blend.shape == (3, 3)
-                assert np.allclose(img_blend, 0.7*255, atol=1.01, rtol=0)
+                assert np.allclose(img_blend, 0.7 * 255, atol=1.01, rtol=0)
 
     def test_alpha_is_030_with_11c_arrays(self):
         for dtype in ["uint8", "float32"]:
@@ -110,15 +115,14 @@ class Test_blend_alpha(unittest.TestCase):
                     img_blend = blend.blend_alpha(img_fg, img_bg, 0.3, eps=0)
                     assert img_blend.dtype.name == dtype
                     assert img_blend.shape == shape
-                    assert np.allclose(img_blend, 0.7*255, atol=1.01, rtol=0)
+                    assert np.allclose(img_blend, 0.7 * 255, atol=1.01, rtol=0)
 
     def test_channelwise_alpha(self):
         for dtype in ["uint8", "float32"]:
             with self.subTest(dtype=dtype):
                 img_fg = np.full((3, 3, 2), 0, dtype=dtype)
                 img_bg = np.full((3, 3, 2), 255, dtype=dtype)
-                img_blend = blend.blend_alpha(
-                    img_fg, img_bg, [1.0, 0.0], eps=0)
+                img_blend = blend.blend_alpha(img_fg, img_bg, [1.0, 0.0], eps=0)
                 assert img_blend.dtype.name == dtype
                 assert img_blend.shape == (3, 3, 2)
                 assert np.all(img_blend[:, :, 0] == 0)
@@ -130,27 +134,19 @@ class Test_blend_alpha(unittest.TestCase):
             for size in sizes:
                 shape = size + (3,)
                 for alphas_shape in [size, size + (1,), size + (3,)]:
-                    with self.subTest(dtype=dtype, shape=shape,
-                                      alphas_shape=alphas_shape):
+                    with self.subTest(
+                        dtype=dtype, shape=shape, alphas_shape=alphas_shape
+                    ):
                         alphas = np.full(alphas_shape, 0.5, dtype=np.float32)
                         img_fg = np.full(shape, 0, dtype=dtype)
                         img_bg = np.full(shape, 255, dtype=dtype)
-                        img_blend = blend.blend_alpha(
-                            img_fg, img_bg, alphas, eps=0)
+                        img_blend = blend.blend_alpha(img_fg, img_bg, alphas, eps=0)
                         assert img_blend.dtype.name == dtype
                         assert img_blend.shape == shape
                         assert np.allclose(img_blend, 128, rtol=0, atol=1.01)
 
     def test_zero_sized_axes(self):
-        shapes = [
-            (0, 0),
-            (0, 1),
-            (1, 0),
-            (0, 1, 0),
-            (1, 0, 0),
-            (0, 1, 1),
-            (1, 0, 1)
-        ]
+        shapes = [(0, 0), (0, 1), (1, 0), (0, 1, 0), (1, 0, 0), (0, 1, 1), (1, 0, 1)]
 
         for dtype in ["uint8", "float32"]:
             for shape in shapes:
@@ -165,12 +161,7 @@ class Test_blend_alpha(unittest.TestCase):
                     assert image_aug.shape == shape
 
     def test_unusual_channel_numbers(self):
-        shapes = [
-            (1, 1, 4),
-            (1, 1, 5),
-            (1, 1, 512),
-            (1, 1, 513)
-        ]
+        shapes = [(1, 1, 4), (1, 1, 5), (1, 1, 512), (1, 1, 513)]
 
         for dtype in ["uint8", "float32"]:
             for shape in shapes:
@@ -204,20 +195,28 @@ class Test_blend_alpha(unittest.TestCase):
     def test_other_dtypes_uint_int(self):
         try:
             high_res_dt = np.float128
-            dtypes = ["uint8", "uint16", "uint32", "uint64",
-                      "int8", "int16", "int32", "int64"]
+            dtypes = [
+                "uint8",
+                "uint16",
+                "uint32",
+                "uint64",
+                "int8",
+                "int16",
+                "int32",
+                "int64",
+            ]
         except AttributeError:
             # uint64 and int64 require float128 in their computation
             high_res_dt = np.float64
-            dtypes = ["uint8", "uint16", "uint32",
-                      "int8", "int16", "int32"]
+            dtypes = ["uint8", "uint16", "uint32", "int8", "int16", "int32"]
 
         for dtype in dtypes:
             with self.subTest(dtype=dtype):
                 dtype = np.dtype(dtype)
 
-                min_value, center_value, max_value = \
-                    iadt.get_value_range_of_dtype(dtype)
+                min_value, center_value, max_value = iadt.get_value_range_of_dtype(
+                    dtype
+                )
 
                 values = [
                     (0, 0),
@@ -232,14 +231,14 @@ class Test_blend_alpha(unittest.TestCase):
                     (int(center_value + 0.27 * max_value), max_value),
                     (int(center_value + 0.40 * max_value), max_value),
                     (min_value, 0),
-                    (0, max_value)
+                    (0, max_value),
                 ]
                 values = values + [(v2, v1) for v1, v2 in values]
 
                 for v1, v2 in values:
                     v1_scalar = np.full((), v1, dtype=dtype)
                     v2_scalar = np.full((), v2, dtype=dtype)
-                    
+
                     img_fg = np.full((3, 3, 1), v1, dtype=dtype)
                     img_bg = np.full((3, 3, 1), v2, dtype=dtype)
                     img_blend = blend.blend_alpha(img_fg, img_bg, 1.0, eps=0)
@@ -265,24 +264,24 @@ class Test_blend_alpha(unittest.TestCase):
                     for c in sm.xrange(3):
                         img_fg = np.full((3, 3, c), v1, dtype=dtype)
                         img_bg = np.full((3, 3, c), v2, dtype=dtype)
-                        img_blend = blend.blend_alpha(
-                            img_fg, img_bg, 0.75, eps=0)
+                        img_blend = blend.blend_alpha(img_fg, img_bg, 0.75, eps=0)
                         assert img_blend.dtype.name == np.dtype(dtype)
                         assert img_blend.shape == (3, 3, c)
                         for ci in sm.xrange(c):
                             v_blend = min(
                                 max(
                                     int(
-                                        0.75*high_res_dt(v1)
-                                        + 0.25*high_res_dt(v2)
+                                        0.75 * high_res_dt(v1) + 0.25 * high_res_dt(v2)
                                     ),
-                                    min_value
+                                    min_value,
                                 ),
-                                max_value)
+                                max_value,
+                            )
                             diff = (
                                 v_blend - img_blend
                                 if v_blend > img_blend[0, 0, ci]
-                                else img_blend - v_blend)
+                                else img_blend - v_blend
+                            )
                             assert np.all(diff < 1.01)
 
                     img_fg = np.full((3, 3, 2), v1, dtype=dtype)
@@ -292,13 +291,11 @@ class Test_blend_alpha(unittest.TestCase):
                     assert img_blend.shape == (3, 3, 2)
                     v_blend = min(
                         max(
-                            int(
-                                0.75 * high_res_dt(v1)
-                                + 0.25 * high_res_dt(v2)
-                            ),
-                            min_value
+                            int(0.75 * high_res_dt(v1) + 0.25 * high_res_dt(v2)),
+                            min_value,
                         ),
-                        max_value)
+                        max_value,
+                    )
                     diff = (
                         v_blend - img_blend
                         if v_blend > img_blend[0, 0, 0]
@@ -308,8 +305,7 @@ class Test_blend_alpha(unittest.TestCase):
 
                     img_fg = np.full((3, 3, 2), v1, dtype=dtype)
                     img_bg = np.full((3, 3, 2), v2, dtype=dtype)
-                    img_blend = blend.blend_alpha(
-                        img_fg, img_bg, [1.0, 0.0], eps=0.1)
+                    img_blend = blend.blend_alpha(img_fg, img_bg, [1.0, 0.0], eps=0.1)
                     assert img_blend.dtype.name == np.dtype(dtype).name
                     assert img_blend.shape == (3, 3, 2)
                     assert np.all(img_blend[:, :, 0] == v1_scalar)
@@ -387,7 +383,7 @@ class Test_blend_alpha(unittest.TestCase):
                     (center_value + 0.27 * max_value, max_value),
                     (center_value + 0.40 * max_value, max_value),
                     (min_value, 0),
-                    (0, max_value)
+                    (0, max_value),
                 ]
                 values = values + [(v2, v1) for v1, v2 in values]
 
@@ -406,8 +402,7 @@ class Test_blend_alpha(unittest.TestCase):
 
                     img_fg = np.full((3, 3, 1), v1, dtype=dtype)
                     img_bg = np.full((3, 3, 1), v2, dtype=dtype)
-                    img_blend = blend.blend_alpha(
-                        img_fg, img_bg, 0.99, eps=0.1)
+                    img_blend = blend.blend_alpha(img_fg, img_bg, 0.99, eps=0.1)
                     assert img_blend.dtype.name == np.dtype(dtype)
                     assert img_blend.shape == (3, 3, 1)
                     assert _allclose(img_blend, max_float_dt(v1))
@@ -422,19 +417,16 @@ class Test_blend_alpha(unittest.TestCase):
                     for c in sm.xrange(3):
                         img_fg = np.full((3, 3, c), v1, dtype=dtype)
                         img_bg = np.full((3, 3, c), v2, dtype=dtype)
-                        img_blend = blend.blend_alpha(
-                            img_fg, img_bg, 0.75, eps=0)
+                        img_blend = blend.blend_alpha(img_fg, img_bg, 0.75, eps=0)
                         assert img_blend.dtype.name == np.dtype(dtype)
                         assert img_blend.shape == (3, 3, c)
                         assert _allclose(
-                            img_blend,
-                            0.75*max_float_dt(v1) + 0.25*max_float_dt(v2)
+                            img_blend, 0.75 * max_float_dt(v1) + 0.25 * max_float_dt(v2)
                         )
 
                     img_fg = np.full((3, 3, 2), v1, dtype=dtype)
                     img_bg = np.full((3, 3, 2), v2, dtype=dtype)
-                    img_blend = blend.blend_alpha(
-                        img_fg, img_bg, [1.0, 0.0], eps=0.1)
+                    img_blend = blend.blend_alpha(img_fg, img_bg, [1.0, 0.0], eps=0.1)
                     assert img_blend.dtype.name == np.dtype(dtype)
                     assert img_blend.shape == (3, 3, 2)
                     assert _allclose(img_blend[:, :, 0], max_float_dt(v1))
@@ -445,8 +437,7 @@ class Test_blend_alpha(unittest.TestCase):
                     img_bg = np.full((1, 2, 3), v2, dtype=dtype)
                     alphas = np.zeros((1, 2), dtype=np.float64)
                     alphas[:, :] = [1.0, 0.0]
-                    img_blend = blend.blend_alpha(
-                        img_fg, img_bg, alphas, eps=0)
+                    img_blend = blend.blend_alpha(img_fg, img_bg, alphas, eps=0)
                     assert img_blend.dtype.name == np.dtype(dtype)
                     assert img_blend.shape == (1, 2, 3)
                     assert _allclose(img_blend[0, 0, :], v1_scalar)
@@ -457,8 +448,7 @@ class Test_blend_alpha(unittest.TestCase):
                     img_bg = np.full((1, 2, 3), v2, dtype=dtype)
                     alphas = np.zeros((1, 2, 1), dtype=np.float64)
                     alphas[:, :, 0] = [1.0, 0.0]
-                    img_blend = blend.blend_alpha(
-                        img_fg, img_bg, alphas, eps=0)
+                    img_blend = blend.blend_alpha(img_fg, img_bg, alphas, eps=0)
                     assert img_blend.dtype.name == np.dtype(dtype)
                     assert img_blend.shape == (1, 2, 3)
                     assert _allclose(img_blend[0, 0, :], v1_scalar)
@@ -471,8 +461,7 @@ class Test_blend_alpha(unittest.TestCase):
                     alphas[:, :, 0] = [1.0, 0.0]
                     alphas[:, :, 1] = [0.0, 1.0]
                     alphas[:, :, 2] = [1.0, 0.0]
-                    img_blend = blend.blend_alpha(
-                        img_fg, img_bg, alphas, eps=0)
+                    img_blend = blend.blend_alpha(img_fg, img_bg, alphas, eps=0)
                     assert img_blend.dtype.name == np.dtype(dtype)
                     assert img_blend.shape == (1, 2, 3)
                     assert _allclose(img_blend[0, 0, [0, 2]], v1_scalar)
@@ -491,10 +480,7 @@ class TestAlpha(unittest.TestCase):
 
             aug = iaa.Alpha(0.75, first=aug1, second=aug2)
 
-            assert (
-                "is deprecated"
-                in str(caught_warnings[-1].message)
-            )
+            assert "is deprecated" in str(caught_warnings[-1].message)
 
         assert isinstance(aug, iaa.BlendAlpha)
         assert np.isclose(aug.factor.value, 0.75)
@@ -513,44 +499,36 @@ class TestBlendAlpha(unittest.TestCase):
 
     @property
     def heatmaps(self):
-        heatmaps_arr = np.float32([[0.0, 0.0, 1.0],
-                                   [0.0, 0.0, 1.0],
-                                   [0.0, 1.0, 1.0]])
+        heatmaps_arr = np.float32([[0.0, 0.0, 1.0], [0.0, 0.0, 1.0], [0.0, 1.0, 1.0]])
         return HeatmapsOnImage(heatmaps_arr, shape=(3, 3, 3))
 
     @property
     def heatmaps_r1(self):
-        heatmaps_arr_r1 = np.float32([[0.0, 0.0, 0.0],
-                                      [0.0, 0.0, 0.0],
-                                      [0.0, 0.0, 1.0]])
+        heatmaps_arr_r1 = np.float32(
+            [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 1.0]]
+        )
         return HeatmapsOnImage(heatmaps_arr_r1, shape=(3, 3, 3))
 
     @property
     def heatmaps_l1(self):
-        heatmaps_arr_l1 = np.float32([[0.0, 1.0, 0.0],
-                                      [0.0, 1.0, 0.0],
-                                      [1.0, 1.0, 0.0]])
+        heatmaps_arr_l1 = np.float32(
+            [[0.0, 1.0, 0.0], [0.0, 1.0, 0.0], [1.0, 1.0, 0.0]]
+        )
         return HeatmapsOnImage(heatmaps_arr_l1, shape=(3, 3, 3))
 
     @property
     def segmaps(self):
-        segmaps_arr = np.int32([[0, 0, 1],
-                                [0, 0, 1],
-                                [0, 1, 1]])
+        segmaps_arr = np.int32([[0, 0, 1], [0, 0, 1], [0, 1, 1]])
         return SegmentationMapsOnImage(segmaps_arr, shape=(3, 3, 3))
 
     @property
     def segmaps_r1(self):
-        segmaps_arr_r1 = np.int32([[0, 0, 0],
-                                   [0, 0, 0],
-                                   [0, 0, 1]])
+        segmaps_arr_r1 = np.int32([[0, 0, 0], [0, 0, 0], [0, 0, 1]])
         return SegmentationMapsOnImage(segmaps_arr_r1, shape=(3, 3, 3))
 
     @property
     def segmaps_l1(self):
-        segmaps_arr_l1 = np.int32([[0, 1, 0],
-                                   [0, 1, 0],
-                                   [1, 1, 0]])
+        segmaps_arr_l1 = np.int32([[0, 1, 0], [0, 1, 0], [1, 1, 0]])
         return SegmentationMapsOnImage(segmaps_arr_l1, shape=(3, 3, 3))
 
     @property
@@ -586,13 +564,13 @@ class TestBlendAlpha(unittest.TestCase):
                     1,
                     iaa.Affine(translate_px={"x": 1}),
                     iaa.Affine(translate_px={"x": -1}),
-                    per_channel=per_channel)
+                    per_channel=per_channel,
+                )
                 observed = aug.augment_heatmaps([self.heatmaps])[0]
                 assert observed.shape == self.heatmaps.shape
                 assert 0 - 1e-6 < self.heatmaps.min_value < 0 + 1e-6
                 assert 1 - 1e-6 < self.heatmaps.max_value < 1 + 1e-6
-                assert np.allclose(observed.get_arr(),
-                                   self.heatmaps_r1.get_arr())
+                assert np.allclose(observed.get_arr(), self.heatmaps_r1.get_arr())
 
     def test_segmaps_factor_is_1_with_affines_and_per_channel(self):
         for per_channel in [False, True]:
@@ -601,11 +579,11 @@ class TestBlendAlpha(unittest.TestCase):
                     1,
                     iaa.Affine(translate_px={"x": 1}),
                     iaa.Affine(translate_px={"x": -1}),
-                    per_channel=per_channel)
+                    per_channel=per_channel,
+                )
                 observed = aug.augment_segmentation_maps([self.segmaps])[0]
                 assert observed.shape == self.segmaps.shape
-                assert np.array_equal(observed.get_arr(),
-                                      self.segmaps_r1.get_arr())
+                assert np.array_equal(observed.get_arr(), self.segmaps_r1.get_arr())
 
     def test_images_factor_is_0(self):
         aug = iaa.BlendAlpha(0, iaa.Add(10), iaa.Add(20))
@@ -620,13 +598,13 @@ class TestBlendAlpha(unittest.TestCase):
                     0,
                     iaa.Affine(translate_px={"x": 1}),
                     iaa.Affine(translate_px={"x": -1}),
-                    per_channel=per_channel)
+                    per_channel=per_channel,
+                )
                 observed = aug.augment_heatmaps([self.heatmaps])[0]
                 assert observed.shape == self.heatmaps.shape
                 assert 0 - 1e-6 < self.heatmaps.min_value < 0 + 1e-6
                 assert 1 - 1e-6 < self.heatmaps.max_value < 1 + 1e-6
-                assert np.allclose(observed.get_arr(),
-                                   self.heatmaps_l1.get_arr())
+                assert np.allclose(observed.get_arr(), self.heatmaps_l1.get_arr())
 
     def test_segmaps_factor_is_0_with_affines_and_per_channel(self):
         for per_channel in [False, True]:
@@ -635,40 +613,28 @@ class TestBlendAlpha(unittest.TestCase):
                     0,
                     iaa.Affine(translate_px={"x": 1}),
                     iaa.Affine(translate_px={"x": -1}),
-                    per_channel=per_channel)
+                    per_channel=per_channel,
+                )
                 observed = aug.augment_segmentation_maps([self.segmaps])[0]
                 assert observed.shape == self.segmaps.shape
-                assert np.array_equal(observed.get_arr(),
-                                      self.segmaps_l1.get_arr())
+                assert np.array_equal(observed.get_arr(), self.segmaps_l1.get_arr())
 
     def test_images_factor_is_075(self):
         aug = iaa.BlendAlpha(0.75, iaa.Add(10), iaa.Add(20))
         observed = aug.augment_image(self.image)
-        expected = np.round(
-            self.image
-            + 0.75 * 10
-            + 0.25 * 20
-        ).astype(np.uint8)
+        expected = np.round(self.image + 0.75 * 10 + 0.25 * 20).astype(np.uint8)
         assert np.allclose(observed, expected)
 
     def test_images_factor_is_075_fg_branch_is_none(self):
         aug = iaa.BlendAlpha(0.75, None, iaa.Add(20))
         observed = aug.augment_image(self.image + 10)
-        expected = np.round(
-            self.image
-            + 0.75 * 10
-            + 0.25 * (10 + 20)
-        ).astype(np.uint8)
+        expected = np.round(self.image + 0.75 * 10 + 0.25 * (10 + 20)).astype(np.uint8)
         assert np.allclose(observed, expected)
 
     def test_images_factor_is_075_bg_branch_is_none(self):
         aug = iaa.BlendAlpha(0.75, iaa.Add(10), None)
         observed = aug.augment_image(self.image + 10)
-        expected = np.round(
-            self.image
-            + 0.75 * (10 + 10)
-            + 0.25 * 10
-        ).astype(np.uint8)
+        expected = np.round(self.image + 0.75 * (10 + 10) + 0.25 * 10).astype(np.uint8)
         assert np.allclose(observed, expected)
 
     def test_images_factor_is_tuple(self):
@@ -682,14 +648,12 @@ class TestBlendAlpha(unittest.TestCase):
             values.append(observed_val / 100)
 
         nb_bins = 5
-        hist, _ = np.histogram(values, bins=nb_bins, range=(0.0, 1.0),
-                               density=False)
-        density_expected = 1.0/nb_bins
+        hist, _ = np.histogram(values, bins=nb_bins, range=(0.0, 1.0), density=False)
+        density_expected = 1.0 / nb_bins
         density_tolerance = 0.05
         for nb_samples in hist:
             density = nb_samples / nb_iterations
-            assert np.isclose(density, density_expected,
-                              rtol=0, atol=density_tolerance)
+            assert np.isclose(density, density_expected, rtol=0, atol=density_tolerance)
 
     def test_bad_datatype_for_factor_fails(self):
         got_exception = False
@@ -703,10 +667,8 @@ class TestBlendAlpha(unittest.TestCase):
     def test_images_with_per_channel_in_both_alpha_and_child(self):
         image = np.zeros((1, 1, 1000), dtype=np.uint8)
         aug = iaa.BlendAlpha(
-            1.0,
-            iaa.Add((0, 100), per_channel=True),
-            None,
-            per_channel=True)
+            1.0, iaa.Add((0, 100), per_channel=True), None, per_channel=True
+        )
         observed = aug.augment_image(image)
         uq = np.unique(observed)
         assert len(uq) > 1
@@ -715,11 +677,7 @@ class TestBlendAlpha(unittest.TestCase):
 
     def test_images_with_per_channel_in_alpha_and_tuple_as_factor(self):
         image = np.zeros((1, 1, 1000), dtype=np.uint8)
-        aug = iaa.BlendAlpha(
-            (0.0, 1.0),
-            iaa.Add(100),
-            None,
-            per_channel=True)
+        aug = iaa.BlendAlpha((0.0, 1.0), iaa.Add(100), None, per_channel=True)
         observed = aug.augment_image(image)
         uq = np.unique(observed)
         assert len(uq) > 1
@@ -727,11 +685,7 @@ class TestBlendAlpha(unittest.TestCase):
         assert np.min(observed) < 20
 
     def test_images_float_as_per_channel_tuple_as_factor_two_branches(self):
-        aug = iaa.BlendAlpha(
-            (0.0, 1.0),
-            iaa.Add(100),
-            iaa.Add(0),
-            per_channel=0.5)
+        aug = iaa.BlendAlpha((0.0, 1.0), iaa.Add(100), iaa.Add(0), per_channel=0.5)
         seen = [0, 0]
         for _ in sm.xrange(200):
             observed = aug.augment_image(np.zeros((1, 1, 100), dtype=np.uint8))
@@ -782,24 +736,23 @@ class TestBlendAlpha(unittest.TestCase):
         self._test_cba_factor_is_0499("augment_keypoints", self.kpsoi)
 
     def test_keypoints_factor_is_1_with_per_channel(self):
-        self._test_cba_factor_is_1_and_per_channel(
-            "augment_keypoints", self.kpsoi)
+        self._test_cba_factor_is_1_and_per_channel("augment_keypoints", self.kpsoi)
 
     def test_keypoints_factor_is_0_with_per_channel(self):
-        self._test_cba_factor_is_0_and_per_channel(
-            "augment_keypoints", self.kpsoi)
+        self._test_cba_factor_is_0_and_per_channel("augment_keypoints", self.kpsoi)
 
     def test_keypoints_factor_is_choice_of_vals_close_to_050_per_channel(self):
         self._test_cba_factor_is_choice_around_050_and_per_channel(
-            "augment_keypoints", self.kpsoi)
+            "augment_keypoints", self.kpsoi
+        )
 
     def test_keypoints_are_empty(self):
         self._test_empty_cba(
-            "augment_keypoints", ia.KeypointsOnImage([], shape=(1, 2, 3)))
+            "augment_keypoints", ia.KeypointsOnImage([], shape=(1, 2, 3))
+        )
 
     def test_keypoints_hooks_limit_propagation(self):
-        self._test_cba_hooks_limit_propagation(
-            "augment_keypoints", self.kpsoi)
+        self._test_cba_hooks_limit_propagation("augment_keypoints", self.kpsoi)
 
     def test_polygons_factor_is_1(self):
         self._test_cba_factor_is_1("augment_polygons", self.psoi)
@@ -814,12 +767,10 @@ class TestBlendAlpha(unittest.TestCase):
         self._test_cba_factor_is_0499("augment_polygons", self.psoi)
 
     def test_polygons_factor_is_1_and_per_channel(self):
-        self._test_cba_factor_is_1_and_per_channel(
-            "augment_polygons", self.psoi)
+        self._test_cba_factor_is_1_and_per_channel("augment_polygons", self.psoi)
 
     def test_polygons_factor_is_0_and_per_channel(self):
-        self._test_cba_factor_is_0_and_per_channel(
-            "augment_polygons", self.psoi)
+        self._test_cba_factor_is_0_and_per_channel("augment_polygons", self.psoi)
 
     def test_polygons_factor_is_choice_around_050_and_per_channel(self):
         self._test_cba_factor_is_choice_around_050_and_per_channel(
@@ -828,11 +779,11 @@ class TestBlendAlpha(unittest.TestCase):
 
     def test_empty_polygons(self):
         return self._test_empty_cba(
-            "augment_polygons", ia.PolygonsOnImage([], shape=(1, 2, 3)))
+            "augment_polygons", ia.PolygonsOnImage([], shape=(1, 2, 3))
+        )
 
     def test_polygons_hooks_limit_propagation(self):
-        return self._test_cba_hooks_limit_propagation(
-            "augment_polygons", self.psoi)
+        return self._test_cba_hooks_limit_propagation("augment_polygons", self.psoi)
 
     def test_line_strings_factor_is_1(self):
         self._test_cba_factor_is_1("augment_line_strings", self.lsoi)
@@ -847,12 +798,10 @@ class TestBlendAlpha(unittest.TestCase):
         self._test_cba_factor_is_0499("augment_line_strings", self.lsoi)
 
     def test_line_strings_factor_is_1_and_per_channel(self):
-        self._test_cba_factor_is_1_and_per_channel(
-            "augment_line_strings", self.lsoi)
+        self._test_cba_factor_is_1_and_per_channel("augment_line_strings", self.lsoi)
 
     def test_line_strings_factor_is_0_and_per_channel(self):
-        self._test_cba_factor_is_0_and_per_channel(
-            "augment_line_strings", self.lsoi)
+        self._test_cba_factor_is_0_and_per_channel("augment_line_strings", self.lsoi)
 
     def test_line_strings_factor_is_choice_around_050_and_per_channel(self):
         self._test_cba_factor_is_choice_around_050_and_per_channel(
@@ -861,12 +810,11 @@ class TestBlendAlpha(unittest.TestCase):
 
     def test_empty_line_strings(self):
         return self._test_empty_cba(
-            "augment_line_strings",
-            ia.LineStringsOnImage([], shape=(1, 2, 3)))
+            "augment_line_strings", ia.LineStringsOnImage([], shape=(1, 2, 3))
+        )
 
     def test_line_strings_hooks_limit_propagation(self):
-        return self._test_cba_hooks_limit_propagation(
-            "augment_line_strings", self.lsoi)
+        return self._test_cba_hooks_limit_propagation("augment_line_strings", self.lsoi)
 
     def test_bounding_boxes_factor_is_1(self):
         self._test_cba_factor_is_1("augment_bounding_boxes", self.bbsoi)
@@ -881,12 +829,10 @@ class TestBlendAlpha(unittest.TestCase):
         self._test_cba_factor_is_0499("augment_bounding_boxes", self.bbsoi)
 
     def test_bounding_boxes_factor_is_1_and_per_channel(self):
-        self._test_cba_factor_is_1_and_per_channel(
-            "augment_bounding_boxes", self.bbsoi)
+        self._test_cba_factor_is_1_and_per_channel("augment_bounding_boxes", self.bbsoi)
 
     def test_bounding_boxes_factor_is_0_and_per_channel(self):
-        self._test_cba_factor_is_0_and_per_channel(
-            "augment_bounding_boxes", self.bbsoi)
+        self._test_cba_factor_is_0_and_per_channel("augment_bounding_boxes", self.bbsoi)
 
     def test_bounding_boxes_factor_is_choice_around_050_and_per_channel(self):
         self._test_cba_factor_is_choice_around_050_and_per_channel(
@@ -895,20 +841,20 @@ class TestBlendAlpha(unittest.TestCase):
 
     def test_empty_bounding_boxes(self):
         return self._test_empty_cba(
-            "augment_bounding_boxes",
-            ia.BoundingBoxesOnImage([], shape=(1, 2, 3)))
+            "augment_bounding_boxes", ia.BoundingBoxesOnImage([], shape=(1, 2, 3))
+        )
 
     def test_bounding_boxes_hooks_limit_propagation(self):
         return self._test_cba_hooks_limit_propagation(
-            "augment_bounding_boxes", self.bbsoi)
+            "augment_bounding_boxes", self.bbsoi
+        )
 
     # Tests for CBA (=coordinate based augmentable) below. This currently
     # covers keypoints, polygons and bounding boxes.
 
     @classmethod
     def _test_cba_factor_is_1(cls, augf_name, cbaoi):
-        aug = iaa.BlendAlpha(
-            1.0, iaa.Identity(), iaa.Affine(translate_px={"x": 1}))
+        aug = iaa.BlendAlpha(1.0, iaa.Identity(), iaa.Affine(translate_px={"x": 1}))
 
         observed = getattr(aug, augf_name)([cbaoi])
 
@@ -916,9 +862,7 @@ class TestBlendAlpha(unittest.TestCase):
 
     @classmethod
     def _test_cba_factor_is_0501(cls, augf_name, cbaoi):
-        aug = iaa.BlendAlpha(0.501,
-                             iaa.Identity(),
-                             iaa.Affine(translate_px={"x": 1}))
+        aug = iaa.BlendAlpha(0.501, iaa.Identity(), iaa.Affine(translate_px={"x": 1}))
 
         observed = getattr(aug, augf_name)([cbaoi])
 
@@ -926,8 +870,7 @@ class TestBlendAlpha(unittest.TestCase):
 
     @classmethod
     def _test_cba_factor_is_0(cls, augf_name, cbaoi):
-        aug = iaa.BlendAlpha(
-            0.0, iaa.Identity(), iaa.Affine(translate_px={"x": 1}))
+        aug = iaa.BlendAlpha(0.0, iaa.Identity(), iaa.Affine(translate_px={"x": 1}))
 
         observed = getattr(aug, augf_name)([cbaoi])
 
@@ -936,9 +879,7 @@ class TestBlendAlpha(unittest.TestCase):
 
     @classmethod
     def _test_cba_factor_is_0499(cls, augf_name, cbaoi):
-        aug = iaa.BlendAlpha(0.499,
-                             iaa.Identity(),
-                             iaa.Affine(translate_px={"x": 1}))
+        aug = iaa.BlendAlpha(0.499, iaa.Identity(), iaa.Affine(translate_px={"x": 1}))
 
         observed = getattr(aug, augf_name)([cbaoi])
 
@@ -948,10 +889,8 @@ class TestBlendAlpha(unittest.TestCase):
     @classmethod
     def _test_cba_factor_is_1_and_per_channel(cls, augf_name, cbaoi):
         aug = iaa.BlendAlpha(
-            1.0,
-            iaa.Identity(),
-            iaa.Affine(translate_px={"x": 1}),
-            per_channel=True)
+            1.0, iaa.Identity(), iaa.Affine(translate_px={"x": 1}), per_channel=True
+        )
 
         observed = getattr(aug, augf_name)([cbaoi])
 
@@ -960,10 +899,8 @@ class TestBlendAlpha(unittest.TestCase):
     @classmethod
     def _test_cba_factor_is_0_and_per_channel(cls, augf_name, cbaoi):
         aug = iaa.BlendAlpha(
-            0.0,
-            iaa.Identity(),
-            iaa.Affine(translate_px={"x": 1}),
-            per_channel=True)
+            0.0, iaa.Identity(), iaa.Affine(translate_px={"x": 1}), per_channel=True
+        )
 
         observed = getattr(aug, augf_name)([cbaoi])
 
@@ -971,13 +908,13 @@ class TestBlendAlpha(unittest.TestCase):
         assert_cbaois_equal(observed[0], expected)
 
     @classmethod
-    def _test_cba_factor_is_choice_around_050_and_per_channel(
-            cls, augf_name, cbaoi):
+    def _test_cba_factor_is_choice_around_050_and_per_channel(cls, augf_name, cbaoi):
         aug = iaa.BlendAlpha(
             iap.Choice([0.49, 0.51]),
             iaa.Identity(),
             iaa.Affine(translate_px={"x": 1}),
-            per_channel=True)
+            per_channel=True,
+        )
         expected_same = cbaoi.deepcopy()
         expected_shifted = cbaoi.shift(x=1)
         seen = [0, 0, 0]
@@ -990,13 +927,19 @@ class TestBlendAlpha(unittest.TestCase):
             # We use here allclose() instead of coords_almost_equals()
             # as the latter one is much slower for polygons and we don't have
             # to deal with tricky geometry changes here, just naive shifting.
-            if np.allclose(observed.items[0].coords,
-                           expected_same.items[0].coords,
-                           rtol=0, atol=0.1):
+            if np.allclose(
+                observed.items[0].coords,
+                expected_same.items[0].coords,
+                rtol=0,
+                atol=0.1,
+            ):
                 seen[0] += 1
-            elif np.allclose(observed.items[0].coords,
-                             expected_shifted.items[0].coords,
-                             rtol=0, atol=0.1):
+            elif np.allclose(
+                observed.items[0].coords,
+                expected_shifted.items[0].coords,
+                rtol=0,
+                atol=0.1,
+            ):
                 seen[1] += 1
             else:
                 seen[2] += 1
@@ -1007,9 +950,7 @@ class TestBlendAlpha(unittest.TestCase):
     @classmethod
     def _test_empty_cba(cls, augf_name, cbaoi):
         # empty CBAs
-        aug = iaa.BlendAlpha(0.501,
-                             iaa.Identity(),
-                             iaa.Affine(translate_px={"x": 1}))
+        aug = iaa.BlendAlpha(0.501, iaa.Identity(), iaa.Affine(translate_px={"x": 1}))
 
         observed = getattr(aug, augf_name)(cbaoi)
 
@@ -1022,7 +963,8 @@ class TestBlendAlpha(unittest.TestCase):
             0.0,
             iaa.Affine(translate_px={"x": 1}),
             iaa.Affine(translate_px={"y": 1}),
-            name="AlphaTest")
+            name="AlphaTest",
+        )
 
         def propagator(cbaoi_to_aug, augmenter, parents, default):
             if "Alpha" in augmenter.name:
@@ -1036,15 +978,7 @@ class TestBlendAlpha(unittest.TestCase):
         assert observed.items[0].coords_almost_equals(cbaoi.items[0])
 
     def test_zero_sized_axes(self):
-        shapes = [
-            (0, 0),
-            (0, 1),
-            (1, 0),
-            (0, 1, 0),
-            (1, 0, 0),
-            (0, 1, 1),
-            (1, 0, 1)
-        ]
+        shapes = [(0, 0), (0, 1), (1, 0), (0, 1, 0), (1, 0, 0), (0, 1, 1), (1, 0, 1)]
 
         for shape in shapes:
             with self.subTest(shape=shape):
@@ -1058,12 +992,7 @@ class TestBlendAlpha(unittest.TestCase):
                 assert image_aug.shape == shape
 
     def test_unusual_channel_numbers(self):
-        shapes = [
-            (1, 1, 4),
-            (1, 1, 5),
-            (1, 1, 512),
-            (1, 1, 513)
-        ]
+        shapes = [(1, 1, 4), (1, 1, 5), (1, 1, 512), (1, 1, 513)]
 
         for shape in shapes:
             with self.subTest(shape=shape):
@@ -1125,7 +1054,8 @@ class TestBlendAlpha(unittest.TestCase):
             iaa.Add((1, 10), seed=1),
             iaa.Add((11, 20), seed=2),
             per_channel=True,
-            seed=3)
+            seed=3,
+        )
         runtest_pickleable_uint8_img(aug, iterations=10)
 
 
@@ -1162,10 +1092,7 @@ class TestAlphaElementwise(unittest.TestCase):
 
             aug = iaa.AlphaElementwise(factor=0.5, first=aug1, second=aug2)
 
-            assert (
-                "is deprecated"
-                in str(caught_warnings[-1].message)
-            )
+            assert "is deprecated" in str(caught_warnings[-1].message)
 
         assert isinstance(aug, iaa.BlendAlphaElementwise)
         assert np.isclose(aug.factor.value, 0.5)
@@ -1185,45 +1112,37 @@ class TestBlendAlphaElementwise(unittest.TestCase):
 
     @property
     def heatmaps(self):
-        heatmaps_arr = np.float32([[0.0, 0.0, 1.0],
-                                   [0.0, 0.0, 1.0],
-                                   [0.0, 1.0, 1.0]])
+        heatmaps_arr = np.float32([[0.0, 0.0, 1.0], [0.0, 0.0, 1.0], [0.0, 1.0, 1.0]])
         return HeatmapsOnImage(heatmaps_arr, shape=(3, 3, 3))
 
     @property
     def heatmaps_r1(self):
-        heatmaps_arr_r1 = np.float32([[0.0, 0.0, 0.0],
-                                      [0.0, 0.0, 0.0],
-                                      [0.0, 0.0, 1.0]])
+        heatmaps_arr_r1 = np.float32(
+            [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 1.0]]
+        )
         return HeatmapsOnImage(heatmaps_arr_r1, shape=(3, 3, 3))
 
     @property
     def heatmaps_l1(self):
-        heatmaps_arr_l1 = np.float32([[0.0, 1.0, 0.0],
-                                      [0.0, 1.0, 0.0],
-                                      [1.0, 1.0, 0.0]])
+        heatmaps_arr_l1 = np.float32(
+            [[0.0, 1.0, 0.0], [0.0, 1.0, 0.0], [1.0, 1.0, 0.0]]
+        )
 
         return HeatmapsOnImage(heatmaps_arr_l1, shape=(3, 3, 3))
 
     @property
     def segmaps(self):
-        segmaps_arr = np.int32([[0, 0, 1],
-                                [0, 0, 1],
-                                [0, 1, 1]])
+        segmaps_arr = np.int32([[0, 0, 1], [0, 0, 1], [0, 1, 1]])
         return SegmentationMapsOnImage(segmaps_arr, shape=(3, 3, 3))
 
     @property
     def segmaps_r1(self):
-        segmaps_arr_r1 = np.int32([[0, 0, 0],
-                                   [0, 0, 0],
-                                   [0, 0, 1]])
+        segmaps_arr_r1 = np.int32([[0, 0, 0], [0, 0, 0], [0, 0, 1]])
         return SegmentationMapsOnImage(segmaps_arr_r1, shape=(3, 3, 3))
 
     @property
     def segmaps_l1(self):
-        segmaps_arr_l1 = np.int32([[0, 1, 0],
-                                   [0, 1, 0],
-                                   [1, 1, 0]])
+        segmaps_arr_l1 = np.int32([[0, 1, 0], [0, 1, 0], [1, 1, 0]])
         return SegmentationMapsOnImage(segmaps_arr_l1, shape=(3, 3, 3))
 
     @property
@@ -1254,9 +1173,8 @@ class TestBlendAlphaElementwise(unittest.TestCase):
 
     def test_heatmaps_factor_is_1_with_affines(self):
         aug = iaa.BlendAlphaElementwise(
-            1,
-            iaa.Affine(translate_px={"x": 1}),
-            iaa.Affine(translate_px={"x": -1}))
+            1, iaa.Affine(translate_px={"x": 1}), iaa.Affine(translate_px={"x": -1})
+        )
         observed = aug.augment_heatmaps([self.heatmaps])[0]
         assert observed.shape == (3, 3, 3)
         assert 0 - 1e-6 < observed.min_value < 0 + 1e-6
@@ -1265,9 +1183,8 @@ class TestBlendAlphaElementwise(unittest.TestCase):
 
     def test_segmaps_factor_is_1_with_affines(self):
         aug = iaa.BlendAlphaElementwise(
-            1,
-            iaa.Affine(translate_px={"x": 1}),
-            iaa.Affine(translate_px={"x": -1}))
+            1, iaa.Affine(translate_px={"x": 1}), iaa.Affine(translate_px={"x": -1})
+        )
         observed = aug.augment_segmentation_maps([self.segmaps])[0]
         assert observed.shape == (3, 3, 3)
         assert np.array_equal(observed.get_arr(), self.segmaps_r1.get_arr())
@@ -1280,9 +1197,8 @@ class TestBlendAlphaElementwise(unittest.TestCase):
 
     def test_heatmaps_factor_is_0_with_affines(self):
         aug = iaa.BlendAlphaElementwise(
-            0,
-            iaa.Affine(translate_px={"x": 1}),
-            iaa.Affine(translate_px={"x": -1}))
+            0, iaa.Affine(translate_px={"x": 1}), iaa.Affine(translate_px={"x": -1})
+        )
         observed = aug.augment_heatmaps([self.heatmaps])[0]
         assert observed.shape == (3, 3, 3)
         assert 0 - 1e-6 < observed.min_value < 0 + 1e-6
@@ -1291,9 +1207,8 @@ class TestBlendAlphaElementwise(unittest.TestCase):
 
     def test_segmaps_factor_is_0_with_affines(self):
         aug = iaa.BlendAlphaElementwise(
-            0,
-            iaa.Affine(translate_px={"x": 1}),
-            iaa.Affine(translate_px={"x": -1}))
+            0, iaa.Affine(translate_px={"x": 1}), iaa.Affine(translate_px={"x": -1})
+        )
         observed = aug.augment_segmentation_maps([self.segmaps])[0]
         assert observed.shape == (3, 3, 3)
         assert np.array_equal(observed.get_arr(), self.segmaps_l1.get_arr())
@@ -1301,25 +1216,19 @@ class TestBlendAlphaElementwise(unittest.TestCase):
     def test_images_factor_is_075(self):
         aug = iaa.BlendAlphaElementwise(0.75, iaa.Add(10), iaa.Add(20))
         observed = aug.augment_image(self.image)
-        expected = np.round(
-            self.image + 0.75 * 10 + 0.25 * 20
-        ).astype(np.uint8)
+        expected = np.round(self.image + 0.75 * 10 + 0.25 * 20).astype(np.uint8)
         assert np.allclose(observed, expected, atol=1.01)
 
     def test_images_factor_is_075_fg_branch_is_none(self):
         aug = iaa.BlendAlphaElementwise(0.75, None, iaa.Add(20))
         observed = aug.augment_image(self.image + 10)
-        expected = np.round(
-            self.image + 0.75 * 10 + 0.25 * (10 + 20)
-        ).astype(np.uint8)
+        expected = np.round(self.image + 0.75 * 10 + 0.25 * (10 + 20)).astype(np.uint8)
         assert np.allclose(observed, expected, atol=1.01)
 
     def test_images_factor_is_075_bg_branch_is_none(self):
         aug = iaa.BlendAlphaElementwise(0.75, iaa.Add(10), None)
         observed = aug.augment_image(self.image + 10)
-        expected = np.round(
-            self.image + 0.75 * (10 + 10) + 0.25 * 10
-        ).astype(np.uint8)
+        expected = np.round(self.image + 0.75 * (10 + 10) + 0.25 * 10).astype(np.uint8)
         assert np.allclose(observed, expected, atol=1.01)
 
     def test_images_factor_is_tuple(self):
@@ -1328,13 +1237,13 @@ class TestBlendAlphaElementwise(unittest.TestCase):
         observed = (aug.augment_image(image) - 10) / 100
         nb_bins = 10
         hist, _ = np.histogram(
-            observed.flatten(), bins=nb_bins, range=(0.0, 1.0), density=False)
-        density_expected = 1.0/nb_bins
+            observed.flatten(), bins=nb_bins, range=(0.0, 1.0), density=False
+        )
+        density_expected = 1.0 / nb_bins
         density_tolerance = 0.05
         for nb_samples in hist:
             density = nb_samples / observed.size
-            assert np.isclose(density, density_expected,
-                              rtol=0, atol=density_tolerance)
+            assert np.isclose(density, density_expected, rtol=0, atol=density_tolerance)
 
     def test_bad_datatype_for_factor_fails(self):
         got_exception = False
@@ -1348,21 +1257,15 @@ class TestBlendAlphaElementwise(unittest.TestCase):
     def test_images_with_per_channel_in_alpha_and_tuple_as_factor(self):
         image = np.zeros((1, 1, 100), dtype=np.uint8)
         aug = iaa.BlendAlphaElementwise(
-            (0.0, 1.0),
-            iaa.Add(10),
-            iaa.Add(110),
-            per_channel=True)
+            (0.0, 1.0), iaa.Add(10), iaa.Add(110), per_channel=True
+        )
         observed = aug.augment_image(image)
         assert len(set(observed.flatten())) > 1
 
     def test_bad_datatype_for_per_channel_fails(self):
         got_exception = False
         try:
-            _ = iaa.BlendAlphaElementwise(
-                0.5,
-                iaa.Add(10),
-                None,
-                per_channel="test")
+            _ = iaa.BlendAlphaElementwise(0.5, iaa.Add(10), None, per_channel="test")
         except Exception as exc:
             assert "Expected " in str(exc)
             got_exception = True
@@ -1370,10 +1273,8 @@ class TestBlendAlphaElementwise(unittest.TestCase):
 
     def test_hooks_limiting_propagation(self):
         aug = iaa.BlendAlphaElementwise(
-            0.5,
-            iaa.Add(100),
-            iaa.Add(50),
-            name="AlphaElementwiseTest")
+            0.5, iaa.Add(100), iaa.Add(50), name="AlphaElementwiseTest"
+        )
 
         def propagator(images, augmenter, parents, default):
             if "AlphaElementwise" in augmenter.name:
@@ -1391,7 +1292,8 @@ class TestBlendAlphaElementwise(unittest.TestCase):
             _DummyMaskParameter(inverted=False),
             iaa.Affine(translate_px={"x": 1}),
             iaa.Affine(translate_px={"x": -1}),
-            per_channel=True)
+            per_channel=True,
+        )
         observed = aug.augment_heatmaps([self.heatmaps])[0]
         assert observed.shape == (3, 3, 3)
         assert 0 - 1e-6 < observed.min_value < 0 + 1e-6
@@ -1403,7 +1305,8 @@ class TestBlendAlphaElementwise(unittest.TestCase):
             _DummyMaskParameter(inverted=True),
             iaa.Affine(translate_px={"x": 1}),
             iaa.Affine(translate_px={"x": -1}),
-            per_channel=True)
+            per_channel=True,
+        )
         observed = aug.augment_heatmaps([self.heatmaps])[0]
         assert observed.shape == (3, 3, 3)
         assert 0 - 1e-6 < observed.min_value < 0 + 1e-6
@@ -1415,7 +1318,8 @@ class TestBlendAlphaElementwise(unittest.TestCase):
             _DummyMaskParameter(inverted=False),
             iaa.Affine(translate_px={"x": 1}),
             iaa.Affine(translate_px={"x": -1}),
-            per_channel=True)
+            per_channel=True,
+        )
         observed = aug.augment_segmentation_maps([self.segmaps])[0]
         assert observed.shape == (3, 3, 3)
         assert np.array_equal(observed.get_arr(), self.segmaps_r1.get_arr())
@@ -1425,7 +1329,8 @@ class TestBlendAlphaElementwise(unittest.TestCase):
             _DummyMaskParameter(inverted=True),
             iaa.Affine(translate_px={"x": 1}),
             iaa.Affine(translate_px={"x": -1}),
-            per_channel=True)
+            per_channel=True,
+        )
         observed = aug.augment_segmentation_maps([self.segmaps])[0]
         assert observed.shape == (3, 3, 3)
         assert np.array_equal(observed.get_arr(), self.segmaps_l1.get_arr())
@@ -1443,12 +1348,10 @@ class TestBlendAlphaElementwise(unittest.TestCase):
         self._test_cba_factor_is_0499("augment_keypoints", self.kpsoi)
 
     def test_keypoints_factor_is_1_with_per_channel(self):
-        self._test_cba_factor_is_1_and_per_channel(
-            "augment_keypoints", self.kpsoi)
+        self._test_cba_factor_is_1_and_per_channel("augment_keypoints", self.kpsoi)
 
     def test_keypoints_factor_is_0_with_per_channel(self):
-        self._test_cba_factor_is_0_and_per_channel(
-            "augment_keypoints", self.kpsoi)
+        self._test_cba_factor_is_0_and_per_channel("augment_keypoints", self.kpsoi)
 
     def test_keypoints_factor_is_choice_of_vals_close_050_per_channel(self):
         # TODO can this somehow be integrated into the CBA functions below?
@@ -1456,17 +1359,18 @@ class TestBlendAlphaElementwise(unittest.TestCase):
             iap.Choice([0.49, 0.51]),
             iaa.Identity(),
             iaa.Affine(translate_px={"x": 1}),
-            per_channel=True)
+            per_channel=True,
+        )
         kpsoi = self.kpsoi
 
         expected_same = kpsoi.deepcopy()
         expected_both_shifted = kpsoi.shift(x=1)
         expected_fg_shifted = ia.KeypointsOnImage(
-            [kpsoi.keypoints[0].shift(x=1), kpsoi.keypoints[1]],
-            shape=self.kpsoi.shape)
+            [kpsoi.keypoints[0].shift(x=1), kpsoi.keypoints[1]], shape=self.kpsoi.shape
+        )
         expected_bg_shifted = ia.KeypointsOnImage(
-            [kpsoi.keypoints[0], kpsoi.keypoints[1].shift(x=1)],
-            shape=self.kpsoi.shape)
+            [kpsoi.keypoints[0], kpsoi.keypoints[1].shift(x=1)], shape=self.kpsoi.shape
+        )
 
         seen = [0, 0]
         for _ in sm.xrange(200):
@@ -1504,19 +1408,31 @@ class TestBlendAlphaElementwise(unittest.TestCase):
         self._test_cba_factor_is_0499("augment_polygons", self.psoi)
 
     def test_polygons_factor_is_1_and_per_channel(self):
-        self._test_cba_factor_is_1_and_per_channel(
-            "augment_polygons", self.psoi)
+        self._test_cba_factor_is_1_and_per_channel("augment_polygons", self.psoi)
 
     def test_polygons_factor_is_0_and_per_channel(self):
-        self._test_cba_factor_is_0_and_per_channel(
-            "augment_polygons", self.psoi)
+        self._test_cba_factor_is_0_and_per_channel("augment_polygons", self.psoi)
 
     def test_polygons_factor_is_choice_around_050_and_per_channel(self):
         # We use more points here to verify the
         # either-or-mode (pointwise=False). The probability that all points
         # move in the same way be coincidence is extremely low for so many.
-        ps = [ia.Polygon([(0, 0), (15, 0), (10, 0), (10, 5), (10, 10),
-                          (5, 10), (5, 5), (0, 10), (0, 5), (0, 0)])]
+        ps = [
+            ia.Polygon(
+                [
+                    (0, 0),
+                    (15, 0),
+                    (10, 0),
+                    (10, 5),
+                    (10, 10),
+                    (5, 10),
+                    (5, 5),
+                    (0, 10),
+                    (0, 5),
+                    (0, 0),
+                ]
+            )
+        ]
         psoi = ia.PolygonsOnImage(ps, shape=(15, 15, 3))
         self._test_cba_factor_is_choice_around_050_and_per_channel(
             "augment_polygons", psoi, pointwise=False
@@ -1542,17 +1458,29 @@ class TestBlendAlphaElementwise(unittest.TestCase):
         self._test_cba_factor_is_0499("augment_line_strings", self.lsoi)
 
     def test_line_strings_factor_is_1_and_per_channel(self):
-        self._test_cba_factor_is_1_and_per_channel(
-            "augment_line_strings", self.lsoi)
+        self._test_cba_factor_is_1_and_per_channel("augment_line_strings", self.lsoi)
 
     def test_line_strings_factor_is_0_and_per_channel(self):
-        self._test_cba_factor_is_0_and_per_channel(
-            "augment_line_strings", self.lsoi)
+        self._test_cba_factor_is_0_and_per_channel("augment_line_strings", self.lsoi)
 
     def test_line_strings_factor_is_choice_around_050_and_per_channel(self):
         # see same polygons test for why self.lsoi is not used here
-        lss = [ia.LineString([(0, 0), (15, 0), (10, 0), (10, 5), (10, 10),
-                              (5, 10), (5, 5), (0, 10), (0, 5), (0, 0)])]
+        lss = [
+            ia.LineString(
+                [
+                    (0, 0),
+                    (15, 0),
+                    (10, 0),
+                    (10, 5),
+                    (10, 10),
+                    (5, 10),
+                    (5, 5),
+                    (0, 10),
+                    (0, 5),
+                    (0, 0),
+                ]
+            )
+        ]
         lsoi = ia.LineStringsOnImage(lss, shape=(15, 15, 3))
         self._test_cba_factor_is_choice_around_050_and_per_channel(
             "augment_line_strings", lsoi, pointwise=False
@@ -1563,8 +1491,7 @@ class TestBlendAlphaElementwise(unittest.TestCase):
         self._test_empty_cba("augment_line_strings", lsoi)
 
     def test_line_strings_hooks_limit_propagation(self):
-        self._test_cba_hooks_limit_propagation(
-            "augment_line_strings", self.lsoi)
+        self._test_cba_hooks_limit_propagation("augment_line_strings", self.lsoi)
 
     def test_bounding_boxes_factor_is_1(self):
         self._test_cba_factor_is_1("augment_bounding_boxes", self.bbsoi)
@@ -1579,12 +1506,10 @@ class TestBlendAlphaElementwise(unittest.TestCase):
         self._test_cba_factor_is_0499("augment_bounding_boxes", self.bbsoi)
 
     def test_bounding_boxes_factor_is_1_and_per_channel(self):
-        self._test_cba_factor_is_1_and_per_channel(
-            "augment_bounding_boxes", self.bbsoi)
+        self._test_cba_factor_is_1_and_per_channel("augment_bounding_boxes", self.bbsoi)
 
     def test_bounding_boxes_factor_is_0_and_per_channel(self):
-        self._test_cba_factor_is_0_and_per_channel(
-            "augment_bounding_boxes", self.bbsoi)
+        self._test_cba_factor_is_0_and_per_channel("augment_bounding_boxes", self.bbsoi)
 
     def test_bounding_boxes_factor_is_choice_around_050_and_per_channel(self):
         # TODO pointwise=True or False makes no difference here, because
@@ -1598,15 +1523,13 @@ class TestBlendAlphaElementwise(unittest.TestCase):
         self._test_empty_cba("augment_bounding_boxes", bbsoi)
 
     def test_bounding_boxes_hooks_limit_propagation(self):
-        self._test_cba_hooks_limit_propagation(
-            "augment_bounding_boxes", self.bbsoi)
+        self._test_cba_hooks_limit_propagation("augment_bounding_boxes", self.bbsoi)
 
     @classmethod
     def _test_cba_factor_is_1(cls, augf_name, cbaoi):
         aug = iaa.BlendAlphaElementwise(
-            1.0,
-            iaa.Identity(),
-            iaa.Affine(translate_px={"x": 1}))
+            1.0, iaa.Identity(), iaa.Affine(translate_px={"x": 1})
+        )
 
         observed = getattr(aug, augf_name)([cbaoi])
 
@@ -1615,9 +1538,8 @@ class TestBlendAlphaElementwise(unittest.TestCase):
     @classmethod
     def _test_cba_factor_is_0501(cls, augf_name, cbaoi):
         aug = iaa.BlendAlphaElementwise(
-            0.501,
-            iaa.Identity(),
-            iaa.Affine(translate_px={"x": 1}))
+            0.501, iaa.Identity(), iaa.Affine(translate_px={"x": 1})
+        )
 
         observed = getattr(aug, augf_name)([cbaoi])
 
@@ -1626,9 +1548,8 @@ class TestBlendAlphaElementwise(unittest.TestCase):
     @classmethod
     def _test_cba_factor_is_0(cls, augf_name, cbaoi):
         aug = iaa.BlendAlphaElementwise(
-            0.0,
-            iaa.Identity(),
-            iaa.Affine(translate_px={"x": 1}))
+            0.0, iaa.Identity(), iaa.Affine(translate_px={"x": 1})
+        )
 
         observed = getattr(aug, augf_name)([cbaoi])
 
@@ -1638,9 +1559,8 @@ class TestBlendAlphaElementwise(unittest.TestCase):
     @classmethod
     def _test_cba_factor_is_0499(cls, augf_name, cbaoi):
         aug = iaa.BlendAlphaElementwise(
-            0.499,
-            iaa.Identity(),
-            iaa.Affine(translate_px={"x": 1}))
+            0.499, iaa.Identity(), iaa.Affine(translate_px={"x": 1})
+        )
 
         observed = getattr(aug, augf_name)([cbaoi])
 
@@ -1650,10 +1570,8 @@ class TestBlendAlphaElementwise(unittest.TestCase):
     @classmethod
     def _test_cba_factor_is_1_and_per_channel(cls, augf_name, cbaoi):
         aug = iaa.BlendAlphaElementwise(
-            1.0,
-            iaa.Identity(),
-            iaa.Affine(translate_px={"x": 1}),
-            per_channel=True)
+            1.0, iaa.Identity(), iaa.Affine(translate_px={"x": 1}), per_channel=True
+        )
 
         observed = getattr(aug, augf_name)([cbaoi])
 
@@ -1662,10 +1580,8 @@ class TestBlendAlphaElementwise(unittest.TestCase):
     @classmethod
     def _test_cba_factor_is_0_and_per_channel(cls, augf_name, cbaoi):
         aug = iaa.BlendAlphaElementwise(
-            0.0,
-            iaa.Identity(),
-            iaa.Affine(translate_px={"x": 1}),
-            per_channel=True)
+            0.0, iaa.Identity(), iaa.Affine(translate_px={"x": 1}), per_channel=True
+        )
 
         observed = getattr(aug, augf_name)([cbaoi])
 
@@ -1674,12 +1590,14 @@ class TestBlendAlphaElementwise(unittest.TestCase):
 
     @classmethod
     def _test_cba_factor_is_choice_around_050_and_per_channel(
-            cls, augf_name, cbaoi, pointwise):
+        cls, augf_name, cbaoi, pointwise
+    ):
         aug = iaa.BlendAlphaElementwise(
             iap.Choice([0.49, 0.51]),
             iaa.Identity(),
             iaa.Affine(translate_px={"x": 1}),
-            per_channel=True)
+            per_channel=True,
+        )
 
         expected_same = cbaoi.deepcopy()
         expected_shifted = cbaoi.shift(x=1)
@@ -1691,13 +1609,19 @@ class TestBlendAlphaElementwise(unittest.TestCase):
             # We use here allclose() instead of coords_almost_equals()
             # as the latter one is much slower for polygons and we don't have
             # to deal with tricky geometry changes here, just naive shifting.
-            if np.allclose(observed.items[0].coords,
-                           expected_same.items[0].coords,
-                           rtol=0, atol=0.1):
+            if np.allclose(
+                observed.items[0].coords,
+                expected_same.items[0].coords,
+                rtol=0,
+                atol=0.1,
+            ):
                 seen[0] += 1
-            elif np.allclose(observed.items[0].coords,
-                             expected_shifted.items[0].coords,
-                             rtol=0, atol=0.1):
+            elif np.allclose(
+                observed.items[0].coords,
+                expected_shifted.items[0].coords,
+                rtol=0,
+                atol=0.1,
+            ):
                 seen[1] += 1
             else:
                 seen[2] += 1
@@ -1706,17 +1630,17 @@ class TestBlendAlphaElementwise(unittest.TestCase):
             # This code can be used if the polygon augmentation mode is
             # AlphaElementwise._MODE_POINTWISE. Currently it is _MODE_EITHER_OR.
             nb_points = len(cbaoi.items[0].coords)
-            p_all_same = 2 * ((1/2)**nb_points)  # all points moved in same way
-            expected_iter = nb_iterations*p_all_same
-            expected_iter_notsame = nb_iterations*(1-p_all_same)
-            atol = nb_iterations * (5*p_all_same)
+            p_all_same = 2 * ((1 / 2) ** nb_points)  # all points moved in same way
+            expected_iter = nb_iterations * p_all_same
+            expected_iter_notsame = nb_iterations * (1 - p_all_same)
+            atol = nb_iterations * (5 * p_all_same)
 
             assert np.isclose(seen[0], expected_iter, rtol=0, atol=atol)
             assert np.isclose(seen[1], expected_iter, rtol=0, atol=atol)
             assert np.isclose(seen[2], expected_iter_notsame, rtol=0, atol=atol)
         else:
-            expected_iter = nb_iterations*0.5
-            atol = nb_iterations*0.15
+            expected_iter = nb_iterations * 0.5
+            atol = nb_iterations * 0.15
             assert np.isclose(seen[0], expected_iter, rtol=0, atol=atol)
             assert np.isclose(seen[1], expected_iter, rtol=0, atol=atol)
             assert seen[2] == 0
@@ -1724,9 +1648,8 @@ class TestBlendAlphaElementwise(unittest.TestCase):
     @classmethod
     def _test_empty_cba(cls, augf_name, cbaoi):
         aug = iaa.BlendAlphaElementwise(
-            0.501,
-            iaa.Identity(),
-            iaa.Affine(translate_px={"x": 1}))
+            0.501, iaa.Identity(), iaa.Affine(translate_px={"x": 1})
+        )
 
         observed = getattr(aug, augf_name)(cbaoi)
 
@@ -1739,7 +1662,8 @@ class TestBlendAlphaElementwise(unittest.TestCase):
             0.0,
             iaa.Affine(translate_px={"x": 1}),
             iaa.Affine(translate_px={"y": 1}),
-            name="AlphaTest")
+            name="AlphaTest",
+        )
 
         def propagator(cbaoi_to_aug, augmenter, parents, default):
             if "Alpha" in augmenter.name:
@@ -1753,15 +1677,7 @@ class TestBlendAlphaElementwise(unittest.TestCase):
         assert observed.items[0].coords_almost_equals(cbaoi.items[0])
 
     def test_zero_sized_axes(self):
-        shapes = [
-            (0, 0),
-            (0, 1),
-            (1, 0),
-            (0, 1, 0),
-            (1, 0, 0),
-            (0, 1, 1),
-            (1, 0, 1)
-        ]
+        shapes = [(0, 0), (0, 1), (1, 0), (0, 1, 0), (1, 0, 0), (0, 1, 1), (1, 0, 1)]
 
         for shape in shapes:
             with self.subTest(shape=shape):
@@ -1775,12 +1691,7 @@ class TestBlendAlphaElementwise(unittest.TestCase):
                 assert image_aug.shape == shape
 
     def test_unusual_channel_numbers(self):
-        shapes = [
-            (1, 1, 4),
-            (1, 1, 5),
-            (1, 1, 512),
-            (1, 1, 513)
-        ]
+        shapes = [(1, 1, 4), (1, 1, 5), (1, 1, 512), (1, 1, 513)]
 
         for shape in shapes:
             with self.subTest(shape=shape):
@@ -1799,7 +1710,8 @@ class TestBlendAlphaElementwise(unittest.TestCase):
             iaa.Add((1, 10), seed=1),
             iaa.Add((11, 20), seed=2),
             per_channel=True,
-            seed=3)
+            seed=3,
+        )
         runtest_pickleable_uint8_img(aug, iterations=3)
 
 
@@ -1816,37 +1728,33 @@ class TestBlendAlphaSomeColors(unittest.TestCase):
         assert isinstance(aug.mask_generator, iaa.SomeColorsMaskGen)
 
     def test_grayscale_drops_different_colors(self):
-        image = np.uint8([
-            [255, 0, 0],
-            [0, 255, 0],
-            [0, 0, 255],
-            [255, 255, 0],
-            [255, 0, 255],
-            [0, 255, 255],
-            [255, 128, 128],
-            [128, 255, 128],
-            [128, 128, 255]
-        ]).reshape((1, 9, 3))
+        image = np.uint8(
+            [
+                [255, 0, 0],
+                [0, 255, 0],
+                [0, 0, 255],
+                [255, 255, 0],
+                [255, 0, 255],
+                [0, 255, 255],
+                [255, 128, 128],
+                [128, 255, 128],
+                [128, 128, 255],
+            ]
+        ).reshape((1, 9, 3))
         image_gray = iaa.Grayscale(1.0)(image=image)
-        aug = iaa.BlendAlphaSomeColors(iaa.Grayscale(1.0),
-                                       nb_bins=256, smoothness=0)
+        aug = iaa.BlendAlphaSomeColors(iaa.Grayscale(1.0), nb_bins=256, smoothness=0)
 
         nb_grayscaled = []
         for _ in sm.xrange(50):
             image_aug = aug(image=image)
-            grayscaled = np.sum((image_aug == image_gray).astype(np.int32),
-                                axis=2)
+            grayscaled = np.sum((image_aug == image_gray).astype(np.int32), axis=2)
             assert np.all(np.logical_or(grayscaled == 0, grayscaled == 3))
             nb_grayscaled.append(np.sum(grayscaled == 3))
 
         assert len(set(nb_grayscaled)) >= 5
 
     def test_zero_sized_axes(self):
-        shapes = [
-            (0, 0, 3),
-            (0, 1, 3),
-            (1, 0, 3)
-        ]
+        shapes = [(0, 0, 3), (0, 1, 3), (1, 0, 3)]
 
         for shape in shapes:
             with self.subTest(shape=shape):
@@ -1861,9 +1769,8 @@ class TestBlendAlphaSomeColors(unittest.TestCase):
 
     def test_pickleable(self):
         aug = iaa.BlendAlphaSomeColors(
-            iaa.Add((1, 10), seed=1),
-            iaa.Add((11, 20), seed=2),
-            seed=3)
+            iaa.Add((1, 10), seed=1), iaa.Add((11, 20), seed=2), seed=3
+        )
         runtest_pickleable_uint8_img(aug, iterations=3)
 
 
@@ -1877,43 +1784,34 @@ class TestBlendAlphaHorizontalLinearGradient(unittest.TestCase):
         aug = iaa.BlendAlphaHorizontalLinearGradient(child1, child2)
         assert aug.foreground is child1
         assert aug.background is child2
-        assert isinstance(aug.mask_generator,
-                          iaa.HorizontalLinearGradientMaskGen)
+        assert isinstance(aug.mask_generator, iaa.HorizontalLinearGradientMaskGen)
 
     def test_single_image(self):
         image = np.full((2, 100, 3), 255, dtype=np.uint8)
         image_drop = iaa.TotalDropout(1.0)(image=image)
 
-        aug = iaa.BlendAlphaHorizontalLinearGradient(iaa.TotalDropout(1.0),
-                                                     min_value=0.0,
-                                                     max_value=1.0,
-                                                     start_at=0.2,
-                                                     end_at=0.8)
+        aug = iaa.BlendAlphaHorizontalLinearGradient(
+            iaa.TotalDropout(1.0),
+            min_value=0.0,
+            max_value=1.0,
+            start_at=0.2,
+            end_at=0.8,
+        )
         image_aug = aug(image=image)
 
         assert np.array_equal(image_aug[0, :, :], image_aug[1, :, :])
         assert np.array_equal(image_aug[:, :20, :], image[:, :20, :])
         assert np.array_equal(image_aug[:, 80:, :], image_drop[:, 80:, :])
         assert not np.array_equal(image_aug[:, 20:80, :], image[:, 20:80, :])
-        assert not np.array_equal(image_aug[:, 20:80, :],
-                                  image_drop[:, 20:80, :])
+        assert not np.array_equal(image_aug[:, 20:80, :], image_drop[:, 20:80, :])
 
     def test_zero_sized_axes(self):
-        shapes = [
-            (0, 0),
-            (0, 1),
-            (1, 0),
-            (0, 1, 0),
-            (1, 0, 0),
-            (0, 1, 1),
-            (1, 0, 1)
-        ]
+        shapes = [(0, 0), (0, 1), (1, 0), (0, 1, 0), (1, 0, 0), (0, 1, 1), (1, 0, 1)]
 
         for shape in shapes:
             with self.subTest(shape=shape):
                 image = np.full(shape, 0, dtype=np.uint8)
-                aug = iaa.BlendAlphaHorizontalLinearGradient(
-                    iaa.TotalDropout(1.0))
+                aug = iaa.BlendAlphaHorizontalLinearGradient(iaa.TotalDropout(1.0))
 
                 image_aug = aug(image=image)
 
@@ -1922,9 +1820,8 @@ class TestBlendAlphaHorizontalLinearGradient(unittest.TestCase):
 
     def test_pickleable(self):
         aug = iaa.BlendAlphaHorizontalLinearGradient(
-            iaa.Add((1, 10), seed=1),
-            iaa.Add((11, 20), seed=2),
-            seed=3)
+            iaa.Add((1, 10), seed=1), iaa.Add((11, 20), seed=2), seed=3
+        )
         runtest_pickleable_uint8_img(aug, iterations=3)
 
 
@@ -1938,43 +1835,34 @@ class TestBlendAlphaVerticalLinearGradient(unittest.TestCase):
         aug = iaa.BlendAlphaVerticalLinearGradient(child1, child2)
         assert aug.foreground is child1
         assert aug.background is child2
-        assert isinstance(aug.mask_generator,
-                          iaa.VerticalLinearGradientMaskGen)
+        assert isinstance(aug.mask_generator, iaa.VerticalLinearGradientMaskGen)
 
     def test_single_image(self):
         image = np.full((100, 2, 3), 255, dtype=np.uint8)
         image_drop = iaa.TotalDropout(1.0)(image=image)
 
-        aug = iaa.BlendAlphaVerticalLinearGradient(iaa.TotalDropout(1.0),
-                                                   min_value=0.0,
-                                                   max_value=1.0,
-                                                   start_at=0.2,
-                                                   end_at=0.8)
+        aug = iaa.BlendAlphaVerticalLinearGradient(
+            iaa.TotalDropout(1.0),
+            min_value=0.0,
+            max_value=1.0,
+            start_at=0.2,
+            end_at=0.8,
+        )
         image_aug = aug(image=image)
 
         assert np.array_equal(image_aug[:, 0, :], image_aug[:, 0, :])
         assert np.array_equal(image_aug[:20, :, :], image[:20, :, :])
         assert np.array_equal(image_aug[80:, :, :], image_drop[80:, :, :])
         assert not np.array_equal(image_aug[20:80, :, :], image[20:80, :, :])
-        assert not np.array_equal(image_aug[20:80, :, :],
-                                  image_drop[20:80, :, :])
+        assert not np.array_equal(image_aug[20:80, :, :], image_drop[20:80, :, :])
 
     def test_zero_sized_axes(self):
-        shapes = [
-            (0, 0),
-            (0, 1),
-            (1, 0),
-            (0, 1, 0),
-            (1, 0, 0),
-            (0, 1, 1),
-            (1, 0, 1)
-        ]
+        shapes = [(0, 0), (0, 1), (1, 0), (0, 1, 0), (1, 0, 0), (0, 1, 1), (1, 0, 1)]
 
         for shape in shapes:
             with self.subTest(shape=shape):
                 image = np.full(shape, 0, dtype=np.uint8)
-                aug = iaa.BlendAlphaVerticalLinearGradient(
-                    iaa.TotalDropout(1.0))
+                aug = iaa.BlendAlphaVerticalLinearGradient(iaa.TotalDropout(1.0))
 
                 image_aug = aug(image=image)
 
@@ -1983,9 +1871,8 @@ class TestBlendAlphaVerticalLinearGradient(unittest.TestCase):
 
     def test_pickleable(self):
         aug = iaa.BlendAlphaVerticalLinearGradient(
-            iaa.Add((1, 10), seed=1),
-            iaa.Add((11, 20), seed=2),
-            seed=3)
+            iaa.Add((1, 10), seed=1), iaa.Add((11, 20), seed=2), seed=3
+        )
         runtest_pickleable_uint8_img(aug, iterations=3)
 
 
@@ -2008,9 +1895,11 @@ class TestBlendAlphaRegularGrid(unittest.TestCase):
         image = np.full((2, 6, 3), 255, dtype=np.uint8)
 
         aug = iaa.BlendAlphaRegularGrid(
-            nb_rows=1, nb_cols=3,
+            nb_rows=1,
+            nb_cols=3,
             foreground=iaa.TotalDropout(1.0),
-            alpha=iap.DeterministicList([1.0, 0.0, 1.0]))
+            alpha=iap.DeterministicList([1.0, 0.0, 1.0]),
+        )
         image_aug = aug(image=image)
 
         expected = np.copy(image)
@@ -2019,21 +1908,14 @@ class TestBlendAlphaRegularGrid(unittest.TestCase):
         assert np.array_equal(image_aug, expected)
 
     def test_zero_sized_axes(self):
-        shapes = [
-            (0, 0),
-            (0, 1),
-            (1, 0),
-            (0, 1, 0),
-            (1, 0, 0),
-            (0, 1, 1),
-            (1, 0, 1)
-        ]
+        shapes = [(0, 0), (0, 1), (1, 0), (0, 1, 0), (1, 0, 0), (0, 1, 1), (1, 0, 1)]
 
         for shape in shapes:
             with self.subTest(shape=shape):
                 image = np.full(shape, 0, dtype=np.uint8)
                 aug = iaa.BlendAlphaRegularGrid(
-                    nb_rows=2, nb_cols=3, foreground=iaa.TotalDropout(1.0))
+                    nb_rows=2, nb_cols=3, foreground=iaa.TotalDropout(1.0)
+                )
 
                 image_aug = aug(image=image)
 
@@ -2042,10 +1924,8 @@ class TestBlendAlphaRegularGrid(unittest.TestCase):
 
     def test_pickleable(self):
         aug = iaa.BlendAlphaRegularGrid(
-            2, 3,
-            iaa.Add((1, 10), seed=1),
-            iaa.Add((11, 20), seed=2),
-            seed=3)
+            2, 3, iaa.Add((1, 10), seed=1), iaa.Add((11, 20), seed=2), seed=3
+        )
         runtest_pickleable_uint8_img(aug, iterations=3)
 
 
@@ -2066,8 +1946,9 @@ class TestBlendAlphaCheckerboard(unittest.TestCase):
     def test_single_image(self):
         image = np.full((2, 6, 3), 255, dtype=np.uint8)
 
-        aug = iaa.BlendAlphaCheckerboard(nb_rows=1, nb_cols=3,
-                                         foreground=iaa.TotalDropout(1.0))
+        aug = iaa.BlendAlphaCheckerboard(
+            nb_rows=1, nb_cols=3, foreground=iaa.TotalDropout(1.0)
+        )
         image_aug = aug(image=image)
 
         expected = np.copy(image)
@@ -2076,21 +1957,14 @@ class TestBlendAlphaCheckerboard(unittest.TestCase):
         assert np.array_equal(image_aug, expected)
 
     def test_zero_sized_axes(self):
-        shapes = [
-            (0, 0),
-            (0, 1),
-            (1, 0),
-            (0, 1, 0),
-            (1, 0, 0),
-            (0, 1, 1),
-            (1, 0, 1)
-        ]
+        shapes = [(0, 0), (0, 1), (1, 0), (0, 1, 0), (1, 0, 0), (0, 1, 1), (1, 0, 1)]
 
         for shape in shapes:
             with self.subTest(shape=shape):
                 image = np.full(shape, 0, dtype=np.uint8)
                 aug = iaa.BlendAlphaCheckerboard(
-                    nb_rows=2, nb_cols=3, foreground=iaa.TotalDropout(1.0))
+                    nb_rows=2, nb_cols=3, foreground=iaa.TotalDropout(1.0)
+                )
 
                 image_aug = aug(image=image)
 
@@ -2099,10 +1973,8 @@ class TestBlendAlphaCheckerboard(unittest.TestCase):
 
     def test_pickleable(self):
         aug = iaa.BlendAlphaCheckerboard(
-            2, 3,
-            iaa.Add((1, 10), seed=1),
-            iaa.Add((11, 20), seed=2),
-            seed=3)
+            2, 3, iaa.Add((1, 10), seed=1), iaa.Add((11, 20), seed=2), seed=3
+        )
         runtest_pickleable_uint8_img(aug, iterations=3)
 
 
@@ -2114,15 +1986,11 @@ class TestBlendAlphaSegMapClassIds(unittest.TestCase):
         child1 = iaa.Sequential([])
         child2 = iaa.Sequential([])
         aug = iaa.BlendAlphaSegMapClassIds(
-            2,
-            nb_sample_classes=1,
-            foreground=child1,
-            background=child2
+            2, nb_sample_classes=1, foreground=child1, background=child2
         )
         assert aug.foreground is child1
         assert aug.background is child2
-        assert isinstance(aug.mask_generator,
-                          iaa.SegMapClassIdsMaskGen)
+        assert isinstance(aug.mask_generator, iaa.SegMapClassIdsMaskGen)
         assert aug.mask_generator.class_ids.value == 2
         assert aug.mask_generator.nb_sample_classes.value == 1
 
@@ -2131,39 +1999,25 @@ class TestBlendAlphaSegMapClassIds(unittest.TestCase):
         segmap_arr = np.zeros((5, 10, 1), dtype=np.int32)
         segmap_arr[0:2, :] = 1
         aug = iaa.BlendAlphaSegMapClassIds(
-            1,
-            nb_sample_classes=1,
-            foreground=iaa.TotalDropout(1.0)
+            1, nb_sample_classes=1, foreground=iaa.TotalDropout(1.0)
         )
 
-        image_aug, segmap_aug = aug(image=image,
-                                    segmentation_maps=[segmap_arr])
+        image_aug, segmap_aug = aug(image=image, segmentation_maps=[segmap_arr])
 
         assert np.allclose(image_aug[0:4, :, :], 0, rtol=0, atol=1.01)
         assert np.allclose(image_aug[4:, :, :], 255, rtol=0, atol=1.01)
 
     def test_zero_sized_axes(self):
-        shapes = [
-            (0, 0),
-            (0, 1),
-            (1, 0),
-            (0, 1, 0),
-            (1, 0, 0),
-            (0, 1, 1),
-            (1, 0, 1)
-        ]
+        shapes = [(0, 0), (0, 1), (1, 0), (0, 1, 0), (1, 0, 0), (0, 1, 1), (1, 0, 1)]
 
         for shape in shapes:
             with self.subTest(shape=shape):
                 image = np.full(shape, 255, dtype=np.uint8)
                 segmap_arr = np.zeros((2, 2, 1), dtype=np.int32)
                 segmap_arr[0, 0] = 2
-                aug = iaa.BlendAlphaSegMapClassIds(
-                    2,
-                    foreground=iaa.TotalDropout(1.0))
+                aug = iaa.BlendAlphaSegMapClassIds(2, foreground=iaa.TotalDropout(1.0))
 
-                image_aug, segmap_aug = aug(
-                    image=image, segmentation_maps=[segmap_arr])
+                image_aug, segmap_aug = aug(image=image, segmentation_maps=[segmap_arr])
 
                 assert image_aug.dtype.name == "uint8"
                 assert image_aug.shape == shape
@@ -2176,7 +2030,8 @@ class TestBlendAlphaSegMapClassIds(unittest.TestCase):
             foreground=iaa.Add((1, 10), seed=1),
             background=iaa.Add((11, 20), seed=2),
             nb_sample_classes=1,
-            seed=3)
+            seed=3,
+        )
         image = np.mod(np.arange(int(np.prod(shape))), 256).astype(np.uint8)
         image = image.reshape(shape)
         segmap_arr = np.zeros((15, 15, 1), dtype=np.int32)
@@ -2186,10 +2041,10 @@ class TestBlendAlphaSegMapClassIds(unittest.TestCase):
         augmenter_pkl = pickle.loads(pickle.dumps(augmenter, protocol=-1))
 
         for _ in np.arange(iterations):
-            image_aug, sm_aug = augmenter(
-                image=image, segmentation_maps=[segmap_arr])
+            image_aug, sm_aug = augmenter(image=image, segmentation_maps=[segmap_arr])
             image_aug_pkl, sm_aug_pkl = augmenter_pkl(
-                image=image, segmentation_maps=[segmap_arr])
+                image=image, segmentation_maps=[segmap_arr]
+            )
             assert np.array_equal(image_aug, image_aug_pkl)
             assert np.array_equal(sm_aug, sm_aug_pkl)
 
@@ -2202,58 +2057,44 @@ class TestBlendAlphaBoundingBoxes(unittest.TestCase):
         child1 = iaa.Sequential([])
         child2 = iaa.Sequential([])
         aug = iaa.BlendAlphaBoundingBoxes(
-            "person",
-            nb_sample_labels=1,
-            foreground=child1,
-            background=child2
+            "person", nb_sample_labels=1, foreground=child1, background=child2
         )
         assert aug.foreground is child1
         assert aug.background is child2
-        assert isinstance(aug.mask_generator,
-                          iaa.BoundingBoxesMaskGen)
+        assert isinstance(aug.mask_generator, iaa.BoundingBoxesMaskGen)
         assert aug.mask_generator.labels.value == "person"
         assert aug.mask_generator.nb_sample_labels.value == 1
 
     def test_single_image(self):
         image = np.full((10, 10, 3), 255, dtype=np.uint8)
-        bbs = [ia.BoundingBox(x1=1, y1=1, x2=5, y2=5, label="bb1"),
-               ia.BoundingBox(x1=-3, y1=4, x2=20, y2=8, label="bb2")]
+        bbs = [
+            ia.BoundingBox(x1=1, y1=1, x2=5, y2=5, label="bb1"),
+            ia.BoundingBox(x1=-3, y1=4, x2=20, y2=8, label="bb2"),
+        ]
 
         aug = iaa.BlendAlphaBoundingBoxes(
-            ["bb1"],
-            nb_sample_labels=1,
-            foreground=iaa.Multiply(0.0)
+            ["bb1"], nb_sample_labels=1, foreground=iaa.Multiply(0.0)
         )
 
-        image_aug, segmap_aug = aug(image=image,
-                                    bounding_boxes=[bbs])
+        image_aug, segmap_aug = aug(image=image, bounding_boxes=[bbs])
 
         assert np.allclose(image_aug[1:5, 1:5, :], 0, rtol=0, atol=1.01)
         assert np.allclose(image_aug[0:1, 0:1, :], 255, rtol=0, atol=1.01)
         assert np.allclose(image_aug[5:10, 5:10, :], 255, rtol=0, atol=1.01)
 
     def test_zero_sized_axes(self):
-        shapes = [
-            (0, 0),
-            (0, 1),
-            (1, 0),
-            (0, 1, 0),
-            (1, 0, 0),
-            (0, 1, 1),
-            (1, 0, 1)
-        ]
+        shapes = [(0, 0), (0, 1), (1, 0), (0, 1, 0), (1, 0, 0), (0, 1, 1), (1, 0, 1)]
 
         for shape in shapes:
             with self.subTest(shape=shape):
                 image = np.full(shape, 255, dtype=np.uint8)
-                bbs = [ia.BoundingBox(x1=1, y1=1, x2=5, y2=5, label="bb1"),
-                       ia.BoundingBox(x1=-3, y1=4, x2=20, y2=8, label="bb2")]
-                aug = iaa.BlendAlphaBoundingBoxes(
-                    ["bb1"],
-                    foreground=iaa.Multiply(0.0))
+                bbs = [
+                    ia.BoundingBox(x1=1, y1=1, x2=5, y2=5, label="bb1"),
+                    ia.BoundingBox(x1=-3, y1=4, x2=20, y2=8, label="bb2"),
+                ]
+                aug = iaa.BlendAlphaBoundingBoxes(["bb1"], foreground=iaa.Multiply(0.0))
 
-                image_aug, segmap_aug = aug(
-                    image=image, bounding_boxes=[bbs])
+                image_aug, segmap_aug = aug(image=image, bounding_boxes=[bbs])
 
                 assert image_aug.dtype.name == "uint8"
                 assert image_aug.shape == shape
@@ -2266,32 +2107,30 @@ class TestBlendAlphaBoundingBoxes(unittest.TestCase):
             foreground=iaa.Add((1, 10), seed=1),
             background=iaa.Add((11, 20), seed=2),
             nb_sample_labels=1,
-            seed=3)
+            seed=3,
+        )
         image = np.mod(np.arange(int(np.prod(shape))), 256).astype(np.uint8)
         image = image.reshape(shape)
-        bbs = [ia.BoundingBox(x1=1, y1=1, x2=5, y2=5, label="bb1"),
-               ia.BoundingBox(x1=-3, y1=4, x2=20, y2=8, label="bb2")]
+        bbs = [
+            ia.BoundingBox(x1=1, y1=1, x2=5, y2=5, label="bb1"),
+            ia.BoundingBox(x1=-3, y1=4, x2=20, y2=8, label="bb2"),
+        ]
 
         augmenter_pkl = pickle.loads(pickle.dumps(augmenter, protocol=-1))
 
         for _ in np.arange(iterations):
-            image_aug, bbs_aug = augmenter(
-                image=image, bounding_boxes=[bbs])
+            image_aug, bbs_aug = augmenter(image=image, bounding_boxes=[bbs])
             image_aug_pkl, bbs_aug_pkl = augmenter_pkl(
-                image=image, bounding_boxes=[bbs])
+                image=image, bounding_boxes=[bbs]
+            )
             assert np.array_equal(image_aug, image_aug_pkl)
 
 
 class TestStochasticParameterMaskGen(unittest.TestCase):
     @classmethod
     def _test_draw_masks_nhwc(cls, shape):
-        batch = _BatchInAugmentation(
-            images=np.zeros(shape, dtype=np.uint8)
-        )
-        values = np.float32([
-            [0.1, 0.2, 0.3],
-            [0.4, 0.5, 0.6]
-        ])
+        batch = _BatchInAugmentation(images=np.zeros(shape, dtype=np.uint8))
+        values = np.float32([[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]])
         param = iap.DeterministicList(values.flatten())
 
         gen = iaa.StochasticParameterMaskGen(param, per_channel=False)
@@ -2314,18 +2153,12 @@ class TestStochasticParameterMaskGen(unittest.TestCase):
         bb = ia.BoundingBox(x1=1, y1=2, x2=3, y2=4)
         bbsoi1 = ia.BoundingBoxesOnImage([bb], shape=(2, 3, 3))
         bbsoi2 = ia.BoundingBoxesOnImage([], shape=(3, 3, 3))
-        batch = _BatchInAugmentation(
-            bounding_boxes=[bbsoi1, bbsoi2]
-        )
+        batch = _BatchInAugmentation(bounding_boxes=[bbsoi1, bbsoi2])
         # sampling for shape of bbsoi1 will cover row1 and row2, then
         # sampling for bbsoi2 will cover row1, row2, row3
         # masks are sampled independently per row/image, so it starts over
         # again for bbsoi2
-        values = np.float32([
-            [0.1, 0.2, 0.3],
-            [0.4, 0.5, 0.6],
-            [0.7, 0.8, 0.9]
-        ])
+        values = np.float32([[0.1, 0.2, 0.3], [0.4, 0.5, 0.6], [0.7, 0.8, 0.9]])
         param = iap.DeterministicList(values.flatten())
 
         gen = iaa.StochasticParameterMaskGen(param, per_channel=False)
@@ -2339,34 +2172,20 @@ class TestStochasticParameterMaskGen(unittest.TestCase):
 
     def test_per_channel(self):
         for per_channel in [True, iap.Deterministic(0.51)]:
-            batch = _BatchInAugmentation(
-                images=np.zeros((1, 2, 3, 2), dtype=np.uint8)
+            batch = _BatchInAugmentation(images=np.zeros((1, 2, 3, 2), dtype=np.uint8))
+            values = np.float32(
+                [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6], [0.7, 0.8, 0.9], [0.10, 0.11, 0.12]]
             )
-            values = np.float32([
-                [0.1, 0.2, 0.3],
-                [0.4, 0.5, 0.6],
-                [0.7, 0.8, 0.9],
-                [0.10, 0.11, 0.12]
-            ])
             param = iap.DeterministicList(values.flatten())
 
-            gen = iaa.StochasticParameterMaskGen(param,
-                                                 per_channel=per_channel)
+            gen = iaa.StochasticParameterMaskGen(param, per_channel=per_channel)
 
             masks = gen.draw_masks(batch, random_state=0)
 
             assert np.allclose(masks[0], values.reshape((2, 3, 2)))
 
     def test_zero_sized_axes(self):
-        shapes = [
-            (0, 0),
-            (0, 1),
-            (1, 0),
-            (0, 1, 0),
-            (1, 0, 0),
-            (0, 1, 1),
-            (1, 0, 1)
-        ]
+        shapes = [(0, 0), (0, 1), (1, 0), (0, 1, 0), (1, 0, 0), (0, 1, 1), (1, 0, 1)]
 
         for per_channel in [False, True]:
             for shape in shapes:
@@ -2375,8 +2194,7 @@ class TestStochasticParameterMaskGen(unittest.TestCase):
                         images=[np.zeros(shape, dtype=np.uint8)]
                     )
                     param = iap.Deterministic(1.0)
-                    gen = iaa.StochasticParameterMaskGen(
-                        param, per_channel=per_channel)
+                    gen = iaa.StochasticParameterMaskGen(param, per_channel=per_channel)
 
                     masks = gen.draw_masks(batch, random_state=0)
 
@@ -2406,7 +2224,7 @@ class TestSomeColorsMaskGen(unittest.TestCase):
             smoothness=0.5,
             alpha=0.7,
             rotation_deg=123,
-            from_colorspace=iaa.CSPACE_HSV
+            from_colorspace=iaa.CSPACE_HSV,
         )
         assert gen.nb_bins.value == 100
         assert np.isclose(gen.smoothness.value, 0.5)
@@ -2415,21 +2233,22 @@ class TestSomeColorsMaskGen(unittest.TestCase):
         assert gen.from_colorspace == iaa.CSPACE_HSV
 
     def test_draw_masks_marks_different_colors(self):
-        image = np.uint8([
-            [255, 0, 0],
-            [0, 255, 0],
-            [0, 0, 255],
-            [255, 255, 0],
-            [255, 0, 255],
-            [0, 255, 255],
-            [255, 128, 128],
-            [128, 255, 128],
-            [128, 128, 255]
-        ]).reshape((9, 1, 3))
+        image = np.uint8(
+            [
+                [255, 0, 0],
+                [0, 255, 0],
+                [0, 0, 255],
+                [255, 255, 0],
+                [255, 0, 255],
+                [0, 255, 255],
+                [255, 128, 128],
+                [128, 255, 128],
+                [128, 128, 255],
+            ]
+        ).reshape((9, 1, 3))
         image = np.tile(image, (9, 50, 1))
         batch = _BatchInAugmentation(images=[image])
-        gen = iaa.SomeColorsMaskGen(nb_bins=256, smoothness=0,
-                                    alpha=[0, 1])
+        gen = iaa.SomeColorsMaskGen(nb_bins=256, smoothness=0, alpha=[0, 1])
         expected_mask_sums = np.arange(1 + image.shape[0]) * image.shape[1]
         expected_mask_sums = expected_mask_sums.astype(np.float32)
 
@@ -2445,7 +2264,8 @@ class TestSomeColorsMaskGen(unittest.TestCase):
                     np.min(np.abs(expected_mask_sums - mask_sum)),
                     0.0,
                     rtol=0,
-                    atol=0.01)
+                    atol=0.01,
+                )
             )
             assert mask.shape == image.shape[0:2]
             assert mask.dtype.name == "float32"
@@ -2453,17 +2273,19 @@ class TestSomeColorsMaskGen(unittest.TestCase):
         assert len(np.unique(mask_sums)) >= 4
 
     def test_draw_masks_marks_alpha_is_0(self):
-        image = np.uint8([
-            [255, 0, 0],
-            [0, 255, 0],
-            [0, 0, 255],
-            [255, 255, 0],
-            [255, 0, 255],
-            [0, 255, 255],
-            [255, 128, 128],
-            [128, 255, 128],
-            [128, 128, 255]
-        ]).reshape((1, 9, 3))
+        image = np.uint8(
+            [
+                [255, 0, 0],
+                [0, 255, 0],
+                [0, 0, 255],
+                [255, 255, 0],
+                [255, 0, 255],
+                [0, 255, 255],
+                [255, 128, 128],
+                [128, 255, 128],
+                [128, 128, 255],
+            ]
+        ).reshape((1, 9, 3))
         batch = _BatchInAugmentation(images=[image])
         gen = iaa.SomeColorsMaskGen(alpha=0.0)
 
@@ -2472,17 +2294,19 @@ class TestSomeColorsMaskGen(unittest.TestCase):
         assert np.allclose(mask, 0.0)
 
     def test_draw_masks_alpha_is_1(self):
-        image = np.uint8([
-            [255, 0, 0],
-            [0, 255, 0],
-            [0, 0, 255],
-            [255, 255, 0],
-            [255, 0, 255],
-            [0, 255, 255],
-            [255, 128, 128],
-            [128, 255, 128],
-            [128, 128, 255]
-        ]).reshape((1, 9, 3))
+        image = np.uint8(
+            [
+                [255, 0, 0],
+                [0, 255, 0],
+                [0, 0, 255],
+                [255, 255, 0],
+                [255, 0, 255],
+                [0, 255, 255],
+                [255, 128, 128],
+                [128, 255, 128],
+                [128, 128, 255],
+            ]
+        ).reshape((1, 9, 3))
         batch = _BatchInAugmentation(images=[image])
         gen = iaa.SomeColorsMaskGen(alpha=1.0)
 
@@ -2492,17 +2316,19 @@ class TestSomeColorsMaskGen(unittest.TestCase):
 
     @mock.patch("imgaug.augmenters.color.change_colorspace_")
     def test_from_colorspace(self, mock_cc):
-        image = np.uint8([
-            [255, 0, 0],
-            [0, 255, 0],
-            [0, 0, 255],
-            [255, 255, 0],
-            [255, 0, 255],
-            [0, 255, 255],
-            [255, 128, 128],
-            [128, 255, 128],
-            [128, 128, 255]
-        ]).reshape((1, 9, 3))
+        image = np.uint8(
+            [
+                [255, 0, 0],
+                [0, 255, 0],
+                [0, 0, 255],
+                [255, 255, 0],
+                [255, 0, 255],
+                [0, 255, 255],
+                [255, 128, 128],
+                [128, 255, 128],
+                [128, 128, 255],
+            ]
+        ).reshape((1, 9, 3))
         batch = _BatchInAugmentation(images=[image])
         mock_cc.return_value = np.copy(image)
         gen = iaa.SomeColorsMaskGen(alpha=1.0, from_colorspace=iaa.CSPACE_BGR)
@@ -2511,10 +2337,8 @@ class TestSomeColorsMaskGen(unittest.TestCase):
 
         assert mock_cc.call_count == 1
         assert np.array_equal(mock_cc.call_args_list[0][0][0], image)
-        assert (mock_cc.call_args_list[0][1]["to_colorspace"]
-                == iaa.CSPACE_HSV)
-        assert (mock_cc.call_args_list[0][1]["from_colorspace"]
-                == iaa.CSPACE_BGR)
+        assert mock_cc.call_args_list[0][1]["to_colorspace"] == iaa.CSPACE_HSV
+        assert mock_cc.call_args_list[0][1]["from_colorspace"] == iaa.CSPACE_BGR
 
     def test__upscale_to_256_alpha_bins__1_to_256(self):
         alphas = np.float32([0.5])
@@ -2585,7 +2409,7 @@ class TestSomeColorsMaskGen(unittest.TestCase):
 
     def test__smoothen_alphas__0(self):
         alphas = np.zeros((11,), dtype=np.float32)
-        alphas[5-3:5+3+1] = 1.0
+        alphas[5 - 3 : 5 + 3 + 1] = 1.0
 
         alphas_smooth = iaa.SomeColorsMaskGen._smoothen_alphas(alphas, 0.0)
 
@@ -2593,7 +2417,7 @@ class TestSomeColorsMaskGen(unittest.TestCase):
 
     def test__smoothen_alphas__002(self):
         alphas = np.zeros((11,), dtype=np.float32)
-        alphas[5-3:5+3+1] = 1.0
+        alphas[5 - 3 : 5 + 3 + 1] = 1.0
 
         alphas_smooth = iaa.SomeColorsMaskGen._smoothen_alphas(alphas, 0.02)
 
@@ -2601,7 +2425,7 @@ class TestSomeColorsMaskGen(unittest.TestCase):
 
     def test__smoothen_alphas__1(self):
         alphas = np.zeros((11,), dtype=np.float32)
-        alphas[5-3:5+3+1] = 1.0
+        alphas[5 - 3 : 5 + 3 + 1] = 1.0
 
         alphas_smooth = iaa.SomeColorsMaskGen._smoothen_alphas(alphas, 1.0)
 
@@ -2610,15 +2434,17 @@ class TestSomeColorsMaskGen(unittest.TestCase):
         assert np.isclose(alphas_smooth[5], 1.0, atol=0.01)
 
     def test__generate_pixelwise_alpha_map(self):
-        image_hsv = np.uint8([
-            [0, 0, 0],
-            [50, 0, 0],
-            [100, 0, 0],
-            [150, 0, 0],
-            [200, 0, 0],
-            [250, 0, 0],
-            [255, 0, 0]
-        ]).reshape((1, 7, 3))
+        image_hsv = np.uint8(
+            [
+                [0, 0, 0],
+                [50, 0, 0],
+                [100, 0, 0],
+                [150, 0, 0],
+                [200, 0, 0],
+                [250, 0, 0],
+                [255, 0, 0],
+            ]
+        ).reshape((1, 7, 3))
         hue_to_alpha = np.zeros((256,), dtype=np.float32)
         hue_to_alpha[0] = 0.1
         hue_to_alpha[50] = 0.2
@@ -2629,21 +2455,17 @@ class TestSomeColorsMaskGen(unittest.TestCase):
         hue_to_alpha[255] = 0.7
 
         mask = iaa.SomeColorsMaskGen._generate_pixelwise_alpha_mask(
-            image_hsv, hue_to_alpha)
+            image_hsv, hue_to_alpha
+        )
 
         # a bit of tolerance here due to the mask being converted from
         # [0, 255] to [0.0, 1.0]
         assert np.allclose(
-            mask.flatten(),
-            [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7],
-            atol=0.05)
+            mask.flatten(), [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7], atol=0.05
+        )
 
     def test_zero_sized_axes(self):
-        shapes = [
-            (0, 0, 3),
-            (0, 1, 3),
-            (1, 0, 3)
-        ]
+        shapes = [(0, 0, 3), (0, 1, 3), (1, 0, 3)]
 
         for shape in shapes:
             with self.subTest(shape=shape):
@@ -2657,8 +2479,7 @@ class TestSomeColorsMaskGen(unittest.TestCase):
                 assert mask.dtype.name == "float32"
 
     def test_batch_contains_no_images(self):
-        hms = ia.HeatmapsOnImage(np.zeros((5, 5), dtype=np.float32),
-                                 shape=(10, 10, 3))
+        hms = ia.HeatmapsOnImage(np.zeros((5, 5), dtype=np.float32), shape=(10, 10, 3))
         batch = _BatchInAugmentation(heatmaps=[hms])
         gen = iaa.SomeColorsMaskGen()
 
@@ -2671,10 +2492,9 @@ class TestHorizontalLinearGradientMaskGen(unittest.TestCase):
         reseed()
 
     def test___init__(self):
-        gen = iaa.HorizontalLinearGradientMaskGen(min_value=0.1,
-                                                  max_value=1.0,
-                                                  start_at=0.1,
-                                                  end_at=0.9)
+        gen = iaa.HorizontalLinearGradientMaskGen(
+            min_value=0.1, max_value=1.0, start_at=0.1, end_at=0.9
+        )
         assert gen.axis == 1
         assert np.isclose(gen.min_value.value, 0.1)
         assert np.isclose(gen.max_value.value, 1.0)
@@ -2686,10 +2506,9 @@ class TestHorizontalLinearGradientMaskGen(unittest.TestCase):
         image2 = np.zeros((7, 200, 3), dtype=np.uint8)
         batch = _BatchInAugmentation(images=[image1, image2])
 
-        gen = iaa.HorizontalLinearGradientMaskGen(min_value=0.1,
-                                                  max_value=0.75,
-                                                  start_at=0.1,
-                                                  end_at=0.9)
+        gen = iaa.HorizontalLinearGradientMaskGen(
+            min_value=0.1, max_value=0.75, start_at=0.1, end_at=0.9
+        )
 
         masks = gen.draw_masks(batch, random_state=1)
 
@@ -2701,26 +2520,27 @@ class TestHorizontalLinearGradientMaskGen(unittest.TestCase):
         assert np.allclose(masks[1][:, 0:20], 0.1)
         assert np.allclose(masks[0][:, 90:], 0.75)
         assert np.allclose(masks[1][:, 180:], 0.75)
-        assert np.allclose(masks[0][:, 10+40], 0.1 + 0.5 * (0.75 - 0.1),
-                           rtol=0, atol=0.05)
-        assert np.allclose(masks[1][:, 20+80], 0.1 + 0.5 * (0.75 - 0.1),
-                           rtol=0, atol=0.025)
+        assert np.allclose(
+            masks[0][:, 10 + 40], 0.1 + 0.5 * (0.75 - 0.1), rtol=0, atol=0.05
+        )
+        assert np.allclose(
+            masks[1][:, 20 + 80], 0.1 + 0.5 * (0.75 - 0.1), rtol=0, atol=0.025
+        )
 
     def test_generate_mask__min_value_below_max_value(self):
         mask = iaa.HorizontalLinearGradientMaskGen.generate_mask(
-            (1, 100, 3), min_value=0.75, max_value=0.25,
-            start_at=0.0, end_at=1.0)
+            (1, 100, 3), min_value=0.75, max_value=0.25, start_at=0.0, end_at=1.0
+        )
 
         assert mask.shape == (1, 100)
         assert np.isclose(mask[0, 0], 0.75)
         assert np.isclose(mask[0, -1], 0.25)
-        assert np.isclose(mask[0, 50], 0.25 + 0.5 * (0.75 - 0.25),
-                          rtol=0, atol=0.05)
+        assert np.isclose(mask[0, 50], 0.25 + 0.5 * (0.75 - 0.25), rtol=0, atol=0.05)
 
     def test_generate_mask__end_at_is_before_start_at(self):
         mask = iaa.HorizontalLinearGradientMaskGen.generate_mask(
-            (1, 100, 3), min_value=0.25, max_value=0.75,
-            start_at=1.0, end_at=0.0)
+            (1, 100, 3), min_value=0.25, max_value=0.75, start_at=1.0, end_at=0.0
+        )
 
         # like test_generate_mask__min_value_below_max_value(),
         # because end < start leads to inversion and we also inverted the
@@ -2728,13 +2548,12 @@ class TestHorizontalLinearGradientMaskGen(unittest.TestCase):
         assert mask.shape == (1, 100)
         assert np.isclose(mask[0, 0], 0.75)
         assert np.isclose(mask[0, -1], 0.25)
-        assert np.isclose(mask[0, 50], 0.25 + 0.5 * (0.75 - 0.25),
-                          rtol=0, atol=0.05)
+        assert np.isclose(mask[0, 50], 0.25 + 0.5 * (0.75 - 0.25), rtol=0, atol=0.05)
 
     def test_generate_mask__start_at_is_end_at(self):
         mask = iaa.HorizontalLinearGradientMaskGen.generate_mask(
-            (1, 100, 3), min_value=0.0, max_value=1.0,
-            start_at=0.5, end_at=0.5)
+            (1, 100, 3), min_value=0.0, max_value=1.0, start_at=0.5, end_at=0.5
+        )
 
         assert mask.shape == (1, 100)
         assert np.allclose(mask[:, 0:50], 0.0)
@@ -2742,16 +2561,16 @@ class TestHorizontalLinearGradientMaskGen(unittest.TestCase):
 
     def test_generate_mask__min_value_is_max_value(self):
         mask = iaa.HorizontalLinearGradientMaskGen.generate_mask(
-            (1, 100, 3), min_value=0.5, max_value=0.5,
-            start_at=0.1, end_at=0.8)
+            (1, 100, 3), min_value=0.5, max_value=0.5, start_at=0.1, end_at=0.8
+        )
 
         assert mask.shape == (1, 100)
         assert np.allclose(mask, 0.5)
 
     def test_generate_mask__start_at_and_end_at_are_outside_of_image(self):
         mask = iaa.HorizontalLinearGradientMaskGen.generate_mask(
-            (1, 100, 3), min_value=0.25, max_value=0.75,
-            start_at=-0.5, end_at=-0.1)
+            (1, 100, 3), min_value=0.25, max_value=0.75, start_at=-0.5, end_at=-0.1
+        )
 
         assert mask.shape == (1, 100)
         assert np.allclose(mask, 0.75)
@@ -2766,7 +2585,7 @@ class TestHorizontalLinearGradientMaskGen(unittest.TestCase):
             (0, 1, 0),
             (0, 0, 1),
             (0, 1, 1),
-            (1, 0, 1)
+            (1, 0, 1),
         ]
 
         for shape in shapes:
@@ -2781,13 +2600,11 @@ class TestHorizontalLinearGradientMaskGen(unittest.TestCase):
                 assert mask.dtype.name == "float32"
 
     def test_batch_contains_no_images(self):
-        hms = ia.HeatmapsOnImage(np.zeros((5, 5), dtype=np.float32),
-                                 shape=(10, 10, 3))
+        hms = ia.HeatmapsOnImage(np.zeros((5, 5), dtype=np.float32), shape=(10, 10, 3))
         batch = _BatchInAugmentation(heatmaps=[hms])
-        gen = iaa.HorizontalLinearGradientMaskGen(min_value=0.25,
-                                                  max_value=0.75,
-                                                  start_at=0.5,
-                                                  end_at=0.5)
+        gen = iaa.HorizontalLinearGradientMaskGen(
+            min_value=0.25, max_value=0.75, start_at=0.5, end_at=0.5
+        )
 
         mask = gen.draw_masks(batch)[0]
         assert np.allclose(mask[:, 0:5], 0.25)
@@ -2799,10 +2616,9 @@ class TestVerticalLinearGradientMaskGen(unittest.TestCase):
         reseed()
 
     def test___init__(self):
-        gen = iaa.VerticalLinearGradientMaskGen(min_value=0.1,
-                                                max_value=1.0,
-                                                start_at=0.1,
-                                                end_at=0.9)
+        gen = iaa.VerticalLinearGradientMaskGen(
+            min_value=0.1, max_value=1.0, start_at=0.1, end_at=0.9
+        )
         assert gen.axis == 0
         assert np.isclose(gen.min_value.value, 0.1)
         assert np.isclose(gen.max_value.value, 1.0)
@@ -2818,10 +2634,9 @@ class TestVerticalLinearGradientMaskGen(unittest.TestCase):
         image2 = image2.transpose((1, 0, 2))
         batch = _BatchInAugmentation(images=[image1, image2])
 
-        gen = iaa.VerticalLinearGradientMaskGen(min_value=0.1,
-                                                max_value=0.75,
-                                                start_at=0.1,
-                                                end_at=0.9)
+        gen = iaa.VerticalLinearGradientMaskGen(
+            min_value=0.1, max_value=0.75, start_at=0.1, end_at=0.9
+        )
 
         masks = gen.draw_masks(batch, random_state=1)
 
@@ -2837,10 +2652,12 @@ class TestVerticalLinearGradientMaskGen(unittest.TestCase):
         assert np.allclose(masks[1][:, 0:20], 0.1)
         assert np.allclose(masks[0][:, 90:], 0.75)
         assert np.allclose(masks[1][:, 180:], 0.75)
-        assert np.allclose(masks[0][:, 10+40], 0.1 + 0.5 * (0.75 - 0.1),
-                           rtol=0, atol=0.05)
-        assert np.allclose(masks[1][:, 20+80], 0.1 + 0.5 * (0.75 - 0.1),
-                           rtol=0, atol=0.025)
+        assert np.allclose(
+            masks[0][:, 10 + 40], 0.1 + 0.5 * (0.75 - 0.1), rtol=0, atol=0.05
+        )
+        assert np.allclose(
+            masks[1][:, 20 + 80], 0.1 + 0.5 * (0.75 - 0.1), rtol=0, atol=0.025
+        )
 
 
 class TestRegularGridMaskGen(unittest.TestCase):
@@ -2854,8 +2671,10 @@ class TestRegularGridMaskGen(unittest.TestCase):
         gen = iaa.RegularGridMaskGen(
             nb_rows=2,
             nb_cols=iap.DeterministicList([1, 4]),
-            alpha=iap.DeterministicList([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7,
-                                         0.8, 0.9, 1.0]))
+            alpha=iap.DeterministicList(
+                [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+            ),
+        )
         image = np.zeros((6, 8, 3), dtype=np.uint8)
         batch = _BatchInAugmentation(images=[image, image])
 
@@ -2878,10 +2697,7 @@ class TestRegularGridMaskGen(unittest.TestCase):
         assert np.allclose(masks[1], expected2)
 
     def test_draw_masks__random_alphas(self):
-        gen = iaa.RegularGridMaskGen(
-            nb_rows=1,
-            nb_cols=2,
-            alpha=[0.1, 0.9])
+        gen = iaa.RegularGridMaskGen(nb_rows=1, nb_cols=2, alpha=[0.1, 0.9])
         image = np.zeros((2, 4, 3), dtype=np.uint8)
         batch = _BatchInAugmentation(images=[image, image])
 
@@ -2913,16 +2729,14 @@ class TestRegularGridMaskGen(unittest.TestCase):
 
     def test_generate_mask_rows_1_cols_1(self):
         mask = iaa.RegularGridMaskGen.generate_mask(
-            (5, 7),
-            nb_rows=1, nb_cols=1,
-            alphas=np.float32([1, 0]))
+            (5, 7), nb_rows=1, nb_cols=1, alphas=np.float32([1, 0])
+        )
         assert np.allclose(mask, 1.0)
 
     def test_generate_mask_rows_1_cols_n(self):
         mask = iaa.RegularGridMaskGen.generate_mask(
-            (5, 8),
-            nb_rows=1, nb_cols=4,
-            alphas=np.float32([[1, 0, 1, 0]]))
+            (5, 8), nb_rows=1, nb_cols=4, alphas=np.float32([[1, 0, 1, 0]])
+        )
         expected = np.full((5, 8), 1.0, dtype=np.float32)
         expected[:, 2:4] = 0.0
         expected[:, 6:8] = 0.0
@@ -2930,12 +2744,8 @@ class TestRegularGridMaskGen(unittest.TestCase):
 
     def test_generate_mask_rows_n_cols_1(self):
         mask = iaa.RegularGridMaskGen.generate_mask(
-            (8, 5),
-            nb_rows=4, nb_cols=1,
-            alphas=np.float32([[1],
-                               [0],
-                               [1],
-                               [0]]))
+            (8, 5), nb_rows=4, nb_cols=1, alphas=np.float32([[1], [0], [1], [0]])
+        )
         expected = np.full((8, 5), 1.0, dtype=np.float32)
         expected[2:4, :] = 0.0
         expected[6:8, :] = 0.0
@@ -2943,11 +2753,8 @@ class TestRegularGridMaskGen(unittest.TestCase):
 
     def test_generate_mask_rows_n_cols_n(self):
         mask = iaa.RegularGridMaskGen.generate_mask(
-            (6, 8),
-            nb_rows=3, nb_cols=2,
-            alphas=np.float32([[1, 0],
-                               [0, 1],
-                               [1, 0]]))
+            (6, 8), nb_rows=3, nb_cols=2, alphas=np.float32([[1, 0], [0, 1], [1, 0]])
+        )
         expected = np.full((6, 8), 1.0, dtype=np.float32)
         expected[0:2, 0:4] = 1.0
         expected[0:2, 4:8] = 0.0
@@ -2960,11 +2767,10 @@ class TestRegularGridMaskGen(unittest.TestCase):
     def test_generate_mask_with_leftover_pixels(self):
         mask = iaa.RegularGridMaskGen.generate_mask(
             (15, 15),
-            nb_rows=4, nb_cols=4,
-            alphas=np.float32([[1, 0, 1, 0],
-                               [0, 1, 0, 1],
-                               [1, 0, 1, 0],
-                               [0, 1, 0, 1]]))
+            nb_rows=4,
+            nb_cols=4,
+            alphas=np.float32([[1, 0, 1, 0], [0, 1, 0, 1], [1, 0, 1, 0], [0, 1, 0, 1]]),
+        )
         expected = np.full((12, 12), 0.0, dtype=np.float32)
 
         expected[0:3, 0:3] = 1.0
@@ -2994,8 +2800,10 @@ class TestRegularGridMaskGen(unittest.TestCase):
     def test_generate_mask_with_more_columns_than_pixels(self):
         mask = iaa.RegularGridMaskGen.generate_mask(
             (5, 4),
-            nb_rows=1, nb_cols=10,
-            alphas=np.float32([[1, 0, 1, 0, 1, 0, 1, 0, 1, 0]]))
+            nb_rows=1,
+            nb_cols=10,
+            alphas=np.float32([[1, 0, 1, 0, 1, 0, 1, 0, 1, 0]]),
+        )
         expected = np.full((5, 4), 1.0, dtype=np.float32)
         expected[:, 1:2] = 0.0
         expected[:, 3:4] = 0.0
@@ -3004,13 +2812,10 @@ class TestRegularGridMaskGen(unittest.TestCase):
     def test_generate_mask_with_more_rows_than_pixels(self):
         mask = iaa.RegularGridMaskGen.generate_mask(
             (4, 5),
-            nb_rows=6, nb_cols=1,
-            alphas=np.float32([[1],
-                               [0],
-                               [1],
-                               [0],
-                               [1],
-                               [0]]))
+            nb_rows=6,
+            nb_cols=1,
+            alphas=np.float32([[1], [0], [1], [0], [1], [0]]),
+        )
         expected = np.full((4, 5), 1.0, dtype=np.float32)
         expected[1:2, :] = 0.0
         expected[3:4, :] = 0.0
@@ -3018,9 +2823,8 @@ class TestRegularGridMaskGen(unittest.TestCase):
 
     def test_generate_mask__alphas_is_1d_array(self):
         mask = iaa.RegularGridMaskGen.generate_mask(
-            (5, 8),
-            nb_rows=1, nb_cols=4,
-            alphas=np.float32([1, 0, 1, 0]))
+            (5, 8), nb_rows=1, nb_cols=4, alphas=np.float32([1, 0, 1, 0])
+        )
         expected = np.full((5, 8), 1.0, dtype=np.float32)
         expected[:, 2:4] = 0.0
         expected[:, 6:8] = 0.0
@@ -3036,7 +2840,7 @@ class TestRegularGridMaskGen(unittest.TestCase):
             (0, 1, 0),
             (0, 0, 1),
             (0, 1, 1),
-            (1, 0, 1)
+            (1, 0, 1),
         ]
 
         for shape in shapes:
@@ -3051,8 +2855,7 @@ class TestRegularGridMaskGen(unittest.TestCase):
                 assert mask.dtype.name == "float32"
 
     def test_batch_contains_no_images(self):
-        hms = ia.HeatmapsOnImage(np.zeros((5, 5), dtype=np.float32),
-                                 shape=(6, 8, 3))
+        hms = ia.HeatmapsOnImage(np.zeros((5, 5), dtype=np.float32), shape=(6, 8, 3))
         batch = _BatchInAugmentation(heatmaps=[hms])
         gen = iaa.CheckerboardMaskGen(nb_rows=3, nb_cols=2)
         mask = gen.draw_masks(batch, random_state=1)[0]
@@ -3074,8 +2877,7 @@ class TestCheckerboardMaskGen(unittest.TestCase):
         assert gen.nb_cols.a == [1, 3]
 
     def test_draw_masks(self):
-        gen = iaa.CheckerboardMaskGen(nb_rows=2,
-                                      nb_cols=iap.DeterministicList([1, 4]))
+        gen = iaa.CheckerboardMaskGen(nb_rows=2, nb_cols=iap.DeterministicList([1, 4]))
         image = np.zeros((6, 8, 3), dtype=np.uint8)
         batch = _BatchInAugmentation(images=[image, image])
 
@@ -3093,29 +2895,25 @@ class TestCheckerboardMaskGen(unittest.TestCase):
         assert np.allclose(masks[1], expected2)
 
     def test_generate_mask_rows_1_cols_1(self):
-        mask = iaa.CheckerboardMaskGen.generate_mask((5, 7),
-                                                     nb_rows=1, nb_cols=1)
+        mask = iaa.CheckerboardMaskGen.generate_mask((5, 7), nb_rows=1, nb_cols=1)
         assert np.allclose(mask, 1.0)
 
     def test_generate_mask_rows_1_cols_n(self):
-        mask = iaa.CheckerboardMaskGen.generate_mask((5, 8),
-                                                     nb_rows=1, nb_cols=4)
+        mask = iaa.CheckerboardMaskGen.generate_mask((5, 8), nb_rows=1, nb_cols=4)
         expected = np.full((5, 8), 1.0, dtype=np.float32)
         expected[:, 2:4] = 0.0
         expected[:, 6:8] = 0.0
         assert np.allclose(mask, expected)
 
     def test_generate_mask_rows_n_cols_1(self):
-        mask = iaa.CheckerboardMaskGen.generate_mask((8, 5),
-                                                     nb_rows=4, nb_cols=1)
+        mask = iaa.CheckerboardMaskGen.generate_mask((8, 5), nb_rows=4, nb_cols=1)
         expected = np.full((8, 5), 1.0, dtype=np.float32)
         expected[2:4, :] = 0.0
         expected[6:8, :] = 0.0
         assert np.allclose(mask, expected)
 
     def test_generate_mask_rows_n_cols_n(self):
-        mask = iaa.CheckerboardMaskGen.generate_mask((6, 8),
-                                                     nb_rows=3, nb_cols=2)
+        mask = iaa.CheckerboardMaskGen.generate_mask((6, 8), nb_rows=3, nb_cols=2)
         expected = np.full((6, 8), 1.0, dtype=np.float32)
         expected[0:2, 0:4] = 1.0
         expected[0:2, 4:8] = 0.0
@@ -3126,8 +2924,7 @@ class TestCheckerboardMaskGen(unittest.TestCase):
         assert np.allclose(mask, expected)
 
     def test_generate_mask_with_leftover_pixels(self):
-        mask = iaa.CheckerboardMaskGen.generate_mask((15, 15),
-                                                     nb_rows=4, nb_cols=4)
+        mask = iaa.CheckerboardMaskGen.generate_mask((15, 15), nb_rows=4, nb_cols=4)
         expected = np.full((12, 12), 0.0, dtype=np.float32)
 
         expected[0:3, 0:3] = 1.0
@@ -3155,16 +2952,14 @@ class TestCheckerboardMaskGen(unittest.TestCase):
         assert np.allclose(mask, expected)
 
     def test_generate_mask_with_more_columns_than_pixels(self):
-        mask = iaa.CheckerboardMaskGen.generate_mask((5, 4),
-                                                     nb_rows=1, nb_cols=10)
+        mask = iaa.CheckerboardMaskGen.generate_mask((5, 4), nb_rows=1, nb_cols=10)
         expected = np.full((5, 4), 1.0, dtype=np.float32)
         expected[:, 1:2] = 0.0
         expected[:, 3:4] = 0.0
         assert np.allclose(mask, expected)
 
     def test_generate_mask_with_more_rows_than_pixels(self):
-        mask = iaa.CheckerboardMaskGen.generate_mask((4, 5),
-                                                     nb_rows=6, nb_cols=1)
+        mask = iaa.CheckerboardMaskGen.generate_mask((4, 5), nb_rows=6, nb_cols=1)
         expected = np.full((4, 5), 1.0, dtype=np.float32)
         expected[1:2, :] = 0.0
         expected[3:4, :] = 0.0
@@ -3180,7 +2975,7 @@ class TestCheckerboardMaskGen(unittest.TestCase):
             (0, 1, 0),
             (0, 0, 1),
             (0, 1, 1),
-            (1, 0, 1)
+            (1, 0, 1),
         ]
 
         for shape in shapes:
@@ -3195,8 +2990,7 @@ class TestCheckerboardMaskGen(unittest.TestCase):
                 assert mask.dtype.name == "float32"
 
     def test_batch_contains_no_images(self):
-        hms = ia.HeatmapsOnImage(np.zeros((5, 5), dtype=np.float32),
-                                 shape=(6, 8, 3))
+        hms = ia.HeatmapsOnImage(np.zeros((5, 5), dtype=np.float32), shape=(6, 8, 3))
         batch = _BatchInAugmentation(heatmaps=[hms])
         gen = iaa.CheckerboardMaskGen(nb_rows=3, nb_cols=2)
         mask = gen.draw_masks(batch, random_state=1)[0]
@@ -3262,16 +3056,8 @@ class TestSegMapClassIdsMaskGen(unittest.TestCase):
         batch = _BatchInAugmentation(segmentation_maps=[segmap])
         gen = iaa.SegMapClassIdsMaskGen([2, 3], nb_sample_classes=1)
 
-        expected_class_2 = np.float32([
-            [0, 1],
-            [0, 0],
-            [0, 0]
-        ])
-        expected_class_3 = np.float32([
-            [1, 0],
-            [0, 1],
-            [0, 0]
-        ])
+        expected_class_2 = np.float32([[0, 1], [0, 0], [0, 0]])
+        expected_class_3 = np.float32([[1, 0], [0, 1], [0, 0]])
         seen = [False, False]
         for i in np.arange(50):
             mask = gen.draw_masks(batch, random_state=i)[0]
@@ -3298,11 +3084,7 @@ class TestSegMapClassIdsMaskGen(unittest.TestCase):
 
         mask = iaa.SegMapClassIdsMaskGen.generate_mask(segmap, [1, 2])
 
-        expected = np.float32([
-            [1.0, 1.0],
-            [1.0, 0.0],
-            [0.0, 0.0]
-        ])
+        expected = np.float32([[1.0, 1.0], [1.0, 0.0], [0.0, 0.0]])
         assert np.allclose(mask, expected)
 
     def test_generate_mask__smaller_than_image(self):
@@ -3316,19 +3098,15 @@ class TestSegMapClassIdsMaskGen(unittest.TestCase):
 
         mask = iaa.SegMapClassIdsMaskGen.generate_mask(segmap, [1, 2])
 
-        expected = np.float32([
-            [1.0, 1.0, 1.0, 1.0],
-            [1.0, 1.0, 0.0, 0.0],
-            [0.0, 0.0, 0.0, 0.0]
-        ])
+        expected = np.float32(
+            [[1.0, 1.0, 1.0, 1.0], [1.0, 1.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]]
+        )
         assert np.allclose(mask, expected, rtol=0.0, atol=0.1)
 
     def test_zero_sized_axes(self):
         # zero-sized segmap arrays currently crash when creating
         # SegmentationMapsOnImage and that's probably better that way
-        segmap_shapes = [
-            (2, 2, 1)
-        ]
+        segmap_shapes = [(2, 2, 1)]
 
         image_shapes = [
             (2, 3, 3),
@@ -3338,16 +3116,14 @@ class TestSegMapClassIdsMaskGen(unittest.TestCase):
             (0, 1, 0),
             (1, 0, 0),
             (0, 1, 1),
-            (1, 0, 1)
+            (1, 0, 1),
         ]
 
         for segmap_shape in segmap_shapes:
             for image_shape in image_shapes:
-                with self.subTest(segmap_shape=segmap_shape,
-                                  image_shape=image_shape):
+                with self.subTest(segmap_shape=segmap_shape, image_shape=image_shape):
                     segmap_arr = np.zeros(segmap_shape, dtype=np.int32)
-                    segmap = ia.SegmentationMapsOnImage(segmap_arr,
-                                                        shape=image_shape)
+                    segmap = ia.SegmentationMapsOnImage(segmap_arr, shape=image_shape)
                     batch = _BatchInAugmentation(segmentation_maps=[segmap])
 
                     gen = iaa.SegMapClassIdsMaskGen(1)
@@ -3357,8 +3133,7 @@ class TestSegMapClassIdsMaskGen(unittest.TestCase):
                     assert np.allclose(mask, 0.0)
 
     def test_batch_contains_no_segmaps(self):
-        hms = ia.HeatmapsOnImage(np.zeros((5, 5), dtype=np.float32),
-                                 shape=(10, 10, 3))
+        hms = ia.HeatmapsOnImage(np.zeros((5, 5), dtype=np.float32), shape=(10, 10, 3))
         batch = _BatchInAugmentation(heatmaps=[hms])
         gen = iaa.SegMapClassIdsMaskGen(class_ids=[1])
 
@@ -3391,9 +3166,11 @@ class TestBoundingBoxesMaskGen(unittest.TestCase):
         assert is_parameter_instance(gen.nb_sample_labels, iap.Deterministic)
 
     def test_draw_masks__labels_is_none(self):
-        bbs = [ia.BoundingBox(x1=1, y1=1, x2=5, y2=5, label="bb1"),
-               ia.BoundingBox(x1=-3, y1=4, x2=20, y2=8, label="bb2"),
-               ia.BoundingBox(x1=2, y1=2, x2=10, y2=10, label="bb3")]
+        bbs = [
+            ia.BoundingBox(x1=1, y1=1, x2=5, y2=5, label="bb1"),
+            ia.BoundingBox(x1=-3, y1=4, x2=20, y2=8, label="bb2"),
+            ia.BoundingBox(x1=2, y1=2, x2=10, y2=10, label="bb3"),
+        ]
         bbsoi = ia.BoundingBoxesOnImage(bbs, shape=(10, 14, 3))
 
         batch = _BatchInAugmentation(bounding_boxes=[bbsoi])
@@ -3410,9 +3187,11 @@ class TestBoundingBoxesMaskGen(unittest.TestCase):
         assert np.allclose(mask, expected)
 
     def test_draw_masks__fixed_labels(self):
-        bbs = [ia.BoundingBox(x1=1, y1=1, x2=5, y2=5, label="bb1"),
-               ia.BoundingBox(x1=-3, y1=4, x2=20, y2=8, label="bb2"),
-               ia.BoundingBox(x1=2, y1=2, x2=10, y2=10, label="bb3")]
+        bbs = [
+            ia.BoundingBox(x1=1, y1=1, x2=5, y2=5, label="bb1"),
+            ia.BoundingBox(x1=-3, y1=4, x2=20, y2=8, label="bb2"),
+            ia.BoundingBox(x1=2, y1=2, x2=10, y2=10, label="bb3"),
+        ]
         bbsoi = ia.BoundingBoxesOnImage(bbs, shape=(10, 14, 3))
 
         batch = _BatchInAugmentation(bounding_boxes=[bbsoi])
@@ -3428,15 +3207,17 @@ class TestBoundingBoxesMaskGen(unittest.TestCase):
         assert np.allclose(mask, expected)
 
     def test_draw_masks__stochastic_labels(self):
-        bbs = [ia.BoundingBox(x1=1, y1=1, x2=5, y2=5, label="bb1"),
-               ia.BoundingBox(x1=-3, y1=4, x2=20, y2=8, label="bb2"),
-               ia.BoundingBox(x1=2, y1=2, x2=10, y2=10, label="bb3")]
+        bbs = [
+            ia.BoundingBox(x1=1, y1=1, x2=5, y2=5, label="bb1"),
+            ia.BoundingBox(x1=-3, y1=4, x2=20, y2=8, label="bb2"),
+            ia.BoundingBox(x1=2, y1=2, x2=10, y2=10, label="bb3"),
+        ]
         bbsoi = ia.BoundingBoxesOnImage(bbs, shape=(10, 14, 3))
 
         batch = _BatchInAugmentation(bounding_boxes=[bbsoi])
         gen = iaa.BoundingBoxesMaskGen(
-            iap.DeterministicList(["bb1", "bb2"]),
-            nb_sample_labels=3)
+            iap.DeterministicList(["bb1", "bb2"]), nb_sample_labels=3
+        )
 
         mask = gen.draw_masks(batch, random_state=1)[0]
 
@@ -3448,9 +3229,11 @@ class TestBoundingBoxesMaskGen(unittest.TestCase):
         assert np.allclose(mask, expected)
 
     def test_generate_mask(self):
-        bbs = [ia.BoundingBox(x1=1, y1=1, x2=5, y2=5, label="bb1"),
-               ia.BoundingBox(x1=-3, y1=4, x2=20, y2=8, label="bb2"),
-               ia.BoundingBox(x1=2, y1=2, x2=10, y2=10, label="bb3")]
+        bbs = [
+            ia.BoundingBox(x1=1, y1=1, x2=5, y2=5, label="bb1"),
+            ia.BoundingBox(x1=-3, y1=4, x2=20, y2=8, label="bb2"),
+            ia.BoundingBox(x1=2, y1=2, x2=10, y2=10, label="bb3"),
+        ]
         bbsoi = ia.BoundingBoxesOnImage(bbs, shape=(10, 14, 3))
 
         mask = iaa.BoundingBoxesMaskGen.generate_mask(bbsoi, ["bb1", "bb2"])
@@ -3463,21 +3246,15 @@ class TestBoundingBoxesMaskGen(unittest.TestCase):
         assert np.allclose(mask, expected)
 
     def test_zero_sized_axes(self):
-        shapes = [
-            (0, 0),
-            (0, 1),
-            (1, 0),
-            (0, 1, 0),
-            (1, 0, 0),
-            (0, 1, 1),
-            (1, 0, 1)
-        ]
+        shapes = [(0, 0), (0, 1), (1, 0), (0, 1, 0), (1, 0, 0), (0, 1, 1), (1, 0, 1)]
 
         for shape in shapes:
             with self.subTest(shape=shape):
-                bbs = [ia.BoundingBox(x1=1, y1=1, x2=5, y2=5, label="bb1"),
-                       ia.BoundingBox(x1=-3, y1=4, x2=20, y2=8, label="bb2"),
-                       ia.BoundingBox(x1=2, y1=2, x2=10, y2=10, label="bb3")]
+                bbs = [
+                    ia.BoundingBox(x1=1, y1=1, x2=5, y2=5, label="bb1"),
+                    ia.BoundingBox(x1=-3, y1=4, x2=20, y2=8, label="bb2"),
+                    ia.BoundingBox(x1=2, y1=2, x2=10, y2=10, label="bb3"),
+                ]
                 bbsoi = ia.BoundingBoxesOnImage(bbs, shape=shape)
                 batch = _BatchInAugmentation(bounding_boxes=[bbsoi])
                 gen = iaa.BoundingBoxesMaskGen("bb1")
@@ -3489,8 +3266,7 @@ class TestBoundingBoxesMaskGen(unittest.TestCase):
                 assert np.allclose(mask, 0.0)
 
     def test_batch_contains_no_bounding_boxes(self):
-        hms = ia.HeatmapsOnImage(np.zeros((5, 5), dtype=np.float32),
-                                 shape=(10, 10, 3))
+        hms = ia.HeatmapsOnImage(np.zeros((5, 5), dtype=np.float32), shape=(10, 10, 3))
         batch = _BatchInAugmentation(heatmaps=[hms])
         gen = iaa.SegMapClassIdsMaskGen(class_ids=[1])
 
@@ -3512,16 +3288,16 @@ class InvertMaskGen(unittest.TestCase):
         image = np.zeros((1, 20), dtype=np.uint8)
         batch = _BatchInAugmentation(images=[image] * 200)
 
-        child = iaa.HorizontalLinearGradientMaskGen(min_value=0.0,
-                                                    max_value=1.0,
-                                                    start_at=0.0,
-                                                    end_at=1.0)
+        child = iaa.HorizontalLinearGradientMaskGen(
+            min_value=0.0, max_value=1.0, start_at=0.0, end_at=1.0
+        )
         gen = iaa.InvertMaskGen(0.5, child)
 
         masks = gen.draw_masks(batch, random_state=1)
 
         hgrad = iaa.HorizontalLinearGradientMaskGen.generate_mask(
-            (1, 20), min_value=0.0, max_value=1.0, start_at=0.0, end_at=1.0)
+            (1, 20), min_value=0.0, max_value=1.0, start_at=0.0, end_at=1.0
+        )
         expected1 = hgrad
         expected2 = 1.0 - hgrad
         seen = [0, 0]
@@ -3532,7 +3308,7 @@ class InvertMaskGen(unittest.TestCase):
                 seen[1] += 1
             else:
                 assert False
-        assert np.allclose(seen, 0.5*200, rtol=0, atol=20)
+        assert np.allclose(seen, 0.5 * 200, rtol=0, atol=20)
 
     def test_zero_sized_axes(self):
         shapes = [
@@ -3544,7 +3320,7 @@ class InvertMaskGen(unittest.TestCase):
             (0, 1, 0),
             (0, 0, 1),
             (0, 1, 1),
-            (1, 0, 1)
+            (1, 0, 1),
         ]
 
         for shape in shapes:
@@ -3570,10 +3346,7 @@ class TestSimplexNoiseAlpha(unittest.TestCase):
 
             aug = iaa.SimplexNoiseAlpha(first=aug1, second=aug2)
 
-            assert (
-                "is deprecated"
-                in str(caught_warnings[-1].message)
-            )
+            assert "is deprecated" in str(caught_warnings[-1].message)
 
         assert isinstance(aug, iaa.BlendAlphaSimplexNoise)
         assert aug.foreground is aug1
@@ -3590,10 +3363,7 @@ class TestFrequencyNoiseAlpha(unittest.TestCase):
 
             aug = iaa.FrequencyNoiseAlpha(first=aug1, second=aug2)
 
-            assert (
-                "is deprecated"
-                in str(caught_warnings[-1].message)
-            )
+            assert "is deprecated" in str(caught_warnings[-1].message)
 
         assert isinstance(aug, iaa.BlendAlphaFrequencyNoise)
         assert aug.foreground is aug1

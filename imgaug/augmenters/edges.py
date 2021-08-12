@@ -96,7 +96,8 @@ class RandomColorsBinaryImageColorizer(IBinaryImageColorizer):
             value_range=(0, 255),
             tuple_to_uniform=True,
             list_to_choice=True,
-            allow_floats=False)
+            allow_floats=False,
+        )
 
         self.color_false = iap.handle_discrete_param(
             color_false,
@@ -104,64 +105,69 @@ class RandomColorsBinaryImageColorizer(IBinaryImageColorizer):
             value_range=(0, 255),
             tuple_to_uniform=True,
             list_to_choice=True,
-            allow_floats=False)
+            allow_floats=False,
+        )
 
     def _draw_samples(self, random_state):
-        color_true = self.color_true.draw_samples((3,),
-                                                  random_state=random_state)
-        color_false = self.color_false.draw_samples((3,),
-                                                    random_state=random_state)
+        color_true = self.color_true.draw_samples((3,), random_state=random_state)
+        color_false = self.color_false.draw_samples((3,), random_state=random_state)
         return color_true, color_false
 
     def colorize(self, image_binary, image_original, nth_image, random_state):
         assert image_binary.ndim == 2, (
             "Expected binary image to colorize to be 2-dimensional, "
-            "got %d dimensions." % (image_binary.ndim,))
-        assert image_binary.dtype.kind == "b", (
-            "Expected binary image to colorize to be boolean, "
-            "got dtype kind %s." % (image_binary.dtype.kind,))
-        assert image_original.ndim == 3, (
-            "Expected original image to be 3-dimensional, got %d "
-            "dimensions." % (image_original.ndim,))
+            "got %d dimensions." % (image_binary.ndim,)
+        )
+        assert (
+            image_binary.dtype.kind == "b"
+        ), "Expected binary image to colorize to be boolean, " "got dtype kind %s." % (
+            image_binary.dtype.kind,
+        )
+        assert (
+            image_original.ndim == 3
+        ), "Expected original image to be 3-dimensional, got %d " "dimensions." % (
+            image_original.ndim,
+        )
         assert image_original.shape[-1] in [1, 3, 4], (
             "Expected original image to have 1, 3 or 4 channels. "
-            "Got %d channels." % (image_original.shape[-1],))
-        assert image_original.dtype == iadt._UINT8_DTYPE, (
-            "Expected original image to have dtype uint8, got dtype %s." % (
-                image_original.dtype.name))
+            "Got %d channels." % (image_original.shape[-1],)
+        )
+        assert (
+            image_original.dtype == iadt._UINT8_DTYPE
+        ), "Expected original image to have dtype uint8, got dtype %s." % (
+            image_original.dtype.name
+        )
 
         color_true, color_false = self._draw_samples(random_state)
 
         nb_channels = min(image_original.shape[-1], 3)
         image_colorized = np.zeros(
             (image_original.shape[0], image_original.shape[1], nb_channels),
-            dtype=image_original.dtype)
+            dtype=image_original.dtype,
+        )
 
         if nb_channels == 1:
             # single channel input image, convert colors to grayscale
             image_colorized[image_binary] = (
-                0.299*color_true[0]
-                + 0.587*color_true[1]
-                + 0.114*color_true[2])
+                0.299 * color_true[0] + 0.587 * color_true[1] + 0.114 * color_true[2]
+            )
             image_colorized[~image_binary] = (
-                0.299*color_false[0]
-                + 0.587*color_false[1]
-                + 0.114*color_false[2])
+                0.299 * color_false[0] + 0.587 * color_false[1] + 0.114 * color_false[2]
+            )
         else:
             image_colorized[image_binary] = color_true
             image_colorized[~image_binary] = color_false
 
         # re-attach alpha channel if it was present in input image
         if image_original.shape[-1] == 4:
-            image_colorized = np.dstack(
-                [image_colorized, image_original[:, :, 3:4]])
+            image_colorized = np.dstack([image_colorized, image_original[:, :, 3:4]])
 
         return image_colorized
 
     def __str__(self):
-        return ("RandomColorsBinaryImageColorizer("
-                "color_true=%s, color_false=%s)") % (
-                    self.color_true, self.color_false)
+        return (
+            "RandomColorsBinaryImageColorizer(" "color_true=%s, color_false=%s)"
+        ) % (self.color_true, self.color_false)
 
 
 class Canny(meta.Augmenter):
@@ -317,25 +323,35 @@ class Canny(meta.Augmenter):
 
     """
 
-    def __init__(self,
-                 alpha=(0.0, 1.0),
-                 hysteresis_thresholds=((100-40, 100+40), (200-40, 200+40)),
-                 sobel_kernel_size=(3, 7),
-                 colorizer=None,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        alpha=(0.0, 1.0),
+        hysteresis_thresholds=((100 - 40, 100 + 40), (200 - 40, 200 + 40)),
+        sobel_kernel_size=(3, 7),
+        colorizer=None,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(Canny, self).__init__(
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed, name=name, random_state=random_state, deterministic=deterministic
+        )
 
         self.alpha = iap.handle_continuous_param(
-            alpha, "alpha", value_range=(0, 1.0), tuple_to_uniform=True,
-            list_to_choice=True)
+            alpha,
+            "alpha",
+            value_range=(0, 1.0),
+            tuple_to_uniform=True,
+            list_to_choice=True,
+        )
 
-        if isinstance(hysteresis_thresholds, tuple) \
-                and len(hysteresis_thresholds) == 2 \
-                and not ia.is_single_number(hysteresis_thresholds[0]) \
-                and not ia.is_single_number(hysteresis_thresholds[1]):
+        if (
+            isinstance(hysteresis_thresholds, tuple)
+            and len(hysteresis_thresholds) == 2
+            and not ia.is_single_number(hysteresis_thresholds[0])
+            and not ia.is_single_number(hysteresis_thresholds[1])
+        ):
             self.hysteresis_thresholds = (
                 iap.handle_discrete_param(
                     hysteresis_thresholds[0],
@@ -343,14 +359,16 @@ class Canny(meta.Augmenter):
                     value_range=(0, 255),
                     tuple_to_uniform=True,
                     list_to_choice=True,
-                    allow_floats=True),
+                    allow_floats=True,
+                ),
                 iap.handle_discrete_param(
                     hysteresis_thresholds[1],
                     "hysteresis_thresholds[1]",
                     value_range=(0, 255),
                     tuple_to_uniform=True,
                     list_to_choice=True,
-                    allow_floats=True)
+                    allow_floats=True,
+                ),
             )
         else:
             self.hysteresis_thresholds = iap.handle_discrete_param(
@@ -359,7 +377,8 @@ class Canny(meta.Augmenter):
                 value_range=(0, 255),
                 tuple_to_uniform=True,
                 list_to_choice=True,
-                allow_floats=True)
+                allow_floats=True,
+            )
 
         # we don't use handle_discrete_kernel_size_param() here, because
         # cv2.Canny() can't handle independent height/width values, only a
@@ -370,12 +389,11 @@ class Canny(meta.Augmenter):
             value_range=(0, 7),  # OpenCV only accepts ksize up to 7
             tuple_to_uniform=True,
             list_to_choice=True,
-            allow_floats=False)
+            allow_floats=False,
+        )
 
         self.colorizer = (
-            colorizer
-            if colorizer is not None
-            else RandomColorsBinaryImageColorizer()
+            colorizer if colorizer is not None else RandomColorsBinaryImageColorizer()
         )
 
     def _draw_samples(self, augmentables, random_state):
@@ -392,11 +410,10 @@ class Canny(meta.Augmenter):
         else:
             hthresh_samples = hthresh.draw_samples((nb_images, 2), rss[1])
 
-        sobel_samples = self.sobel_kernel_size.draw_samples((nb_images,),
-                                                            rss[3])
+        sobel_samples = self.sobel_kernel_size.draw_samples((nb_images,), rss[3])
 
         # verify for hysteresis thresholds that min_value < max_value everywhere
-        invalid = (hthresh_samples[:, 0] > hthresh_samples[:, 1])
+        invalid = hthresh_samples[:, 0] > hthresh_samples[:, 1]
         if np.any(invalid):
             hthresh_samples[invalid, :] = hthresh_samples[invalid, :][:, [1, 0]]
 
@@ -405,11 +422,13 @@ class Canny(meta.Augmenter):
         # and (b) <=7
         assert not np.any(sobel_samples < 0), (
             "Sampled a sobel kernel size below 0 in Canny. "
-            "Allowed value range is 0 to 7.")
+            "Allowed value range is 0 to 7."
+        )
         assert not np.any(sobel_samples > 7), (
             "Sampled a sobel kernel size above 7 in Canny. "
-            "Allowed value range is 0 to 7.")
-        even_idx = (np.mod(sobel_samples, 2) == 0)
+            "Allowed value range is 0 to 7."
+        )
+        even_idx = np.mod(sobel_samples, 2) == 0
         sobel_samples[even_idx] -= 1
 
         return alpha_samples, hthresh_samples, sobel_samples
@@ -429,47 +448,58 @@ class Canny(meta.Augmenter):
         hthresh_samples = samples[1]
         sobel_samples = samples[2]
 
-        gen = enumerate(zip(images, alpha_samples, hthresh_samples,
-                            sobel_samples))
+        gen = enumerate(zip(images, alpha_samples, hthresh_samples, sobel_samples))
         for i, (image, alpha, hthreshs, sobel) in gen:
             assert image.shape[-1] in [1, 3, 4], (
                 "Canny edge detector can currently only handle images with "
-                "channel numbers that are 1, 3 or 4. Got %d.") % (
-                    image.shape[-1],)
+                "channel numbers that are 1, 3 or 4. Got %d."
+            ) % (image.shape[-1],)
 
-            has_zero_sized_axes = (0 in image.shape[0:2])
+            has_zero_sized_axes = 0 in image.shape[0:2]
             if alpha > 0 and sobel > 1 and not has_zero_sized_axes:
                 image_canny = cv2.Canny(
                     _normalize_cv2_input_arr_(image[:, :, 0:3]),
                     threshold1=hthreshs[0],
                     threshold2=hthreshs[1],
                     apertureSize=sobel,
-                    L2gradient=True)
-                image_canny = (image_canny > 0)
+                    L2gradient=True,
+                )
+                image_canny = image_canny > 0
 
                 # canny returns a boolean (H,W) image, so we change it to
                 # (H,W,C) and then uint8
                 image_canny_color = self.colorizer.colorize(
-                    image_canny, image, nth_image=i, random_state=rss[i])
+                    image_canny, image, nth_image=i, random_state=rss[i]
+                )
 
-                batch.images[i] = blend.blend_alpha(image_canny_color, image,
-                                                    alpha)
+                batch.images[i] = blend.blend_alpha(image_canny_color, image, alpha)
 
         return batch
 
     def get_parameters(self):
         """See :func:`~imgaug.augmenters.meta.Augmenter.get_parameters`."""
-        return [self.alpha, self.hysteresis_thresholds, self.sobel_kernel_size,
-                self.colorizer]
+        return [
+            self.alpha,
+            self.hysteresis_thresholds,
+            self.sobel_kernel_size,
+            self.colorizer,
+        ]
 
     def __str__(self):
-        return ("Canny("
-                "alpha=%s, "
-                "hysteresis_thresholds=%s, "
-                "sobel_kernel_size=%s, "
-                "colorizer=%s, "
-                "name=%s, "
-                "deterministic=%s)" % (
-                    self.alpha, self.hysteresis_thresholds,
-                    self.sobel_kernel_size, self.colorizer,
-                    self.name, self.deterministic))
+        return (
+            "Canny("
+            "alpha=%s, "
+            "hysteresis_thresholds=%s, "
+            "sobel_kernel_size=%s, "
+            "colorizer=%s, "
+            "name=%s, "
+            "deterministic=%s)"
+            % (
+                self.alpha,
+                self.hysteresis_thresholds,
+                self.sobel_kernel_size,
+                self.colorizer,
+                self.name,
+                self.deterministic,
+            )
+        )

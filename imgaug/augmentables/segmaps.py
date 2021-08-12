@@ -13,8 +13,10 @@ from ..augmenters import blend as blendlib
 from .base import IAugmentable
 
 
-@ia.deprecated(alt_func="SegmentationMapsOnImage",
-               comment="(Note the plural 'Maps' instead of old 'Map'.)")
+@ia.deprecated(
+    alt_func="SegmentationMapsOnImage",
+    comment="(Note the plural 'Maps' instead of old 'Map'.)",
+)
 def SegmentationMapOnImage(*args, **kwargs):
     """Object representing a segmentation map associated with an image."""
     # pylint: disable=invalid-name
@@ -100,16 +102,18 @@ class SegmentationMapsOnImage(IAugmentable):
     ]
 
     def __init__(self, arr, shape, nb_classes=None):
-        assert ia.is_np_array(arr), (
-            "Expected to get numpy array, got %s." % (type(arr),))
+        assert ia.is_np_array(arr), "Expected to get numpy array, got %s." % (
+            type(arr),
+        )
         assert arr.ndim in [2, 3], (
             "Expected segmentation map array to be 2- or "
-            "3-dimensional, got %d dimensions and shape %s." % (
-                arr.ndim, arr.shape))
+            "3-dimensional, got %d dimensions and shape %s." % (arr.ndim, arr.shape)
+        )
         assert isinstance(shape, tuple), (
             "Expected 'shape' to be a tuple denoting the shape of the image "
-            "on which the segmentation map is placed. Got type %s instead." % (
-                type(shape)))
+            "on which the segmentation map is placed. Got type %s instead."
+            % (type(shape))
+        )
 
         if arr.dtype.kind == "f":
             ia.warn_deprecated(
@@ -120,7 +124,7 @@ class SegmentationMapsOnImage(IAugmentable):
             )
 
             if arr.ndim == 2:
-                arr = (arr > 0.5)
+                arr = arr > 0.5
             else:  # arr.ndim == 3
                 arr = np.argmax(arr, axis=2).astype(np.int32)
 
@@ -131,7 +135,8 @@ class SegmentationMapsOnImage(IAugmentable):
         elif arr.dtype.kind in ["i", "u"]:
             assert np.min(arr.flat[0:100]) >= 0, (
                 "Expected segmentation map array to only contain values >=0, "
-                "got a minimum of %d." % (np.min(arr),))
+                "got a minimum of %d." % (np.min(arr),)
+            )
             if arr.dtype.kind == "u":
                 # allow only <=uint16 due to conversion to int32
                 assert arr.dtype.itemsize <= 2, (
@@ -142,17 +147,20 @@ class SegmentationMapsOnImage(IAugmentable):
                 # allow only <=uint16 due to conversion to int32
                 assert arr.dtype.itemsize <= 4, (
                     "When using int arrays as segmentation maps, only int8, "
-                    "int16 and int32 are allowed. Got dtype %s." % (
-                        arr.dtype.name,)
+                    "int16 and int32 are allowed. Got dtype %s." % (arr.dtype.name,)
                 )
 
             self._input_was = (arr.dtype, arr.ndim)
             if arr.ndim == 2:
                 arr = arr[..., np.newaxis]
         else:
-            raise Exception((
-                "Input was expected to be an array of dtype 'bool', 'int' "
-                "or 'uint'. Got dtype '%s'.") % (arr.dtype.name,))
+            raise Exception(
+                (
+                    "Input was expected to be an array of dtype 'bool', 'int' "
+                    "or 'uint'. Got dtype '%s'."
+                )
+                % (arr.dtype.name,)
+            )
 
         if arr.dtype.name != "int32":
             arr = arr.astype(np.int32)
@@ -164,7 +172,8 @@ class SegmentationMapsOnImage(IAugmentable):
             ia.warn_deprecated(
                 "Providing nb_classes to SegmentationMapsOnImage is no longer "
                 "necessary and hence deprecated. The argument is ignored "
-                "and can be safely removed.")
+                "and can be safely removed."
+            )
 
     def get_arr(self):
         """Return the seg.map array, with original dtype and shape ndim.
@@ -197,7 +206,8 @@ class SegmentationMapsOnImage(IAugmentable):
             assert arr_input.shape[2] == 1, (
                 "Originally got a (H,W) segmentation map. Internal array "
                 "should now have shape (H,W,1), but got %s. This might be "
-                "an internal error." % (arr_input.shape,))
+                "an internal error." % (arr_input.shape,)
+            )
             return arr_input[:, :, 0]
         return arr_input
 
@@ -230,6 +240,7 @@ class SegmentationMapsOnImage(IAugmentable):
             One per ``C`` in the original input array ``(H,W,C)``.
 
         """
+
         def _handle_sizeval(sizeval, arr_axis_size):
             if sizeval is None:
                 return arr_axis_size
@@ -237,8 +248,7 @@ class SegmentationMapsOnImage(IAugmentable):
                 return max(int(arr_axis_size * sizeval), 1)
             if ia.is_single_integer(sizeval):
                 return sizeval
-            raise ValueError("Expected float or int, got %s." % (
-                type(sizeval),))
+            raise ValueError("Expected float or int, got %s." % (type(sizeval),))
 
         if size is None:
             size = [size, size]
@@ -254,12 +264,19 @@ class SegmentationMapsOnImage(IAugmentable):
             alpha=1.0,
             resize="segmentation_map",
             colors=colors,
-            draw_background=True
+            draw_background=True,
         )
 
-    def draw_on_image(self, image, alpha=0.75, resize="segmentation_map",
-                      colors=None, draw_background=False,
-                      background_class_id=0, background_threshold=None):
+    def draw_on_image(
+        self,
+        image,
+        alpha=0.75,
+        resize="segmentation_map",
+        colors=None,
+        draw_background=False,
+        background_class_id=0,
+        background_threshold=None,
+    ):
         """Draw the segmentation map as an overlay over an image.
 
         Parameters
@@ -309,23 +326,30 @@ class SegmentationMapsOnImage(IAugmentable):
         if background_threshold is not None:
             ia.warn_deprecated(
                 "The argument `background_threshold` is deprecated and "
-                "ignored. Please don't use it anymore.")
+                "ignored. Please don't use it anymore."
+            )
 
         assert image.ndim == 3, (
             "Expected to draw on 3-dimensional image, got image with %d "
-            "dimensions." % (image.ndim,))
-        assert image.shape[2] == 3, (
-            "Expected to draw on RGB image, got image with %d channels "
-            "instead." % (image.shape[2],))
-        assert image.dtype.name == "uint8", (
-            "Expected to get image with dtype uint8, got dtype %s." % (
-                image.dtype.name,))
-        assert 0 - 1e-8 <= alpha <= 1.0 + 1e-8, (
-            "Expected 'alpha' to be in interval [0.0, 1.0], got %.4f." % (
-                alpha,))
-        assert resize in ["segmentation_map", "image"], (
-            "Expected 'resize' to be \"segmentation_map\" or \"image\", got "
-            "%s." % (resize,))
+            "dimensions." % (image.ndim,)
+        )
+        assert (
+            image.shape[2] == 3
+        ), "Expected to draw on RGB image, got image with %d channels " "instead." % (
+            image.shape[2],
+        )
+        assert (
+            image.dtype.name == "uint8"
+        ), "Expected to get image with dtype uint8, got dtype %s." % (image.dtype.name,)
+        assert (
+            0 - 1e-8 <= alpha <= 1.0 + 1e-8
+        ), "Expected 'alpha' to be in interval [0.0, 1.0], got %.4f." % (alpha,)
+        assert resize in [
+            "segmentation_map",
+            "image",
+        ], 'Expected \'resize\' to be "segmentation_map" or "image", got ' "%s." % (
+            resize,
+        )
 
         colors = (
             colors
@@ -335,7 +359,8 @@ class SegmentationMapsOnImage(IAugmentable):
 
         if resize == "image":
             image = ia.imresize_single_image(
-                image, self.arr.shape[0:2], interpolation="cubic")
+                image, self.arr.shape[0:2], interpolation="cubic"
+            )
 
         segmaps_drawn = []
         arr_channelwise = np.dsplit(self.arr, self.arr.shape[2])
@@ -343,20 +368,23 @@ class SegmentationMapsOnImage(IAugmentable):
             arr = arr[:, :, 0]
 
             nb_classes = 1 + np.max(arr)
-            segmap_drawn = np.zeros((arr.shape[0], arr.shape[1], 3),
-                                    dtype=np.uint8)
-            assert nb_classes <= len(colors), (
-                "Can't draw all %d classes as it would exceed the maximum "
-                "number of %d available colors." % (nb_classes, len(colors),))
+            segmap_drawn = np.zeros((arr.shape[0], arr.shape[1], 3), dtype=np.uint8)
+            assert nb_classes <= len(
+                colors
+            ), "Can't draw all %d classes as it would exceed the maximum " "number of %d available colors." % (
+                nb_classes,
+                len(colors),
+            )
 
             ids_in_map = np.unique(arr)
             for c, color in zip(sm.xrange(nb_classes), colors):
                 if c in ids_in_map:
-                    class_mask = (arr == c)
+                    class_mask = arr == c
                     segmap_drawn[class_mask] = color
 
             segmap_drawn = ia.imresize_single_image(
-                segmap_drawn, image.shape[0:2], interpolation="nearest")
+                segmap_drawn, image.shape[0:2], interpolation="nearest"
+            )
 
             segmap_on_image = blendlib.blend_alpha(segmap_drawn, image, alpha)
 
@@ -366,14 +394,12 @@ class SegmentationMapsOnImage(IAugmentable):
                 foreground_mask = ia.imresize_single_image(
                     (arr != background_class_id),
                     image.shape[0:2],
-                    interpolation="nearest")
+                    interpolation="nearest",
+                )
                 # without this, the merge below does nothing
                 foreground_mask = np.atleast_3d(foreground_mask)
 
-                mix = (
-                    (~foreground_mask) * image
-                    + foreground_mask * segmap_on_image
-                )
+                mix = (~foreground_mask) * image + foreground_mask * segmap_on_image
             segmaps_drawn.append(mix)
         return segmaps_drawn
 
@@ -413,12 +439,21 @@ class SegmentationMapsOnImage(IAugmentable):
 
         """
         from ..augmenters import size as iasize
-        arr_padded = iasize.pad(self.arr, top=top, right=right, bottom=bottom,
-                                left=left, mode=mode, cval=cval)
+
+        arr_padded = iasize.pad(
+            self.arr,
+            top=top,
+            right=right,
+            bottom=bottom,
+            left=left,
+            mode=mode,
+            cval=cval,
+        )
         return self.deepcopy(arr=arr_padded)
 
-    def pad_to_aspect_ratio(self, aspect_ratio, mode="constant", cval=0,
-                            return_pad_amounts=False):
+    def pad_to_aspect_ratio(
+        self, aspect_ratio, mode="constant", cval=0, return_pad_amounts=False
+    ):
         """Pad the segmentation maps until they match a target aspect ratio.
 
         Depending on which dimension is smaller (height or width), only the
@@ -461,19 +496,23 @@ class SegmentationMapsOnImage(IAugmentable):
 
         """
         from ..augmenters import size as iasize
+
         arr_padded, pad_amounts = iasize.pad_to_aspect_ratio(
             self.arr,
             aspect_ratio=aspect_ratio,
             mode=mode,
             cval=cval,
-            return_pad_amounts=True)
+            return_pad_amounts=True,
+        )
         segmap = self.deepcopy(arr=arr_padded)
         if return_pad_amounts:
             return segmap, pad_amounts
         return segmap
 
-    @ia.deprecated(alt_func="SegmentationMapsOnImage.resize()",
-                   comment="resize() has the exactly same interface.")
+    @ia.deprecated(
+        alt_func="SegmentationMapsOnImage.resize()",
+        comment="resize() has the exactly same interface.",
+    )
     def scale(self, *args, **kwargs):
         """Resize the seg.map(s) array given a target size and interpolation."""
         return self.resize(*args, **kwargs)
@@ -499,8 +538,9 @@ class SegmentationMapsOnImage(IAugmentable):
             Resized segmentation map object.
 
         """
-        arr_resized = ia.imresize_single_image(self.arr, sizes,
-                                               interpolation=interpolation)
+        arr_resized = ia.imresize_single_image(
+            self.arr, sizes, interpolation=interpolation
+        )
         return self.deepcopy(arr_resized)
 
     # TODO how best to handle changes to _input_was due to changed 'arr'?
@@ -532,7 +572,8 @@ class SegmentationMapsOnImage(IAugmentable):
         # pylint: disable=protected-access
         segmap = SegmentationMapsOnImage(
             self.arr if arr is None else arr,
-            shape=self.shape if shape is None else shape)
+            shape=self.shape if shape is None else shape,
+        )
         segmap._input_was = self._input_was
         return segmap
 
@@ -564,6 +605,7 @@ class SegmentationMapsOnImage(IAugmentable):
         # pylint: disable=protected-access
         segmap = SegmentationMapsOnImage(
             np.copy(self.arr if arr is None else arr),
-            shape=self.shape if shape is None else shape)
+            shape=self.shape if shape is None else shape,
+        )
         segmap._input_was = self._input_was
         return segmap

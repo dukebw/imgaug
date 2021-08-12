@@ -4,68 +4,86 @@ import argparse
 import numpy as np
 
 COMMANDS_HORIZONTAL_FLIPS = [
-    ("slice",
-     "arr2 = arr[:, ::-1, :]; "),
-    ("slice, contig",
-     "arr2 = arr[:, ::-1, :]; "
-     "arr2 = np.ascontiguousarray(arr2);"),
-    ("fliplr",
-     "arr2 = np.fliplr(arr); "),
-    ("fliplr contig",
-     "arr2 = np.fliplr(arr); "
-     "arr2 = np.ascontiguousarray(arr2);"),
-    ("cv2",
-     "arr2 = cv2.flip(arr, 1); "
-     "arr2 = arr2 if arr2.ndim == 3 else arr2[..., np.newaxis]; "),
-    ("cv2 contig",
-     "arr2 = cv2.flip(arr, 1); "
-     "arr2 = arr2 if arr2.ndim == 3 else arr2[..., np.newaxis]; "
-     "arr2 = np.ascontiguousarray(arr2); "),
-    ("fort cv2",
-     "arr = np.asfortranarray(arr); "
-     "arr2 = cv2.flip(arr, 1); "
-     "arr2 = arr2 if arr2.ndim == 3 else arr2[..., np.newaxis]; "),
-    ("fort cv2 contig",
-     "arr = np.asfortranarray(arr); "
-     "arr2 = cv2.flip(arr, 1); "
-     "arr2 = arr2 if arr2.ndim == 3 else arr2[..., np.newaxis]; "
-     "arr2 = np.ascontiguousarray(arr2); "),
-    ("cv2_",
-     "arr = cv2.flip(arr, 1, dst=arr); "
-     "arr = arr if arr.ndim == 3 else arr[..., np.newaxis]; "),
-    ("cv2_ contig",
-     "arr = cv2.flip(arr, 1, dst=arr); "
-     "arr = np.ascontiguousarray(arr); "
-     "arr = arr if arr.ndim == 3 else arr[..., np.newaxis]; "),
-    ("fort cv2_",
-     "arr = np.asfortranarray(arr); "
-     "arr = cv2.flip(arr, 1, dst=arr); "
-     "arr = arr if arr.ndim == 3 else arr[..., np.newaxis]; "),
-    ("fort cv2_ contig",
-     "arr = np.asfortranarray(arr); "
-     "arr = cv2.flip(arr, 1, dst=arr); "
-     "arr = np.ascontiguousarray(arr); "
-     "arr = arr if arr.ndim == 3 else arr[..., np.newaxis]; "),
-    ("cv2_ get",
-     "arr = cv2.flip(arr, 1, dst=arr); "
-     "arr = arr.get(); "
-     "arr = arr if arr.ndim == 3 else arr[..., np.newaxis]; "),
-    ("cv2_ get contig",
-     "arr = cv2.flip(arr, 1, dst=arr); "
-     "arr = arr.get(); "
-     "arr = arr if arr.ndim == 3 else arr[..., np.newaxis]; "
-     "arr = np.ascontiguousarray(arr); "),
-    ("fort cv2_ get",
-     "arr = np.asfortranarray(arr); "
-     "arr = cv2.flip(arr, 1, dst=arr); "
-     "arr = arr.get(); "
-     "arr = arr if arr.ndim == 3 else arr[..., np.newaxis]; "),
-    ("fort cv2_ get contig",
-     "arr = np.asfortranarray(arr); "
-     "arr = cv2.flip(arr, 1, dst=arr); "
-     "arr = arr.get(); "
-     "arr = arr if arr.ndim == 3 else arr[..., np.newaxis]; "
-     "arr = np.ascontiguousarray(arr); ")
+    ("slice", "arr2 = arr[:, ::-1, :]; "),
+    ("slice, contig", "arr2 = arr[:, ::-1, :]; " "arr2 = np.ascontiguousarray(arr2);"),
+    ("fliplr", "arr2 = np.fliplr(arr); "),
+    ("fliplr contig", "arr2 = np.fliplr(arr); " "arr2 = np.ascontiguousarray(arr2);"),
+    (
+        "cv2",
+        "arr2 = cv2.flip(arr, 1); "
+        "arr2 = arr2 if arr2.ndim == 3 else arr2[..., np.newaxis]; ",
+    ),
+    (
+        "cv2 contig",
+        "arr2 = cv2.flip(arr, 1); "
+        "arr2 = arr2 if arr2.ndim == 3 else arr2[..., np.newaxis]; "
+        "arr2 = np.ascontiguousarray(arr2); ",
+    ),
+    (
+        "fort cv2",
+        "arr = np.asfortranarray(arr); "
+        "arr2 = cv2.flip(arr, 1); "
+        "arr2 = arr2 if arr2.ndim == 3 else arr2[..., np.newaxis]; ",
+    ),
+    (
+        "fort cv2 contig",
+        "arr = np.asfortranarray(arr); "
+        "arr2 = cv2.flip(arr, 1); "
+        "arr2 = arr2 if arr2.ndim == 3 else arr2[..., np.newaxis]; "
+        "arr2 = np.ascontiguousarray(arr2); ",
+    ),
+    (
+        "cv2_",
+        "arr = cv2.flip(arr, 1, dst=arr); "
+        "arr = arr if arr.ndim == 3 else arr[..., np.newaxis]; ",
+    ),
+    (
+        "cv2_ contig",
+        "arr = cv2.flip(arr, 1, dst=arr); "
+        "arr = np.ascontiguousarray(arr); "
+        "arr = arr if arr.ndim == 3 else arr[..., np.newaxis]; ",
+    ),
+    (
+        "fort cv2_",
+        "arr = np.asfortranarray(arr); "
+        "arr = cv2.flip(arr, 1, dst=arr); "
+        "arr = arr if arr.ndim == 3 else arr[..., np.newaxis]; ",
+    ),
+    (
+        "fort cv2_ contig",
+        "arr = np.asfortranarray(arr); "
+        "arr = cv2.flip(arr, 1, dst=arr); "
+        "arr = np.ascontiguousarray(arr); "
+        "arr = arr if arr.ndim == 3 else arr[..., np.newaxis]; ",
+    ),
+    (
+        "cv2_ get",
+        "arr = cv2.flip(arr, 1, dst=arr); "
+        "arr = arr.get(); "
+        "arr = arr if arr.ndim == 3 else arr[..., np.newaxis]; ",
+    ),
+    (
+        "cv2_ get contig",
+        "arr = cv2.flip(arr, 1, dst=arr); "
+        "arr = arr.get(); "
+        "arr = arr if arr.ndim == 3 else arr[..., np.newaxis]; "
+        "arr = np.ascontiguousarray(arr); ",
+    ),
+    (
+        "fort cv2_ get",
+        "arr = np.asfortranarray(arr); "
+        "arr = cv2.flip(arr, 1, dst=arr); "
+        "arr = arr.get(); "
+        "arr = arr if arr.ndim == 3 else arr[..., np.newaxis]; ",
+    ),
+    (
+        "fort cv2_ get contig",
+        "arr = np.asfortranarray(arr); "
+        "arr = cv2.flip(arr, 1, dst=arr); "
+        "arr = arr.get(); "
+        "arr = arr if arr.ndim == 3 else arr[..., np.newaxis]; "
+        "arr = np.ascontiguousarray(arr); ",
+    ),
 ]
 
 COMMANDS_VERTICAL_FLIPS = []
@@ -79,7 +97,8 @@ for name, command in COMMANDS_HORIZONTAL_FLIPS:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Test performance of horizontal or vertical flip methods")
+        description="Test performance of horizontal or vertical flip methods"
+    )
     parser.add_argument("--type", help="horizontal|vertical", required=True)
     args = parser.parse_args()
 
@@ -88,13 +107,25 @@ def main():
     commands = (
         COMMANDS_HORIZONTAL_FLIPS
         if args.type == "horizontal"
-        else COMMANDS_VERTICAL_FLIPS)
+        else COMMANDS_VERTICAL_FLIPS
+    )
 
     number = 10000
-    for dt in ["bool",
-               "uint8", "uint16", "uint32", "uint64",
-               "int8", "int16", "int32", "int64",
-               "float16", "float32", "float64", "float128"]:
+    for dt in [
+        "bool",
+        "uint8",
+        "uint16",
+        "uint32",
+        "uint64",
+        "int8",
+        "int16",
+        "int32",
+        "int64",
+        "float16",
+        "float32",
+        "float64",
+        "float128",
+    ]:
         print("")
         print("----------")
         print(dt)
@@ -108,19 +139,23 @@ def main():
                 if "arr2" not in commands_i:
                     arr_name = "arr"
                 _ = timeit.repeat(
-                    "%s assert %s.dtype.name == '%s', ('Got dtype ' + %s.dtype.name)" % (
-                        commands_i, arr_name, dt, arr_name),
+                    "%s assert %s.dtype.name == '%s', ('Got dtype ' + %s.dtype.name)"
+                    % (commands_i, arr_name, dt, arr_name),
                     setup="import cv2; "
-                          "import numpy as np; "
-                          "arr = np.ones((224, 224, 3), dtype=np.%s)" % (dt,),
-                    repeat=1, number=1)
+                    "import numpy as np; "
+                    "arr = np.ones((224, 224, 3), dtype=np.%s)" % (dt,),
+                    repeat=1,
+                    number=1,
+                )
 
                 times = timeit.repeat(
                     commands_i,
                     setup="import cv2; "
-                          "import numpy as np; "
-                          "arr = np.ones((224, 224, 3), dtype=np.%s)" % (dt,),
-                    repeat=number, number=1)
+                    "import numpy as np; "
+                    "arr = np.ones((224, 224, 3), dtype=np.%s)" % (dt,),
+                    repeat=number,
+                    number=1,
+                )
                 time = np.average(times) * 1000
                 if command_i_title == "slice, contig":
                     last_fliplr_time = time
@@ -128,8 +163,11 @@ def main():
                     print("{:>20s} {:.5f}ms".format(command_i_title, time))
                 else:
                     rel_time = last_fliplr_time / time
-                    print("{:>20s} {:.5f}ms ({:.2f}x)".format(
-                        command_i_title, time, rel_time))
+                    print(
+                        "{:>20s} {:.5f}ms ({:.2f}x)".format(
+                            command_i_title, time, rel_time
+                        )
+                    )
             except (AssertionError, AttributeError, TypeError) as exc:
                 print("{:>20s} Error: {}".format(command_i_title, str(exc)))
                 # import traceback
@@ -138,7 +176,7 @@ def main():
     augs = [
         ("Add", "iaa.Add(10)"),
         ("Affine", "iaa.Affine(translate_px={'x': 10})"),
-        ("AverageBlur", "iaa.AverageBlur(3)")
+        ("AverageBlur", "iaa.AverageBlur(3)"),
     ]
     for aug_name, aug_command in augs:
         print("")
@@ -156,21 +194,25 @@ def main():
                     arr_name = "arr2"
 
                 _ = timeit.repeat(
-                        "%s assert %s.dtype.name == '%s', ('Got dtype ' + %s.dtype.name)" % (
-                            commands_i, arr_name, dt, arr_name),
-                        setup="import cv2; "
-                              "import numpy as np; "
-                              "arr = np.ones((224, 224, 3), dtype=np.%s)" % (dt,),
-                        repeat=1, number=1)
+                    "%s assert %s.dtype.name == '%s', ('Got dtype ' + %s.dtype.name)"
+                    % (commands_i, arr_name, dt, arr_name),
+                    setup="import cv2; "
+                    "import numpy as np; "
+                    "arr = np.ones((224, 224, 3), dtype=np.%s)" % (dt,),
+                    repeat=1,
+                    number=1,
+                )
 
                 times = timeit.repeat(
                     "%s _ = aug(image=%s);" % (commands_i, arr_name),
                     setup="import cv2; "
-                          "import numpy as np; "
-                          "import imgaug.augmenters as iaa; "
-                          "arr = np.ones((224, 224, 3), dtype=np.%s); "
-                          "aug = %s" % (dt, aug_command),
-                    repeat=number, number=1)
+                    "import numpy as np; "
+                    "import imgaug.augmenters as iaa; "
+                    "arr = np.ones((224, 224, 3), dtype=np.%s); "
+                    "aug = %s" % (dt, aug_command),
+                    repeat=number,
+                    number=1,
+                )
                 time = np.average(times) * 1000
                 print("{:>20s} {:.5f}ms".format(command_i_title, time))
             except (AssertionError, AttributeError, TypeError) as exc:

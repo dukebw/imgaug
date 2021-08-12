@@ -8,13 +8,13 @@ from imgaug import augmenters as iaa
 
 def main():
     for size in [0.1, 0.2, 1.0]:
-        image = imageio.imread("https://upload.wikimedia.org/wikipedia/commons/8/89/Kukle%2CCzech_Republic..jpg",
-                               format="jpg")
+        image = imageio.imread(
+            "https://upload.wikimedia.org/wikipedia/commons/8/89/Kukle%2CCzech_Republic..jpg",
+            format="jpg",
+        )
         image = ia.imresize_single_image(image, size, "cubic")
         print(image.shape)
-        augs = [
-            ("iaa.Clouds()", iaa.Clouds())
-        ]
+        augs = [("iaa.Clouds()", iaa.Clouds())]
 
         for descr, aug in augs:
             print(descr)

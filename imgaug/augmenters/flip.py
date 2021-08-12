@@ -674,9 +674,7 @@ fort cv2_ get contig 1.95215ms
 """
 # pylint:enable=pointless-string-statement
 
-_FLIPLR_DTYPES_CV2 = iadt._convert_dtype_strs_to_types(
-    "uint8 uint16 int8 int16"
-)
+_FLIPLR_DTYPES_CV2 = iadt._convert_dtype_strs_to_types("uint8 uint16 int8 int16")
 
 
 def fliplr(arr):
@@ -742,8 +740,7 @@ def _fliplr_cv2(arr):
         # TODO this is quite inefficient right now
         channels = [
             cv2.flip(_normalize_cv2_input_arr_(arr[..., c]), 1)
-            for c
-            in sm.xrange(arr.shape[-1])
+            for c in sm.xrange(arr.shape[-1])
         ]
         result = np.stack(channels, axis=-1)
     else:
@@ -869,30 +866,34 @@ class Fliplr(meta.Augmenter):
 
     """
 
-    def __init__(self, p=1,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        p=1,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(Fliplr, self).__init__(
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed, name=name, random_state=random_state, deterministic=deterministic
+        )
         self.p = iap.handle_probability_param(p, "p")
 
     # Added in 0.4.0.
     def _augment_batch_(self, batch, random_state, parents, hooks):
-        samples = self.p.draw_samples((batch.nb_rows,),
-                                      random_state=random_state)
+        samples = self.p.draw_samples((batch.nb_rows,), random_state=random_state)
         for i, sample in enumerate(samples):
             if sample >= 0.5:
                 if batch.images is not None:
                     batch.images[i] = fliplr(batch.images[i])
 
                 if batch.heatmaps is not None:
-                    batch.heatmaps[i].arr_0to1 = fliplr(
-                        batch.heatmaps[i].arr_0to1)
+                    batch.heatmaps[i].arr_0to1 = fliplr(batch.heatmaps[i].arr_0to1)
 
                 if batch.segmentation_maps is not None:
                     batch.segmentation_maps[i].arr = fliplr(
-                        batch.segmentation_maps[i].arr)
+                        batch.segmentation_maps[i].arr
+                    )
 
                 if batch.keypoints is not None:
                     kpsoi = batch.keypoints[i]
@@ -981,18 +982,22 @@ class Flipud(meta.Augmenter):
 
     """
 
-    def __init__(self, p=1,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        p=1,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(Flipud, self).__init__(
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed, name=name, random_state=random_state, deterministic=deterministic
+        )
         self.p = iap.handle_probability_param(p, "p")
 
     # Added in 0.4.0.
     def _augment_batch_(self, batch, random_state, parents, hooks):
-        samples = self.p.draw_samples((batch.nb_rows,),
-                                      random_state=random_state)
+        samples = self.p.draw_samples((batch.nb_rows,), random_state=random_state)
         for i, sample in enumerate(samples):
             if sample >= 0.5:
                 if batch.images is not None:
@@ -1001,12 +1006,12 @@ class Flipud(meta.Augmenter):
                     batch.images[i] = batch.images[i][::-1, ...]
 
                 if batch.heatmaps is not None:
-                    batch.heatmaps[i].arr_0to1 = \
-                        batch.heatmaps[i].arr_0to1[::-1, ...]
+                    batch.heatmaps[i].arr_0to1 = batch.heatmaps[i].arr_0to1[::-1, ...]
 
                 if batch.segmentation_maps is not None:
-                    batch.segmentation_maps[i].arr = \
-                        batch.segmentation_maps[i].arr[::-1, ...]
+                    batch.segmentation_maps[i].arr = batch.segmentation_maps[i].arr[
+                        ::-1, ...
+                    ]
 
                 if batch.keypoints is not None:
                     kpsoi = batch.keypoints[i]

@@ -15,6 +15,7 @@ BB_X2 = WIDTH - 64
 BB_Y1 = 64
 BB_Y2 = HEIGHT - 64
 
+
 def main():
     image = data.astronaut()
     image = ia.imresize_single_image(image, (HEIGHT, WIDTH))
@@ -62,16 +63,44 @@ def main():
         iaa.AffineCv2(scale=0.5, order="lanczos4"),
         iaa.AffineCv2(rotate=45, translate_px=20, scale=1.2),
         iaa.AffineCv2(rotate=45, translate_px=20, scale=0.8),
-        iaa.AffineCv2(rotate=(-45, 45), translate_px=(-20, 20), scale=(0.8, 1.2), order=ia.ALL, mode=ia.ALL, cval=ia.ALL),
-        iaa.AffineCv2(rotate=(-45, 45), translate_px=(-20, 20), scale=(0.8, 1.2), order=ia.ALL, mode=ia.ALL, cval=ia.ALL),
-        iaa.AffineCv2(rotate=(-45, 45), translate_px=(-20, 20), scale=(0.8, 1.2), order=ia.ALL, mode=ia.ALL, cval=ia.ALL),
-        iaa.AffineCv2(rotate=(-45, 45), translate_px=(-20, 20), scale=(0.8, 1.2), order=ia.ALL, mode=ia.ALL, cval=ia.ALL)
+        iaa.AffineCv2(
+            rotate=(-45, 45),
+            translate_px=(-20, 20),
+            scale=(0.8, 1.2),
+            order=ia.ALL,
+            mode=ia.ALL,
+            cval=ia.ALL,
+        ),
+        iaa.AffineCv2(
+            rotate=(-45, 45),
+            translate_px=(-20, 20),
+            scale=(0.8, 1.2),
+            order=ia.ALL,
+            mode=ia.ALL,
+            cval=ia.ALL,
+        ),
+        iaa.AffineCv2(
+            rotate=(-45, 45),
+            translate_px=(-20, 20),
+            scale=(0.8, 1.2),
+            order=ia.ALL,
+            mode=ia.ALL,
+            cval=ia.ALL,
+        ),
+        iaa.AffineCv2(
+            rotate=(-45, 45),
+            translate_px=(-20, 20),
+            scale=(0.8, 1.2),
+            order=ia.ALL,
+            mode=ia.ALL,
+            cval=ia.ALL,
+        ),
     ]
 
     for seq in seqs:
         seq_det = seq.to_deterministic()
         image_aug = seq_det.augment_image(image)
-        #print(image_aug.dtype, np.min(image_aug), np.max(image_aug))
+        # print(image_aug.dtype, np.min(image_aug), np.max(image_aug))
         kps_aug = seq_det.augment_keypoints([kps])[0]
         bbs_aug = seq_det.augment_bounding_boxes([bbs])[0]
 
@@ -87,6 +116,7 @@ def main():
 
     ia.imshow(np.vstack(pairs))
     imageio.imwrite("affinecv2.jpg", np.vstack(pairs))
+
 
 if __name__ == "__main__":
     main()

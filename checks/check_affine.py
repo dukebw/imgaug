@@ -22,28 +22,16 @@ def main():
     image = ia.imresize_single_image(image, (HEIGHT, WIDTH))
 
     # testing new shear on x-/y-axis
-    shear_x = [iaa.Affine(shear=shear)(image=image)
-               for shear in np.linspace(0, 45, 10)]
-    shear_y = [iaa.Affine(shear={"y": shear})(image=image)
-               for shear in np.linspace(0, 45, 10)]
+    shear_x = [iaa.Affine(shear=shear)(image=image) for shear in np.linspace(0, 45, 10)]
+    shear_y = [
+        iaa.Affine(shear={"y": shear})(image=image) for shear in np.linspace(0, 45, 10)
+    ]
+    ia.imshow(ia.draw_grid(shear_x + shear_y, cols=10, rows=2))
+    ia.imshow(ia.draw_grid(iaa.Affine(shear=(-45, 45))(images=[image] * 16)))
     ia.imshow(
-        ia.draw_grid(shear_x + shear_y, cols=10, rows=2)
+        ia.draw_grid(iaa.Affine(shear=[-45, -20, 0, 20, 45])(images=[image] * 16))
     )
-    ia.imshow(
-        ia.draw_grid(
-            iaa.Affine(shear=(-45, 45))(images=[image]*16)
-        )
-    )
-    ia.imshow(
-        ia.draw_grid(
-            iaa.Affine(shear=[-45, -20, 0, 20, 45])(images=[image]*16)
-        )
-    )
-    ia.imshow(
-        ia.draw_grid(
-            iaa.Affine(shear={"y": (-45, 45)})(images=[image]*16)
-        )
-    )
+    ia.imshow(ia.draw_grid(iaa.Affine(shear={"y": (-45, 45)})(images=[image] * 16)))
 
     kps = []
     for y in range(NB_ROWS):
@@ -81,14 +69,38 @@ def main():
         {"scale": 0.5, "order": 5},
         {"rotate": 45, "translate_px": 20, "scale": 1.2},
         {"rotate": 45, "translate_px": 20, "scale": 0.8},
-        {"rotate": (-45, 45), "translate_px": (-20, 20), "scale": (0.8, 1.2), "order": ia.ALL,
-         "mode": ia.ALL, "cval": ia.ALL},
-        {"rotate": (-45, 45), "translate_px": (-20, 20), "scale": (0.8, 1.2), "order": ia.ALL,
-         "mode": ia.ALL, "cval": ia.ALL},
-        {"rotate": (-45, 45), "translate_px": (-20, 20), "scale": (0.8, 1.2), "order": ia.ALL,
-         "mode": ia.ALL, "cval": ia.ALL},
-        {"rotate": (-45, 45), "translate_px": (-20, 20), "scale": (0.8, 1.2), "order": ia.ALL,
-         "mode": ia.ALL, "cval": ia.ALL}
+        {
+            "rotate": (-45, 45),
+            "translate_px": (-20, 20),
+            "scale": (0.8, 1.2),
+            "order": ia.ALL,
+            "mode": ia.ALL,
+            "cval": ia.ALL,
+        },
+        {
+            "rotate": (-45, 45),
+            "translate_px": (-20, 20),
+            "scale": (0.8, 1.2),
+            "order": ia.ALL,
+            "mode": ia.ALL,
+            "cval": ia.ALL,
+        },
+        {
+            "rotate": (-45, 45),
+            "translate_px": (-20, 20),
+            "scale": (0.8, 1.2),
+            "order": ia.ALL,
+            "mode": ia.ALL,
+            "cval": ia.ALL,
+        },
+        {
+            "rotate": (-45, 45),
+            "translate_px": (-20, 20),
+            "scale": (0.8, 1.2),
+            "order": ia.ALL,
+            "mode": ia.ALL,
+            "cval": ia.ALL,
+        },
     ]
     seqs_skimage = [iaa.Affine(backend="skimage", **p) for p in params]
     seqs_cv2 = [iaa.Affine(backend="auto", **p) for p in params]
@@ -102,9 +114,9 @@ def main():
         image_aug_skimage = seq_skimage_det.augment_image(image)
         image_aug_cv2 = seq_cv2_det.augment_image(image)
         kps_aug_skimage = seq_skimage_det.augment_keypoints([kps])[0]
-        kps_aug_cv2     = seq_cv2_det.augment_keypoints([kps])[0]
+        kps_aug_cv2 = seq_cv2_det.augment_keypoints([kps])[0]
         bbs_aug_skimage = seq_skimage_det.augment_bounding_boxes([bbs])[0]
-        bbs_aug_cv2     = seq_cv2_det.augment_bounding_boxes([bbs])[0]
+        bbs_aug_cv2 = seq_cv2_det.augment_bounding_boxes([bbs])[0]
 
         image_before_skimage = np.copy(image)
         image_before_cv2 = np.copy(image)
@@ -120,7 +132,9 @@ def main():
         image_after_skimage = bbs_aug_skimage.draw_on_image(image_after_skimage)
         image_after_cv2 = bbs_aug_cv2.draw_on_image(image_after_cv2)
 
-        pairs.append(np.hstack((image_before_skimage, image_after_skimage, image_after_cv2)))
+        pairs.append(
+            np.hstack((image_before_skimage, image_after_skimage, image_after_cv2))
+        )
 
     ia.imshow(np.vstack(pairs))
     imageio.imwrite("affine.jpg", np.vstack(pairs))

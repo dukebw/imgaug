@@ -11,8 +11,14 @@ def main():
         ("iaa.AdditivePoissonNoise(20.0)", iaa.AdditivePoissonNoise(20.0)),
         ("iaa.AdditivePoissonNoise(50.0)", iaa.AdditivePoissonNoise(50.0)),
         ("iaa.AdditivePoissonNoise((10.0, 20))", iaa.AdditivePoissonNoise((10.0, 20))),
-        ("iaa.AdditivePoissonNoise([10.0, 20.0, 50])", iaa.AdditivePoissonNoise([10.0, 20.0, 50])),
-        ("iaa.AdditivePoissonNoise(20, per_channel=True)", iaa.AdditivePoissonNoise(50, per_channel=True)),
+        (
+            "iaa.AdditivePoissonNoise([10.0, 20.0, 50])",
+            iaa.AdditivePoissonNoise([10.0, 20.0, 50]),
+        ),
+        (
+            "iaa.AdditivePoissonNoise(20, per_channel=True)",
+            iaa.AdditivePoissonNoise(50, per_channel=True),
+        ),
     ]
     for descr, aug in augs:
         print(descr)

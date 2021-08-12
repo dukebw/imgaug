@@ -19,8 +19,7 @@ _QUOKKA_FP = os.path.join(_FILE_DIR, "quokka.jpg")
 # Added in 0.5.0.
 _QUOKKA_ANNOTATIONS_FP = os.path.join(_FILE_DIR, "quokka_annotations.json")
 # Added in 0.5.0.
-_QUOKKA_DEPTH_MAP_HALFRES_FP = os.path.join(
-    _FILE_DIR, "quokka_depth_map_halfres.png")
+_QUOKKA_DEPTH_MAP_HALFRES_FP = os.path.join(_FILE_DIR, "quokka_depth_map_halfres.png")
 
 
 def _quokka_normalize_extract(extract):
@@ -59,17 +58,18 @@ def _quokka_normalize_extract(extract):
     if extract == "square":
         bb = BoundingBox(x1=0, y1=0, x2=643, y2=643)
     elif isinstance(extract, tuple) and len(extract) == 4:
-        bb = BoundingBox(x1=extract[0], y1=extract[1],
-                         x2=extract[2], y2=extract[3])
+        bb = BoundingBox(x1=extract[0], y1=extract[1], x2=extract[2], y2=extract[3])
     elif isinstance(extract, BoundingBox):
         bb = extract
     elif isinstance(extract, BoundingBoxesOnImage):
         assert len(extract.bounding_boxes) == 1, (
             "Provided BoundingBoxesOnImage instance may currently only "
-            "contain a single bounding box.")
+            "contain a single bounding box."
+        )
         assert extract.shape[0:2] == (643, 960), (
             "Expected BoundingBoxesOnImage instance on an image of shape "
-            "(643, 960, ?). Got shape %s." % (extract.shape,))
+            "(643, 960, ?). Got shape %s." % (extract.shape,)
+        )
         bb = extract.bounding_boxes[0]
     else:
         raise Exception(
@@ -135,11 +135,12 @@ def _compute_resized_shape(from_shape, to_shape):
             to_shape_computed.append(to_shape[2])
 
         is_to_s_valid_values = all(
-            [v is None or ia.is_single_number(v) for v in to_shape[0:2]])
+            [v is None or ia.is_single_number(v) for v in to_shape[0:2]]
+        )
         assert is_to_s_valid_values, (
             "Expected the first two entries in to_shape to be None or "
-            "numbers, got types %s." % (
-                str([type(v) for v in to_shape[0:2]]),))
+            "numbers, got types %s." % (str([type(v) for v in to_shape[0:2]]),)
+        )
 
         for i, from_shape_i in enumerate(from_shape[0:2]):
             if to_shape[i] is None:
@@ -149,13 +150,13 @@ def _compute_resized_shape(from_shape, to_shape):
             else:  # float
                 to_shape_computed[i] = int(np.round(from_shape_i * to_shape[i]))
     elif ia.is_single_integer(to_shape) or ia.is_single_float(to_shape):
-        to_shape_computed = _compute_resized_shape(
-            from_shape, (to_shape, to_shape))
+        to_shape_computed = _compute_resized_shape(from_shape, (to_shape, to_shape))
     else:
         raise Exception(
             "Expected to_shape to be None or ndarray or tuple of floats or "
             "tuple of ints or single int or single float, "
-            "got %s." % (type(to_shape),))
+            "got %s." % (type(to_shape),)
+        )
 
     return tuple(to_shape_computed)
 
@@ -294,6 +295,7 @@ def quokka_segmentation_map(size=None, extract=None):
     """
     # pylint: disable=invalid-name
     import skimage.draw
+
     # TODO get rid of this deferred import
     from imgaug.augmentables.segmaps import SegmentationMapsOnImage
 
@@ -309,8 +311,7 @@ def quokka_segmentation_map(size=None, extract=None):
         yy.append(y)
 
     img_seg = np.zeros((643, 960, 1), dtype=np.int32)
-    rr, cc = skimage.draw.polygon(
-        np.array(yy), np.array(xx), shape=img_seg.shape)
+    rr, cc = skimage.draw.polygon(np.array(yy), np.array(xx), shape=img_seg.shape)
     img_seg[rr, cc, 0] = 1
 
     if extract is not None:
@@ -416,7 +417,7 @@ def quokka_bounding_boxes(size=None, extract=None):
                 x1=bb_dict["x1"] - left,
                 y1=bb_dict["y1"] - top,
                 x2=bb_dict["x2"] - left,
-                y2=bb_dict["y2"] - top
+                y2=bb_dict["y2"] - top,
             )
         )
     if extract is not None:
@@ -468,8 +469,12 @@ def quokka_polygons(size=None, extract=None):
     polygons = []
     for poly_json in json_dict["polygons"]:
         polygons.append(
-            Polygon([(point["x"] - left, point["y"] - top)
-                     for point in poly_json["keypoints"]])
+            Polygon(
+                [
+                    (point["x"] - left, point["y"] - top)
+                    for point in poly_json["keypoints"]
+                ]
+            )
         )
     if extract is not None:
         shape = (bb_extract.height, bb_extract.width, 3)

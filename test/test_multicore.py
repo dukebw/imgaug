@@ -6,6 +6,7 @@ import pickle
 from collections import defaultdict
 import warnings
 import sys
+
 # unittest only added in 3.4 self.subTest()
 if sys.version_info[0] < 3 or sys.version_info[1] < 4:
     import unittest2 as unittest
@@ -27,11 +28,10 @@ from imgaug import augmenters as iaa
 from imgaug.testutils import reseed
 from imgaug.augmentables.batches import Batch, UnnormalizedBatch
 
-IS_SUPPORTING_CONTEXTS = (sys.version_info[0] == 3
-                          and sys.version_info[1] >= 4)
+IS_SUPPORTING_CONTEXTS = sys.version_info[0] == 3 and sys.version_info[1] >= 4
 
 
-class clean_context():
+class clean_context:
     def __init__(self):
         self.old_context = None
 
@@ -44,8 +44,9 @@ class clean_context():
 
 
 class Test__get_context(unittest.TestCase):
-    @unittest.skipUnless(not IS_SUPPORTING_CONTEXTS,
-                         "Behaviour happens only in python <=3.3")
+    @unittest.skipUnless(
+        not IS_SUPPORTING_CONTEXTS, "Behaviour happens only in python <=3.3"
+    )
     @mock.patch("imgaug.imgaug.warn")
     @mock.patch("platform.version")
     def test_mocked_nixos_python2(self, mock_version, mock_warn):
@@ -54,8 +55,9 @@ class Test__get_context(unittest.TestCase):
             _ctx = multicore._get_context()
             assert mock_warn.call_count == 1
 
-    @unittest.skipUnless(IS_SUPPORTING_CONTEXTS,
-                         "Behaviour is only supported in python 3.4+")
+    @unittest.skipUnless(
+        IS_SUPPORTING_CONTEXTS, "Behaviour is only supported in python 3.4+"
+    )
     @mock.patch("platform.version")
     @mock.patch("multiprocessing.get_context")
     def test_mocked_nixos_python3(self, mock_gctx, mock_version):
@@ -64,8 +66,9 @@ class Test__get_context(unittest.TestCase):
             _ctx = multicore._get_context()
             mock_gctx.assert_called_once_with("spawn")
 
-    @unittest.skipUnless(not IS_SUPPORTING_CONTEXTS,
-                         "Behaviour happens only in python <=3.3")
+    @unittest.skipUnless(
+        not IS_SUPPORTING_CONTEXTS, "Behaviour happens only in python <=3.3"
+    )
     @mock.patch("platform.version")
     def test_mocked_no_nixos_python2(self, mock_version):
         with clean_context():
@@ -73,8 +76,9 @@ class Test__get_context(unittest.TestCase):
             ctx = multicore._get_context()
             assert ctx is multiprocessing
 
-    @unittest.skipUnless(IS_SUPPORTING_CONTEXTS,
-                         "Behaviour is only supported in python 3.4+")
+    @unittest.skipUnless(
+        IS_SUPPORTING_CONTEXTS, "Behaviour is only supported in python 3.4+"
+    )
     @mock.patch("platform.system")
     @mock.patch("multiprocessing.get_context")
     @mock.patch("platform.version")
@@ -86,20 +90,18 @@ class Test__get_context(unittest.TestCase):
             assert mock_gctx.call_count == 1
             assert mock_gctx.call_args_list[0][0][0] is None
 
-    @unittest.skipUnless(IS_SUPPORTING_CONTEXTS,
-                         "Behaviour is only supported in python 3.4+")
+    @unittest.skipUnless(
+        IS_SUPPORTING_CONTEXTS, "Behaviour is only supported in python 3.4+"
+    )
     @mock.patch.object(sys, "version_info")
     @mock.patch("platform.system")
     @mock.patch("multiprocessing.get_context")
     @mock.patch("platform.version")
     def test_mocked_mac_and_37_cause_spawn(
-            self,
-            mock_version,
-            mock_gctx,
-            mock_system,
-            mock_vi
+        self, mock_version, mock_gctx, mock_system, mock_vi
     ):
         with clean_context():
+
             def version_info(index):
                 if isinstance(index, slice):
                     return 3, 7
@@ -136,7 +138,8 @@ class TestPool(unittest.TestCase):
         with mock.patch("multiprocessing.pool.Pool", mock_Pool):
             augseq = iaa.Identity()
             pool_config = multicore.Pool(
-                augseq, processes=1, maxtasksperchild=4, seed=123)
+                augseq, processes=1, maxtasksperchild=4, seed=123
+            )
             with pool_config as pool:
                 assert pool.processes == 1
             assert pool._pool is None
@@ -170,8 +173,9 @@ class TestPool(unittest.TestCase):
         # https://github.com/
         # python/cpython/blob/master/Lib/multiprocessing/context.py
         # L41.
-        fname = ("os.cpu_count" if IS_SUPPORTING_CONTEXTS
-                 else "multiprocessing.cpu_count")
+        fname = (
+            "os.cpu_count" if IS_SUPPORTING_CONTEXTS else "multiprocessing.cpu_count"
+        )
         patch_cpu_count = mock.patch(fname, mock_cpu_count)
 
         with patch_pool, patch_cpu_count:
@@ -188,15 +192,16 @@ class TestPool(unittest.TestCase):
                 (1, -1, 1),
                 (2, -1, 1),
                 (3, -1, 2),
-                (4, -2, 2)
+                (4, -2, 2),
             ]
 
             for cores_available, processes_req, expected in combos:
-                with self.subTest(cpu_count_available=cores_available,
-                                  processes_requested=processes_req):
+                with self.subTest(
+                    cpu_count_available=cores_available,
+                    processes_requested=processes_req,
+                ):
                     mock_cpu_count.return_value = cores_available
-                    with multicore.Pool(augseq,
-                                        processes=processes_req) as _pool:
+                    with multicore.Pool(augseq, processes=processes_req) as _pool:
                         pass
 
                     if expected is None:
@@ -227,9 +232,9 @@ class TestPool(unittest.TestCase):
         assert mock_pool.call_args_list[0][0][0] is None
 
         assert len(caught_warnings) == 1
-        assert (
-            "Could not find method multiprocessing.cpu_count(). "
-            in str(caught_warnings[-1].message))
+        assert "Could not find method multiprocessing.cpu_count(). " in str(
+            caught_warnings[-1].message
+        )
 
         multicore._get_context().cpu_count = old_method
 
@@ -244,7 +249,7 @@ class TestPool(unittest.TestCase):
             with mock.patch("multiprocessing.pool.Pool", mock_Pool):
                 batches = [
                     clazz(images=[ia.data.quokka()]),
-                    clazz(images=[ia.data.quokka()+1])
+                    clazz(images=[ia.data.quokka() + 1]),
                 ]
                 with multicore.Pool(augseq, processes=1) as pool:
                     if call_async:
@@ -269,8 +274,8 @@ class TestPool(unittest.TestCase):
                 # args, arg 1 (batches with ids), tuple 0,
                 # entry 1 in tuple (=> batch)
                 assert np.array_equal(
-                    to_check.call_args[0][1][0][1].images_unaug,
-                    batches[0].images_unaug)
+                    to_check.call_args[0][1][0][1].images_unaug, batches[0].images_unaug
+                )
 
                 # args, arg 1 (batches with ids), tuple 1,
                 # entry 0 in tuple (=> batch id)
@@ -279,8 +284,8 @@ class TestPool(unittest.TestCase):
                 # args, arg 1 (batches with ids), tuple 1,
                 # entry 1 in tuple (=> batch)
                 assert np.array_equal(
-                    to_check.call_args[0][1][1][1].images_unaug,
-                    batches[1].images_unaug)
+                    to_check.call_args[0][1][1][1].images_unaug, batches[1].images_unaug
+                )
 
     def test_map_batches(self):
         self._test_map_batches_both(call_async=False)
@@ -291,8 +296,10 @@ class TestPool(unittest.TestCase):
     @classmethod
     def _test_imap_batches_both(cls, call_unordered):
         for clazz in [Batch, UnnormalizedBatch]:
-            batches = [clazz(images=[ia.data.quokka()]),
-                       clazz(images=[ia.data.quokka()+1])]
+            batches = [
+                clazz(images=[ia.data.quokka()]),
+                clazz(images=[ia.data.quokka() + 1]),
+            ]
 
             def _generate_batches():
                 for batch in batches:
@@ -329,23 +336,22 @@ class TestPool(unittest.TestCase):
 
                 # tuple 0, entry 1 in tuple (=> batch)
                 assert np.array_equal(
-                    arg_batches[0][1].images_unaug,
-                    batches[0].images_unaug)
+                    arg_batches[0][1].images_unaug, batches[0].images_unaug
+                )
 
                 # tuple 1, entry 0 in tuple (=> batch id)
                 assert arg_batches[1][0] == 1
 
                 # tuple 1, entry 1 in tuple (=> batch)
                 assert np.array_equal(
-                    arg_batches[1][1].images_unaug,
-                    batches[1].images_unaug)
+                    arg_batches[1][1].images_unaug, batches[1].images_unaug
+                )
 
     @classmethod
-    def _test_imap_batches_both_output_buffer_size(cls, call_unordered,
-                                                   timeout=0.075):
+    def _test_imap_batches_both_output_buffer_size(cls, call_unordered, timeout=0.075):
         batches = [
-            ia.Batch(images=[np.full((1, 1), i, dtype=np.uint8)])
-            for i in range(8)]
+            ia.Batch(images=[np.full((1, 1), i, dtype=np.uint8)]) for i in range(8)
+        ]
 
         def _generate_batches(times):
             for batch in batches:
@@ -353,11 +359,7 @@ class TestPool(unittest.TestCase):
                 times.append(time.time())
 
         def callfunc(pool, gen, output_buffer_size):
-            func = (
-                pool.imap_batches_unordered
-                if call_unordered
-                else pool.imap_batches
-            )
+            func = pool.imap_batches_unordered if call_unordered else pool.imap_batches
 
             for v in func(gen, output_buffer_size=output_buffer_size):
                 yield v
@@ -413,9 +415,9 @@ class TestPool(unittest.TestCase):
             times_diffs = times[1:] - times[0:-1]
             # use -1 here because we have N-1 times for N batches as
             # diffs denote diffs between Nth and N+1th batch
-            assert np.all(times_diffs[0:4-1] < timeout * 1.01)
-            assert np.all(times_diffs[4-1:4-1+1] >= timeout * 0.99)
-            assert np.all(times_diffs[4-1+1:] < timeout * 1.01)
+            assert np.all(times_diffs[0 : 4 - 1] < timeout * 1.01)
+            assert np.all(times_diffs[4 - 1 : 4 - 1 + 1] >= timeout * 0.99)
+            assert np.all(times_diffs[4 - 1 + 1 :] < timeout * 1.01)
             assert contains_all_ids(result)
 
     def test_imap_batches(self):
@@ -452,8 +454,7 @@ class TestPool(unittest.TestCase):
         batches = [batch.deepcopy() for _ in sm.xrange(nb_batches)]
 
         # seed=1
-        with multicore.Pool(augseq, processes=2, maxtasksperchild=30,
-                            seed=1) as pool:
+        with multicore.Pool(augseq, processes=2, maxtasksperchild=30, seed=1) as pool:
             batches_aug1 = pool.map_batches(batches, chunksize=2)
 
         # seed=1
@@ -500,8 +501,7 @@ class TestPool(unittest.TestCase):
         batches = [batch.deepcopy() for _ in sm.xrange(60)]
 
         # seed=1
-        with multicore.Pool(augseq, processes=2, maxtasksperchild=30,
-                            seed=1) as pool:
+        with multicore.Pool(augseq, processes=2, maxtasksperchild=30, seed=1) as pool:
             batches_aug1 = pool.map_batches(batches, chunksize=2)
         # seed=1
         with multicore.Pool(augseq, processes=2, seed=1) as pool:
@@ -553,7 +553,7 @@ class TestPool(unittest.TestCase):
         with multicore.Pool(augseq, processes=2) as pool:
             batches_aug.extend(pool.map_batches(batches, chunksize=1))
 
-        assert len(batches_aug) == 2*20
+        assert len(batches_aug) == 2 * 20
 
         self._assert_each_augmentation_not_more_than_once(batches_aug)
 
@@ -572,7 +572,7 @@ class TestPool(unittest.TestCase):
         with multicore.Pool(augseq, processes=2) as pool:
             batches_aug.extend(pool.map_batches(batches, chunksize=1))
 
-        assert len(batches_aug) == 2*20
+        assert len(batches_aug) == 2 * 20
 
         for batch in batches_aug:
             for keypoints_aug in batch.keypoints_aug:
@@ -583,13 +583,14 @@ class TestPool(unittest.TestCase):
 
     def test_inputs_not_lost(self):
         """Test to make sure that inputs (e.g. images) are never lost."""
+
         def _assert_contains_all_ids(batches_aug):
             # batch.images_unaug
             ids = set()
             for batch_aug in batches_aug:
                 ids.add(int(batch_aug.images_unaug.flat[0]))
                 ids.add(int(batch_aug.images_unaug.flat[1]))
-            for idx in sm.xrange(2*100):
+            for idx in sm.xrange(2 * 100):
                 assert idx in ids
             assert len(ids) == 200
 
@@ -598,7 +599,7 @@ class TestPool(unittest.TestCase):
             for batch_aug in batches_aug:
                 ids.add(int(batch_aug.images_aug.flat[0]))
                 ids.add(int(batch_aug.images_aug.flat[1]))
-            for idx in sm.xrange(2*100):
+            for idx in sm.xrange(2 * 100):
                 assert idx in ids
             assert len(ids) == 200
 
@@ -607,16 +608,15 @@ class TestPool(unittest.TestCase):
         # creates batches containing images with ids from 0 to 199 (one pair
         # of consecutive ids per batch)
         batches = [
-            ia.Batch(images=np.uint8([image + b_idx*2, image + b_idx*2+1]))
-            for b_idx
-            in sm.xrange(100)]
+            ia.Batch(images=np.uint8([image + b_idx * 2, image + b_idx * 2 + 1]))
+            for b_idx in sm.xrange(100)
+        ]
 
         with multicore.Pool(augseq, processes=2, maxtasksperchild=25) as pool:
             batches_aug = pool.map_batches(batches)
             _assert_contains_all_ids(batches_aug)
 
-        with multicore.Pool(augseq, processes=2, maxtasksperchild=25,
-                            seed=1) as pool:
+        with multicore.Pool(augseq, processes=2, maxtasksperchild=25, seed=1) as pool:
             batches_aug = pool.map_batches(batches)
             _assert_contains_all_ids(batches_aug)
 
@@ -683,15 +683,13 @@ class Test_Pool_initialize_worker(unittest.TestCase):
         assert mock_ia_pool._WORKER_AUGSEQ is augseq
         assert augseq.localize_random_state_.call_count == 1
 
-    @mock.patch.object(sys, 'version_info')
+    @mock.patch.object(sys, "version_info")
     @mock.patch("time.time_ns", create=True)  # doesnt exist in <=3.6
     @mock.patch("imgaug.random.seed")
     @mock.patch("multiprocessing.current_process")
-    def test_without_seed_start_simulate_py37_or_higher(self,
-                                                        mock_cp,
-                                                        mock_ia_seed,
-                                                        mock_time_ns,
-                                                        mock_vi):
+    def test_without_seed_start_simulate_py37_or_higher(
+        self, mock_cp, mock_ia_seed, mock_time_ns, mock_vi
+    ):
         def version_info(index):
             return 3 if index == 0 else 7
 
@@ -711,15 +709,13 @@ class Test_Pool_initialize_worker(unittest.TestCase):
         seed_local = augseq.seed_.call_args_list[0][0][0]
         assert seed_global != seed_local
 
-    @mock.patch.object(sys, 'version_info')
+    @mock.patch.object(sys, "version_info")
     @mock.patch("time.time")
     @mock.patch("imgaug.random.seed")
     @mock.patch("multiprocessing.current_process")
-    def test_without_seed_start_simulate_py36_or_lower(self,
-                                                       mock_cp,
-                                                       mock_ia_seed,
-                                                       mock_time,
-                                                       mock_vi):
+    def test_without_seed_start_simulate_py36_or_lower(
+        self, mock_cp, mock_ia_seed, mock_time, mock_vi
+    ):
         def version_info(index):
             return 3 if index == 0 else 6
 
@@ -757,8 +753,11 @@ class Test_Pool_initialize_worker(unittest.TestCase):
             != seed_global_call_2
             != seed_local_call_2
         ), "Got seeds: %d, %d, %d, %d" % (
-            seed_global_call_1, seed_local_call_1,
-            seed_global_call_2, seed_local_call_2)
+            seed_global_call_1,
+            seed_local_call_1,
+            seed_global_call_2,
+            seed_local_call_2,
+        )
         assert mock_ia_seed.call_count == 2
         assert augseq.seed_.call_count == 2
 
@@ -801,15 +800,11 @@ class Test_Pool_worker(unittest.TestCase):
 
         # expected seeds used
         seed = seed_start + batch_idx
-        seed_global_expected = (
-            iarandom.SEED_MIN_VALUE
-            + (seed - 10**9)
-            % (iarandom.SEED_MAX_VALUE - iarandom.SEED_MIN_VALUE)
+        seed_global_expected = iarandom.SEED_MIN_VALUE + (seed - 10 ** 9) % (
+            iarandom.SEED_MAX_VALUE - iarandom.SEED_MIN_VALUE
         )
-        seed_local_expected = (
-            iarandom.SEED_MIN_VALUE
-            + seed
-            % (iarandom.SEED_MAX_VALUE - iarandom.SEED_MIN_VALUE)
+        seed_local_expected = iarandom.SEED_MIN_VALUE + seed % (
+            iarandom.SEED_MAX_VALUE - iarandom.SEED_MIN_VALUE
         )
 
         assert result == "augmented_batch_"
@@ -849,6 +844,8 @@ class Test_Pool_starworker(unittest.TestCase):
 def _batch_loader_load_func():
     for _ in sm.xrange(20):
         yield ia.Batch(images=np.zeros((2, 4, 4, 3), dtype=np.uint8))
+
+
 # ---------
 
 
@@ -864,54 +861,66 @@ class TestBatchLoader(unittest.TestCase):
                 # repeat these tests many times to catch rarer race conditions
                 for _ in sm.xrange(5):
                     loader = multicore.BatchLoader(
-                        _batch_loader_load_func, queue_size=2,
-                        nb_workers=nb_workers, threaded=True)
+                        _batch_loader_load_func,
+                        queue_size=2,
+                        nb_workers=nb_workers,
+                        threaded=True,
+                    )
                     loaded = []
                     counter = 0
-                    while ((not loader.all_finished()
-                            or not loader.queue.empty())
-                            and counter < 1000):
+                    while (
+                        not loader.all_finished() or not loader.queue.empty()
+                    ) and counter < 1000:
                         try:
                             batch = loader.queue.get(timeout=0.001)
                             loaded.append(batch)
                         except:
                             pass
                         counter += 1
-                    assert len(loaded) == 20*nb_workers, \
-                        "Expected %d to be loaded by threads, got %d for %d " \
-                        "workers at counter %d." % (
-                            20*nb_workers, len(loaded), nb_workers, counter
-                        )
+                    assert len(loaded) == 20 * nb_workers, (
+                        "Expected %d to be loaded by threads, got %d for %d "
+                        "workers at counter %d."
+                        % (20 * nb_workers, len(loaded), nb_workers, counter)
+                    )
 
                     loader = multicore.BatchLoader(
-                        _batch_loader_load_func, queue_size=200,
-                        nb_workers=nb_workers, threaded=True)
+                        _batch_loader_load_func,
+                        queue_size=200,
+                        nb_workers=nb_workers,
+                        threaded=True,
+                    )
                     loader.terminate()
                     assert loader.all_finished()
 
                     loader = multicore.BatchLoader(
-                        _batch_loader_load_func, queue_size=2,
-                        nb_workers=nb_workers, threaded=False)
+                        _batch_loader_load_func,
+                        queue_size=2,
+                        nb_workers=nb_workers,
+                        threaded=False,
+                    )
                     loaded = []
                     counter = 0
-                    while ((not loader.all_finished()
-                            or not loader.queue.empty())
-                            and counter < 1000):
+                    while (
+                        not loader.all_finished() or not loader.queue.empty()
+                    ) and counter < 1000:
                         try:
                             batch = loader.queue.get(timeout=0.001)
                             loaded.append(batch)
                         except:
                             pass
                         counter += 1
-                    assert len(loaded) == 20*nb_workers, \
-                        "Expected %d to be loaded by background processes, " \
-                        "got %d for %d workers at counter %d." % (
-                            20*nb_workers, len(loaded), nb_workers, counter
-                        )
+                    assert len(loaded) == 20 * nb_workers, (
+                        "Expected %d to be loaded by background processes, "
+                        "got %d for %d workers at counter %d."
+                        % (20 * nb_workers, len(loaded), nb_workers, counter)
+                    )
 
                     loader = multicore.BatchLoader(
-                        _batch_loader_load_func, queue_size=200,
-                        nb_workers=nb_workers, threaded=False)
+                        _batch_loader_load_func,
+                        queue_size=200,
+                        nb_workers=nb_workers,
+                        threaded=False,
+                    )
                     loader.terminate()
                     assert loader.all_finished()
 
@@ -928,23 +937,24 @@ class TestBackgroundAugmenter(unittest.TestCase):
     def test_augment_images_worker(self):
         warnings.simplefilter("always")
         with warnings.catch_warnings(record=True) as caught_warnings:
+
             def gen():
                 yield ia.Batch(images=np.zeros((1, 4, 4, 3), dtype=np.uint8))
+
             bl = multicore.BatchLoader(gen(), queue_size=2)
-            bgaug = multicore.BackgroundAugmenter(bl, iaa.Identity(),
-                                                  queue_size=1, nb_workers=1)
+            bgaug = multicore.BackgroundAugmenter(
+                bl, iaa.Identity(), queue_size=1, nb_workers=1
+            )
 
             queue_source = multiprocessing.Queue(2)
             queue_target = multiprocessing.Queue(2)
             queue_source.put(
                 pickle.dumps(
-                    ia.Batch(images=np.zeros((1, 4, 8, 3), dtype=np.uint8)),
-                    protocol=-1
+                    ia.Batch(images=np.zeros((1, 4, 8, 3), dtype=np.uint8)), protocol=-1
                 )
             )
             queue_source.put(pickle.dumps(None, protocol=-1))
-            bgaug._augment_images_worker(iaa.Add(1), queue_source,
-                                         queue_target, 1)
+            bgaug._augment_images_worker(iaa.Add(1), queue_source, queue_target, 1)
 
             batch_aug = pickle.loads(queue_target.get())
             assert isinstance(batch_aug, ia.Batch)
@@ -952,14 +962,14 @@ class TestBackgroundAugmenter(unittest.TestCase):
             assert batch_aug.images_unaug.dtype == np.uint8
             assert batch_aug.images_unaug.shape == (1, 4, 8, 3)
             assert np.array_equal(
-                batch_aug.images_unaug,
-                np.zeros((1, 4, 8, 3), dtype=np.uint8))
+                batch_aug.images_unaug, np.zeros((1, 4, 8, 3), dtype=np.uint8)
+            )
             assert batch_aug.images_aug is not None
             assert batch_aug.images_aug.dtype == np.uint8
             assert batch_aug.images_aug.shape == (1, 4, 8, 3)
             assert np.array_equal(
-                batch_aug.images_aug,
-                np.zeros((1, 4, 8, 3), dtype=np.uint8) + 1)
+                batch_aug.images_aug, np.zeros((1, 4, 8, 3), dtype=np.uint8) + 1
+            )
 
             finished_signal = pickle.loads(queue_target.get())
             assert finished_signal is None

@@ -26,10 +26,9 @@ class PoolWithMarkedWorker(multicore.Pool):
 
 
 def main():
-    augseq = iaa.Sequential([
-        iaa.Fliplr(0.5),
-        iaa.CoarseDropout(p=0.1, size_percent=0.1)
-    ])
+    augseq = iaa.Sequential(
+        [iaa.Fliplr(0.5), iaa.CoarseDropout(p=0.1, size_percent=0.1)]
+    )
 
     def func_images(images, random_state, parents, hooks):
         time.sleep(0.2)
@@ -41,14 +40,16 @@ def main():
     def func_keypoints(keypoints_on_images, random_state, parents, hooks):
         return keypoints_on_images
 
-    augseq_slow = iaa.Sequential([
-        iaa.Fliplr(0.5),
-        iaa.Lambda(
-            func_images=func_images,
-            func_heatmaps=func_heatmaps,
-            func_keypoints=func_keypoints
-        )
-    ])
+    augseq_slow = iaa.Sequential(
+        [
+            iaa.Fliplr(0.5),
+            iaa.Lambda(
+                func_images=func_images,
+                func_heatmaps=func_heatmaps,
+                func_keypoints=func_keypoints,
+            ),
+        ]
+    )
 
     print("------------------")
     print(".pool()")
@@ -142,6 +143,7 @@ def main():
     print("------------------")
     print("Pool.map_batches chunksize with fast aug")
     print("------------------")
+
     def test_fast(processes, chunksize):
         augseq = iaa.Dropout(0.1)
         with multicore.Pool(augseq, processes=processes) as pool:
@@ -149,7 +151,10 @@ def main():
             time_start = time.time()
             batches_aug = pool.map_batches(batches, chunksize=chunksize)
             assert len(batches_aug) == 10000
-            print("chunksize=%d, worker=%s, time=%.4fs" % (chunksize, processes, time.time() - time_start))
+            print(
+                "chunksize=%d, worker=%s, time=%.4fs"
+                % (chunksize, processes, time.time() - time_start)
+            )
 
     test_fast(-4, 1)
     test_fast(1, 1)
@@ -162,14 +167,20 @@ def main():
     print("------------------")
     print("Pool.imap_batches chunksize with fast aug")
     print("------------------")
+
     def test_fast_imap(processes, chunksize):
         augseq = iaa.Dropout(0.1)
         with multicore.Pool(augseq, processes=processes) as pool:
             time_start = time.time()
-            batches_aug = pool.imap_batches(load_images(n_batches=10000, draw_text=False), chunksize=chunksize)
+            batches_aug = pool.imap_batches(
+                load_images(n_batches=10000, draw_text=False), chunksize=chunksize
+            )
             batches_aug = list(batches_aug)
             assert len(batches_aug) == 10000
-            print("chunksize=%d, worker=%s, time=%.4fs" % (chunksize, processes, time.time() - time_start))
+            print(
+                "chunksize=%d, worker=%s, time=%.4fs"
+                % (chunksize, processes, time.time() - time_start)
+            )
 
     test_fast_imap(-4, 1)
     test_fast_imap(1, 1)
@@ -182,6 +193,7 @@ def main():
     print("------------------")
     print("Pool.map_batches with computationally expensive aug")
     print("------------------")
+
     def test_heavy(processes, chunksize):
         augseq_heavy = iaa.PiecewiseAffine(scale=0.2, nb_cols=8, nb_rows=8)
         with multicore.Pool(augseq_heavy, processes=processes) as pool:
@@ -189,7 +201,10 @@ def main():
             time_start = time.time()
             batches_aug = pool.map_batches(batches, chunksize=chunksize)
             assert len(batches_aug) == 500
-            print("chunksize=%d, worker=%s, time=%.4fs" % (chunksize, processes, time.time() - time_start))
+            print(
+                "chunksize=%d, worker=%s, time=%.4fs"
+                % (chunksize, processes, time.time() - time_start)
+            )
 
     test_heavy(-4, 1)
     test_heavy(1, 1)
@@ -330,21 +345,29 @@ def load_images(n_batches=10, sleep=0.0, draw_text=True):
             batch_images = []
             batch_kps = []
             for b in range(batch_size):
-                astronaut_text = ia.draw_text(astronaut, x=0, y=0, text="%d" % (counter,), color=[0, 255, 0], size=16)
+                astronaut_text = ia.draw_text(
+                    astronaut,
+                    x=0,
+                    y=0,
+                    text="%d" % (counter,),
+                    color=[0, 255, 0],
+                    size=16,
+                )
                 batch_images.append(astronaut_text)
                 batch_kps.append(kps)
                 counter += 1
             batch = ia.Batch(
-                images=np.array(batch_images, dtype=np.uint8),
-                keypoints=batch_kps
+                images=np.array(batch_images, dtype=np.uint8), keypoints=batch_kps
             )
         else:
             if i == 0:
-                batch_images = np.array([np.copy(astronaut) for _ in range(batch_size)], dtype=np.uint8)
+                batch_images = np.array(
+                    [np.copy(astronaut) for _ in range(batch_size)], dtype=np.uint8
+                )
 
             batch = ia.Batch(
                 images=np.copy(batch_images),
-                keypoints=[kps.deepcopy() for _ in range(batch_size)]
+                keypoints=[kps.deepcopy() for _ in range(batch_size)],
             )
         yield batch
         if sleep > 0:

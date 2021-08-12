@@ -3,6 +3,7 @@ from __future__ import print_function, division, absolute_import
 import sys
 import warnings
 import itertools
+
 # unittest only added in 3.4 self.subTest()
 if sys.version_info[0] < 3 or sys.version_info[1] < 4:
     import unittest2 as unittest
@@ -25,7 +26,7 @@ from imgaug.testutils import (
     reseed,
     runtest_pickleable_uint8_img,
     temporary_constants,
-    is_parameter_instance
+    is_parameter_instance,
 )
 from imgaug.imgaug import _NUMBA_INSTALLED
 
@@ -56,11 +57,11 @@ class TestSuperpixels(unittest.TestCase):
         base_img = [
             [255, 255, 255, 0, 0, 0],
             [255, 235, 255, 0, 20, 0],
-            [250, 250, 250, 5, 5, 5]
+            [250, 250, 250, 5, 5, 5],
         ]
         base_img = np.tile(
-            np.array(base_img, dtype=np.uint8)[..., np.newaxis],
-            (1, 1, 3))
+            np.array(base_img, dtype=np.uint8)[..., np.newaxis], (1, 1, 3)
+        )
         return base_img
 
     @property
@@ -68,11 +69,11 @@ class TestSuperpixels(unittest.TestCase):
         base_img_superpixels = [
             [251, 251, 251, 4, 4, 4],
             [251, 251, 251, 4, 4, 4],
-            [251, 251, 251, 4, 4, 4]
+            [251, 251, 251, 4, 4, 4],
         ]
         base_img_superpixels = np.tile(
-            np.array(base_img_superpixels, dtype=np.uint8)[..., np.newaxis],
-            (1, 1, 3))
+            np.array(base_img_superpixels, dtype=np.uint8)[..., np.newaxis], (1, 1, 3)
+        )
         return base_img_superpixels
 
     @property
@@ -121,14 +122,13 @@ class TestSuperpixels(unittest.TestCase):
             with self.subTest(use_np_replace=use_np_replace):
                 with _create_replace_np_context(use_np_replace):
                     aug = iaa.Superpixels(
-                        p_replace=iap.Binomial(iap.Choice([0.0, 1.0])),
-                        n_segments=2
+                        p_replace=iap.Binomial(iap.Choice([0.0, 1.0])), n_segments=2
                     )
                     observed = aug.augment_image(self.base_img)
-                    assert (
-                        np.allclose(observed, self.base_img)
-                        or self._array_equals_tolerant(
-                            observed, self.base_img_superpixels, 2)
+                    assert np.allclose(
+                        observed, self.base_img
+                    ) or self._array_equals_tolerant(
+                        observed, self.base_img_superpixels, 2
                     )
 
     def test_p_replace_050_n_segments_2(self):
@@ -138,8 +138,7 @@ class TestSuperpixels(unittest.TestCase):
             with self.subTest(use_np_replace=use_np_replace):
                 with _create_replace_np_context(use_np_replace):
                     aug = iaa.Superpixels(p_replace=0.5, n_segments=2)
-                    seen = {"none": False, "left": False, "right": False,
-                            "both": False}
+                    seen = {"none": False, "left": False, "right": False, "both": False}
                     for _ in sm.xrange(100):
                         observed = aug.augment_image(self.base_img)
                         if _eq(observed, self.base_img, 2):
@@ -180,15 +179,7 @@ class TestSuperpixels(unittest.TestCase):
         assert got_exception
 
     def test_zero_sized_axes(self):
-        shapes = [
-            (0, 0),
-            (0, 1),
-            (1, 0),
-            (0, 1, 0),
-            (1, 0, 0),
-            (0, 1, 1),
-            (1, 0, 1)
-        ]
+        shapes = [(0, 0), (0, 1), (1, 0), (0, 1, 0), (1, 0, 0), (0, 1, 1), (1, 0, 1)]
 
         for shape, use_np_replace in itertools.product(shapes, _NP_REPLACE):
             with self.subTest(shape=shape, use_np_replace=use_np_replace):
@@ -202,12 +193,7 @@ class TestSuperpixels(unittest.TestCase):
                     assert image_aug.shape == shape
 
     def test_unusual_channel_numbers(self):
-        shapes = [
-            (1, 1, 4),
-            (1, 1, 5),
-            (1, 1, 512),
-            (1, 1, 513)
-        ]
+        shapes = [(1, 1, 4), (1, 1, 5), (1, 1, 512), (1, 1, 513)]
 
         for shape, use_np_replace in itertools.product(shapes, _NP_REPLACE):
             with self.subTest(shape=shape, use_np_replace=use_np_replace):
@@ -222,7 +208,8 @@ class TestSuperpixels(unittest.TestCase):
 
     def test_get_parameters(self):
         aug = iaa.Superpixels(
-            p_replace=0.5, n_segments=2, max_size=100, interpolation="nearest")
+            p_replace=0.5, n_segments=2, max_size=100, interpolation="nearest"
+        )
         params = aug.get_parameters()
         assert params[0] is aug.p_replace
         assert is_parameter_instance(params[0].p, iap.Deterministic)
@@ -234,76 +221,80 @@ class TestSuperpixels(unittest.TestCase):
 
     def test_other_dtypes_bool(self):
         for use_np_replace in _NP_REPLACE:
-                with self.subTest(use_np_replace=use_np_replace):
-                    with _create_replace_np_context(use_np_replace):
-                        aug = iaa.Superpixels(p_replace=1.0, n_segments=2)
-                        img = np.array([
-                            [False, False, True, True],
-                            [False, False, True, True]
-                        ], dtype=bool)
-                        img_aug = aug.augment_image(img)
-                        assert img_aug.dtype == img.dtype
-                        assert np.all(img_aug == img)
+            with self.subTest(use_np_replace=use_np_replace):
+                with _create_replace_np_context(use_np_replace):
+                    aug = iaa.Superpixels(p_replace=1.0, n_segments=2)
+                    img = np.array(
+                        [[False, False, True, True], [False, False, True, True]],
+                        dtype=bool,
+                    )
+                    img_aug = aug.augment_image(img)
+                    assert img_aug.dtype == img.dtype
+                    assert np.all(img_aug == img)
 
-                        aug = iaa.Superpixels(p_replace=1.0, n_segments=1)
-                        img = np.array([
-                            [True, True, True, True],
-                            [False, True, True, True]
-                        ], dtype=bool)
-                        img_aug = aug.augment_image(img)
-                        assert img_aug.dtype == img.dtype
-                        assert np.all(img_aug)
+                    aug = iaa.Superpixels(p_replace=1.0, n_segments=1)
+                    img = np.array(
+                        [[True, True, True, True], [False, True, True, True]],
+                        dtype=bool,
+                    )
+                    img_aug = aug.augment_image(img)
+                    assert img_aug.dtype == img.dtype
+                    assert np.all(img_aug)
 
     def test_other_dtypes_uint_int(self):
-        dtypes = ["uint8", "uint16", "uint32",
-                  "int8", "int16", "int32"]
+        dtypes = ["uint8", "uint16", "uint32", "int8", "int16", "int32"]
         for dtype in dtypes:
             for use_np_replace in _NP_REPLACE:
                 with self.subTest(dtype=dtype, use_np_replace=use_np_replace):
                     with _create_replace_np_context(use_np_replace):
                         dtype = np.dtype(dtype)
 
-                        min_value, center_value, max_value = \
-                            iadt.get_value_range_of_dtype(dtype)
+                        (
+                            min_value,
+                            center_value,
+                            max_value,
+                        ) = iadt.get_value_range_of_dtype(dtype)
 
                         if np.dtype(dtype).kind == "i":
                             values = [
-                                int(center_value), int(0.1 * max_value),
-                                int(0.2 * max_value), int(0.5 * max_value),
-                                max_value-100
+                                int(center_value),
+                                int(0.1 * max_value),
+                                int(0.2 * max_value),
+                                int(0.5 * max_value),
+                                max_value - 100,
                             ]
-                            values = [((-1)*value, value) for value in values]
+                            values = [((-1) * value, value) for value in values]
                         else:
-                            values = [(0, int(center_value)),
-                                      (10, int(0.1 * max_value)),
-                                      (10, int(0.2 * max_value)),
-                                      (10, int(0.5 * max_value)),
-                                      (0, max_value),
-                                      (int(center_value),
-                                       max_value)]
+                            values = [
+                                (0, int(center_value)),
+                                (10, int(0.1 * max_value)),
+                                (10, int(0.2 * max_value)),
+                                (10, int(0.5 * max_value)),
+                                (0, max_value),
+                                (int(center_value), max_value),
+                            ]
 
                         for v1, v2 in values:
                             aug = iaa.Superpixels(p_replace=1.0, n_segments=2)
-                            img = np.array([
-                                [v1, v1, v2, v2],
-                                [v1, v1, v2, v2]
-                            ], dtype=dtype)
+                            img = np.array(
+                                [[v1, v1, v2, v2], [v1, v1, v2, v2]], dtype=dtype
+                            )
                             img_aug = aug.augment_image(img)
                             assert img_aug.dtype.name == dtype.name
                             assert np.array_equal(img_aug, img)
 
                             aug = iaa.Superpixels(p_replace=1.0, n_segments=1)
-                            img = np.array([
-                                [v2, v2, v2, v2],
-                                [v1, v2, v2, v2]
-                            ], dtype=dtype)
+                            img = np.array(
+                                [[v2, v2, v2, v2], [v1, v2, v2, v2]], dtype=dtype
+                            )
                             img_aug = aug.augment_image(img)
                             assert img_aug.dtype.name == dtype.name
-                            assert np.all(img_aug == int((7/8)*v2 + (1/8)*v1))
+                            assert np.all(img_aug == int((7 / 8) * v2 + (1 / 8) * v1))
 
     def test_other_dtypes_float(self):
         # currently, no float dtype is actually accepted
         for dtype in []:
+
             def _allclose(a, b):
                 atol = 1e-4 if dtype == np.float16 else 1e-8
                 return np.allclose(a, b, atol=atol, rtol=0)
@@ -314,22 +305,16 @@ class TestSuperpixels(unittest.TestCase):
                 v2 = value
 
                 aug = iaa.Superpixels(p_replace=1.0, n_segments=2)
-                img = np.array([
-                    [v1, v1, v2, v2],
-                    [v1, v1, v2, v2]
-                ], dtype=dtype)
+                img = np.array([[v1, v1, v2, v2], [v1, v1, v2, v2]], dtype=dtype)
                 img_aug = aug.augment_image(img)
                 assert img_aug.dtype == np.dtype(dtype)
                 assert _allclose(img_aug, img)
 
                 aug = iaa.Superpixels(p_replace=1.0, n_segments=1)
-                img = np.array([
-                    [v2, v2, v2, v2],
-                    [v1, v2, v2, v2]
-                ], dtype=dtype)
+                img = np.array([[v2, v2, v2, v2], [v1, v2, v2, v2]], dtype=dtype)
                 img_aug = aug.augment_image(img)
                 assert img_aug.dtype == np.dtype(dtype)
-                assert _allclose(img_aug, (7/8)*v2 + (1/8)*v1)
+                assert _allclose(img_aug, (7 / 8) * v2 + (1 / 8) * v1)
 
     def test_pickleable(self):
         aug = iaa.Superpixels(p_replace=0.5, seed=1)
@@ -341,7 +326,7 @@ class Test_segment_voronoi(unittest.TestCase):
         reseed()
 
     def test_cell_coordinates_is_empty_integrationtest(self):
-        image = np.arange(2*2*3).astype(np.uint8).reshape((2, 2, 3))
+        image = np.arange(2 * 2 * 3).astype(np.uint8).reshape((2, 2, 3))
         cell_coordinates = np.zeros((0, 2), dtype=np.float32)
         replace_mask = np.zeros((0,), dtype=bool)
 
@@ -351,18 +336,12 @@ class Test_segment_voronoi(unittest.TestCase):
 
     @classmethod
     def _test_image_n_channels_integrationtest(cls, nb_channels):
-        image = np.uint8([
-            [0, 1, 200, 201],
-            [2, 3, 202, 203]
-        ])
+        image = np.uint8([[0, 1, 200, 201], [2, 3, 202, 203]])
         if nb_channels is not None:
             image = np.tile(image[:, :, np.newaxis], (1, 1, nb_channels))
             for c in sm.xrange(nb_channels):
                 image[..., c] += c
-        cell_coordinates = np.float32([
-            [1.0, 1.0],
-            [3.0, 1.0]
-        ])
+        cell_coordinates = np.float32([[1.0, 1.0], [3.0, 1.0]])
         replace_mask = np.array([True, True], dtype=bool)
 
         image_seg = iaa.segment_voronoi(image, cell_coordinates, replace_mask)
@@ -371,10 +350,12 @@ class Test_segment_voronoi(unittest.TestCase):
         pixels2 = image[0:2, 2:4]
         avg_color1 = np.average(pixels1.astype(np.float32), axis=(0, 1))
         avg_color2 = np.average(pixels2.astype(np.float32), axis=(0, 1))
-        image_expected = np.uint8([
-            [avg_color1, avg_color1, avg_color2, avg_color2],
-            [avg_color1, avg_color1, avg_color2, avg_color2],
-        ])
+        image_expected = np.uint8(
+            [
+                [avg_color1, avg_color1, avg_color2, avg_color2],
+                [avg_color1, avg_color1, avg_color2, avg_color2],
+            ]
+        )
 
         assert np.array_equal(image_seg, image_expected)
 
@@ -388,14 +369,8 @@ class Test_segment_voronoi(unittest.TestCase):
         self._test_image_n_channels_integrationtest(3)
 
     def test_replace_mask_is_all_false_integrationtest(self):
-        image = np.uint8([
-            [0, 1, 200, 201],
-            [2, 3, 202, 203]
-        ])
-        cell_coordinates = np.float32([
-            [1.0, 1.0],
-            [3.0, 1.0]
-        ])
+        image = np.uint8([[0, 1, 200, 201], [2, 3, 202, 203]])
+        cell_coordinates = np.float32([[1.0, 1.0], [3.0, 1.0]])
         replace_mask = np.array([False, False], dtype=bool)
 
         image_seg = iaa.segment_voronoi(image, cell_coordinates, replace_mask)
@@ -403,35 +378,25 @@ class Test_segment_voronoi(unittest.TestCase):
         assert np.array_equal(image_seg, image)
 
     def test_replace_mask_is_mixed_integrationtest(self):
-        image = np.uint8([
-            [0, 1, 200, 201],
-            [2, 3, 202, 203]
-        ])
-        cell_coordinates = np.float32([
-            [1.0, 1.0],
-            [3.0, 1.0]
-        ])
+        image = np.uint8([[0, 1, 200, 201], [2, 3, 202, 203]])
+        cell_coordinates = np.float32([[1.0, 1.0], [3.0, 1.0]])
         replace_mask = np.array([False, True], dtype=bool)
 
         image_seg = iaa.segment_voronoi(image, cell_coordinates, replace_mask)
 
         pixels2 = image[0:2, 2:4]
         avg_color2 = np.sum(pixels2).astype(np.float32) / pixels2.size
-        image_expected = np.uint8([
-            [0, 1, avg_color2, avg_color2],
-            [2, 3, avg_color2, avg_color2],
-        ])
+        image_expected = np.uint8(
+            [
+                [0, 1, avg_color2, avg_color2],
+                [2, 3, avg_color2, avg_color2],
+            ]
+        )
         assert np.array_equal(image_seg, image_expected)
 
     def test_replace_mask_is_none_integrationtest(self):
-        image = np.uint8([
-            [0, 1, 200, 201],
-            [2, 3, 202, 203]
-        ])
-        cell_coordinates = np.float32([
-            [1.0, 1.0],
-            [3.0, 1.0]
-        ])
+        image = np.uint8([[0, 1, 200, 201], [2, 3, 202, 203]])
+        cell_coordinates = np.float32([[1.0, 1.0], [3.0, 1.0]])
         replace_mask = None
 
         image_seg = iaa.segment_voronoi(image, cell_coordinates, replace_mask)
@@ -440,17 +405,16 @@ class Test_segment_voronoi(unittest.TestCase):
         pixels2 = image[0:2, 2:4]
         avg_color1 = np.sum(pixels1).astype(np.float32) / pixels1.size
         avg_color2 = np.sum(pixels2).astype(np.float32) / pixels2.size
-        image_expected = np.uint8([
-            [avg_color1, avg_color1, avg_color2, avg_color2],
-            [avg_color1, avg_color1, avg_color2, avg_color2],
-        ])
+        image_expected = np.uint8(
+            [
+                [avg_color1, avg_color1, avg_color2, avg_color2],
+                [avg_color1, avg_color1, avg_color2, avg_color2],
+            ]
+        )
         assert np.array_equal(image_seg, image_expected)
 
     def test_no_cell_coordinates_provided_and_no_channel_integrationtest(self):
-        image = np.uint8([
-            [0, 1, 200, 201],
-            [2, 3, 202, 203]
-        ])
+        image = np.uint8([[0, 1, 200, 201], [2, 3, 202, 203]])
         cell_coordinates = np.zeros((0, 2), dtype=np.float32)
         replace_mask = np.zeros((0,), dtype=bool)
 
@@ -459,10 +423,7 @@ class Test_segment_voronoi(unittest.TestCase):
         assert np.array_equal(image_seg, image)
 
     def test_no_cell_coordinates_provided_and_3_channels_integrationtest(self):
-        image = np.uint8([
-            [0, 1, 200, 201],
-            [2, 3, 202, 203]
-        ])
+        image = np.uint8([[0, 1, 200, 201], [2, 3, 202, 203]])
         image = np.tile(image[..., np.newaxis], (1, 1, 3))
         cell_coordinates = np.zeros((0, 2), dtype=np.float32)
         replace_mask = np.zeros((0,), dtype=bool)
@@ -472,52 +433,31 @@ class Test_segment_voronoi(unittest.TestCase):
         assert np.array_equal(image_seg, image)
 
     def test_zero_sized_axes(self):
-        shapes = [
-            (0, 0),
-            (0, 1),
-            (1, 0),
-            (0, 1, 0),
-            (1, 0, 0),
-            (0, 1, 1),
-            (1, 0, 1)
-        ]
+        shapes = [(0, 0), (0, 1), (1, 0), (0, 1, 0), (1, 0, 0), (0, 1, 1), (1, 0, 1)]
 
-        cell_coordinates = np.float32([
-            [1.0, 1.0],
-            [3.0, 1.0]
-        ])
+        cell_coordinates = np.float32([[1.0, 1.0], [3.0, 1.0]])
         replace_mask = np.array([True, True], dtype=bool)
 
         for shape in shapes:
             with self.subTest(shape=shape):
                 image = np.full(shape, 128, dtype=np.uint8)
 
-                image_aug = iaa.segment_voronoi(image, cell_coordinates,
-                                                replace_mask)
+                image_aug = iaa.segment_voronoi(image, cell_coordinates, replace_mask)
 
                 assert image_aug.dtype.name == "uint8"
                 assert image_aug.shape == shape
 
     def test_unusual_channel_numbers(self):
-        shapes = [
-            (1, 1, 4),
-            (1, 1, 5),
-            (1, 1, 512),
-            (1, 1, 513)
-        ]
+        shapes = [(1, 1, 4), (1, 1, 5), (1, 1, 512), (1, 1, 513)]
 
-        cell_coordinates = np.float32([
-            [1.0, 1.0],
-            [3.0, 1.0]
-        ])
+        cell_coordinates = np.float32([[1.0, 1.0], [3.0, 1.0]])
         replace_mask = np.array([True, True], dtype=bool)
 
         for shape in shapes:
             with self.subTest(shape=shape):
                 image = np.full(shape, 128, dtype=np.uint8)
 
-                image_aug = iaa.segment_voronoi(image, cell_coordinates,
-                                                replace_mask)
+                image_aug = iaa.segment_voronoi(image, cell_coordinates, replace_mask)
 
                 assert image_aug.dtype.name == "uint8"
                 assert image_aug.shape == shape
@@ -538,8 +478,7 @@ class TestVoronoi(unittest.TestCase):
 
     def test___init___custom_arguments(self):
         sampler = iaa.RegularGridPointsSampler(1, 1)
-        aug = iaa.Voronoi(sampler, p_replace=0.5, max_size=None,
-                          interpolation="cubic")
+        aug = iaa.Voronoi(sampler, p_replace=0.5, max_size=None, interpolation="cubic")
         assert aug.points_sampler is sampler
         assert is_parameter_instance(aug.p_replace, iap.Binomial)
         assert np.isclose(aug.p_replace.p.value, 0.5)
@@ -712,13 +651,12 @@ class TestVoronoi(unittest.TestCase):
         assert 0.4 <= replace_fraction <= 0.6
 
     def test_determinism_integrationtest(self):
-        image = np.arange(10*20).astype(np.uint8).reshape((10, 20, 1))
+        image = np.arange(10 * 20).astype(np.uint8).reshape((10, 20, 1))
         image = np.tile(image, (1, 1, 3))
         image[:, :, 1] += 5
         image[:, :, 2] += 10
         sampler = iaa.DropoutPointsSampler(
-            iaa.RegularGridPointsSampler((1, 10), (1, 20)),
-            0.5
+            iaa.RegularGridPointsSampler((1, 10), (1, 20)), 0.5
         )
         aug = iaa.Voronoi(sampler, p_replace=(0.0, 1.0))
         aug_det = aug.to_deterministic()
@@ -735,10 +673,12 @@ class TestVoronoi(unittest.TestCase):
         same_within_b1 = _all_arrays_identical(images_aug_b1)
         same_within_b2 = _all_arrays_identical(images_aug_b2)
 
-        same_between_a1_a2 = _array_lists_elementwise_identical(images_aug_a1,
-                                                                images_aug_a2)
-        same_between_b1_b2 = _array_lists_elementwise_identical(images_aug_b1,
-                                                                images_aug_b2)
+        same_between_a1_a2 = _array_lists_elementwise_identical(
+            images_aug_a1, images_aug_a2
+        )
+        same_between_b1_b2 = _array_lists_elementwise_identical(
+            images_aug_b1, images_aug_b2
+        )
 
         assert not same_within_a1
         assert not same_within_a2
@@ -749,15 +689,7 @@ class TestVoronoi(unittest.TestCase):
         assert same_between_b1_b2
 
     def test_zero_sized_axes(self):
-        shapes = [
-            (0, 0),
-            (0, 1),
-            (1, 0),
-            (0, 1, 0),
-            (1, 0, 0),
-            (0, 1, 1),
-            (1, 0, 1)
-        ]
+        shapes = [(0, 0), (0, 1), (1, 0), (0, 1, 0), (1, 0, 0), (0, 1, 1), (1, 0, 1)]
 
         sampler = iaa.RegularGridPointsSampler(50, 50)
 
@@ -772,12 +704,7 @@ class TestVoronoi(unittest.TestCase):
                 assert image_aug.shape == shape
 
     def test_unusual_channel_numbers(self):
-        shapes = [
-            (1, 1, 4),
-            (1, 1, 5),
-            (1, 1, 512),
-            (1, 1, 513)
-        ]
+        shapes = [(1, 1, 4), (1, 1, 5), (1, 1, 512), (1, 1, 513)]
 
         sampler = iaa.RegularGridPointsSampler(50, 50)
 
@@ -793,8 +720,7 @@ class TestVoronoi(unittest.TestCase):
 
     def test_get_parameters(self):
         sampler = iaa.RegularGridPointsSampler(1, 1)
-        aug = iaa.Voronoi(sampler, p_replace=0.5, max_size=None,
-                          interpolation="cubic")
+        aug = iaa.Voronoi(sampler, p_replace=0.5, max_size=None, interpolation="cubic")
         params = aug.get_parameters()
         assert params[0] is sampler
         assert is_parameter_instance(params[1], iap.Binomial)
@@ -812,13 +738,11 @@ def _all_arrays_identical(arrs):
     if len(arrs) == 1:
         return True
 
-    return np.all([np.array_equal(arrs[0], arr_other)
-                   for arr_other in arrs[1:]])
+    return np.all([np.array_equal(arrs[0], arr_other) for arr_other in arrs[1:]])
 
 
 def _array_lists_elementwise_identical(arrs1, arrs2):
-    return np.all([np.array_equal(arr1, arr2)
-                   for arr1, arr2 in zip(arrs1, arrs2)])
+    return np.all([np.array_equal(arr1, arr2) for arr1, arr2 in zip(arrs1, arrs2)])
 
 
 class TestUniformVoronoi(unittest.TestCase):
@@ -835,14 +759,15 @@ class TestUniformVoronoi(unittest.TestCase):
                 max_size=5,
                 interpolation="cubic",
                 seed=rs,
-                name="foo"
+                name="foo",
             )
 
         assert mock_voronoi.call_count == 1
-        assert isinstance(mock_voronoi.call_args_list[0][1]["points_sampler"],
-                          iaa.UniformPointsSampler)
-        assert np.isclose(mock_voronoi.call_args_list[0][1]["p_replace"],
-                          0.5)
+        assert isinstance(
+            mock_voronoi.call_args_list[0][1]["points_sampler"],
+            iaa.UniformPointsSampler,
+        )
+        assert np.isclose(mock_voronoi.call_args_list[0][1]["p_replace"], 0.5)
         assert mock_voronoi.call_args_list[0][1]["max_size"] == 5
         assert mock_voronoi.call_args_list[0][1]["interpolation"] == "cubic"
         assert mock_voronoi.call_args_list[0][1]["name"] == "foo"
@@ -851,12 +776,7 @@ class TestUniformVoronoi(unittest.TestCase):
     def test___init___integrationtest(self):
         rs = iarandom.RNG(10)
         aug = iaa.UniformVoronoi(
-            100,
-            p_replace=0.5,
-            max_size=5,
-            interpolation="cubic",
-            seed=rs,
-            name=None
+            100, p_replace=0.5, max_size=5, interpolation="cubic", seed=rs, name=None
         )
         assert aug.points_sampler.n_points.value == 100
         assert np.isclose(aug.p_replace.p.value, 0.5)
@@ -886,19 +806,17 @@ class TestRegularGridVoronoi(unittest.TestCase):
                 max_size=5,
                 interpolation="cubic",
                 seed=rs,
-                name="foo"
+                name="foo",
             )
 
         assert mock_voronoi.call_count == 1
         ps = mock_voronoi.call_args_list[0][1]["points_sampler"]
         assert isinstance(ps, iaa.DropoutPointsSampler)
-        assert isinstance(ps.other_points_sampler,
-                          iaa.RegularGridPointsSampler)
-        assert np.isclose(ps.p_drop.p.value, 1-0.6)
+        assert isinstance(ps.other_points_sampler, iaa.RegularGridPointsSampler)
+        assert np.isclose(ps.p_drop.p.value, 1 - 0.6)
         assert ps.other_points_sampler.n_rows.value == 10
         assert ps.other_points_sampler.n_cols.value == 20
-        assert np.isclose(mock_voronoi.call_args_list[0][1]["p_replace"],
-                          0.5)
+        assert np.isclose(mock_voronoi.call_args_list[0][1]["p_replace"], 0.5)
         assert mock_voronoi.call_args_list[0][1]["max_size"] == 5
         assert mock_voronoi.call_args_list[0][1]["interpolation"] == "cubic"
         assert mock_voronoi.call_args_list[0][1]["name"] == "foo"
@@ -913,12 +831,11 @@ class TestRegularGridVoronoi(unittest.TestCase):
             max_size=5,
             interpolation="cubic",
             seed=rs,
-            name=None
+            name=None,
         )
         assert aug.points_sampler.other_points_sampler.n_rows.value == 10
         assert is_parameter_instance(
-            aug.points_sampler.other_points_sampler.n_cols,
-            iap.DiscreteUniform
+            aug.points_sampler.other_points_sampler.n_cols, iap.DiscreteUniform
         )
         assert aug.points_sampler.other_points_sampler.n_cols.a.value == 10
         assert aug.points_sampler.other_points_sampler.n_cols.b.value == 30
@@ -929,8 +846,7 @@ class TestRegularGridVoronoi(unittest.TestCase):
         assert aug.random_state.equals(rs)
 
     def test_pickleable(self):
-        aug = iaa.RegularGridVoronoi((5, 10), (5, 10), p_replace=0.5,
-                                     seed=1)
+        aug = iaa.RegularGridVoronoi((5, 10), (5, 10), p_replace=0.5, seed=1)
         runtest_pickleable_uint8_img(aug, iterations=3, shape=(50, 50, 1))
 
 
@@ -950,19 +866,17 @@ class TestRelativeRegularGridVoronoi(unittest.TestCase):
                 max_size=5,
                 interpolation="cubic",
                 seed=rs,
-                name="foo"
+                name="foo",
             )
 
         assert mock_voronoi.call_count == 1
         ps = mock_voronoi.call_args_list[0][1]["points_sampler"]
         assert isinstance(ps, iaa.DropoutPointsSampler)
-        assert isinstance(ps.other_points_sampler,
-                          iaa.RelativeRegularGridPointsSampler)
-        assert np.isclose(ps.p_drop.p.value, 1-0.6)
+        assert isinstance(ps.other_points_sampler, iaa.RelativeRegularGridPointsSampler)
+        assert np.isclose(ps.p_drop.p.value, 1 - 0.6)
         assert np.isclose(ps.other_points_sampler.n_rows_frac.value, 0.1)
         assert np.isclose(ps.other_points_sampler.n_cols_frac.value, 0.2)
-        assert np.isclose(mock_voronoi.call_args_list[0][1]["p_replace"],
-                          0.5)
+        assert np.isclose(mock_voronoi.call_args_list[0][1]["p_replace"], 0.5)
         assert mock_voronoi.call_args_list[0][1]["max_size"] == 5
         assert mock_voronoi.call_args_list[0][1]["interpolation"] == "cubic"
         assert mock_voronoi.call_args_list[0][1]["name"] == "foo"
@@ -977,13 +891,12 @@ class TestRelativeRegularGridVoronoi(unittest.TestCase):
             max_size=5,
             interpolation="cubic",
             seed=rs,
-            name=None
+            name=None,
         )
 
         ps = aug.points_sampler
         assert np.isclose(ps.other_points_sampler.n_rows_frac.value, 0.1)
-        assert is_parameter_instance(ps.other_points_sampler.n_cols_frac,
-                                     iap.Uniform)
+        assert is_parameter_instance(ps.other_points_sampler.n_cols_frac, iap.Uniform)
         assert np.isclose(ps.other_points_sampler.n_cols_frac.a.value, 0.1)
         assert np.isclose(ps.other_points_sampler.n_cols_frac.b.value, 0.3)
         assert np.isclose(aug.p_replace.p.value, 0.5)
@@ -993,8 +906,9 @@ class TestRelativeRegularGridVoronoi(unittest.TestCase):
         assert aug.random_state.equals(rs)
 
     def test_pickleable(self):
-        aug = iaa.RelativeRegularGridVoronoi((0.01, 0.2), (0.01, 0.2),
-                                             p_replace=0.5, seed=1)
+        aug = iaa.RelativeRegularGridVoronoi(
+            (0.01, 0.2), (0.01, 0.2), p_replace=0.5, seed=1
+        )
         runtest_pickleable_uint8_img(aug, iterations=3, shape=(50, 50, 1))
 
 
@@ -1022,25 +936,15 @@ class TestRegularGridPointsSampler(unittest.TestCase):
         sampler = iaa.RegularGridPointsSampler(2, 2)
         points = sampler.sample_points([image], iarandom.RNG(1))[0]
         assert len(points) == 4
-        assert np.allclose(points, [
-            [2.5, 2.5],
-            [7.5, 2.5],
-            [2.5, 7.5],
-            [7.5, 7.5]
-        ])
+        assert np.allclose(points, [[2.5, 2.5], [7.5, 2.5], [2.5, 7.5], [7.5, 7.5]])
 
     def test_sample_points_stochastic(self):
         image = np.zeros((10, 10, 3), dtype=np.uint8)
         sampler = iaa.RegularGridPointsSampler(1, iap.Choice([1, 2]))
         points = sampler.sample_points([image], iarandom.RNG(1))[0]
 
-        matches_single_point = np.allclose(points, [
-            [5.0, 5.0]
-        ])
-        matches_two_points = np.allclose(points, [
-            [2.5, 5.0],
-            [7.5, 5.0]
-        ])
+        matches_single_point = np.allclose(points, [[5.0, 5.0]])
+        matches_two_points = np.allclose(points, [[2.5, 5.0], [7.5, 5.0]])
 
         assert len(points) in [1, 2]
         assert matches_single_point or matches_two_points
@@ -1050,9 +954,7 @@ class TestRegularGridPointsSampler(unittest.TestCase):
         sampler = iaa.RegularGridPointsSampler(iap.Deterministic(0), 1)
         points = sampler.sample_points([image], iarandom.RNG(1))[0]
 
-        matches_single_point = np.allclose(points, [
-            [5.0, 5.0]
-        ])
+        matches_single_point = np.allclose(points, [[5.0, 5.0]])
 
         assert len(points) == 1
         assert matches_single_point
@@ -1062,9 +964,7 @@ class TestRegularGridPointsSampler(unittest.TestCase):
         sampler = iaa.RegularGridPointsSampler(1, iap.Deterministic(0))
         points = sampler.sample_points([image], iarandom.RNG(1))[0]
 
-        matches_single_point = np.allclose(points, [
-            [5.0, 5.0]
-        ])
+        matches_single_point = np.allclose(points, [[5.0, 5.0]])
 
         assert len(points) == 1
         assert matches_single_point
@@ -1074,9 +974,7 @@ class TestRegularGridPointsSampler(unittest.TestCase):
         sampler = iaa.RegularGridPointsSampler(2, 1)
         points = sampler.sample_points([image], iarandom.RNG(1))[0]
 
-        matches_single_point = np.allclose(points, [
-            [0.5, 0.5]
-        ])
+        matches_single_point = np.allclose(points, [[0.5, 0.5]])
 
         assert len(points) == 1
         assert matches_single_point
@@ -1086,20 +984,13 @@ class TestRegularGridPointsSampler(unittest.TestCase):
         sampler = iaa.RegularGridPointsSampler(1, 2)
         points = sampler.sample_points([image], iarandom.RNG(1))[0]
 
-        matches_single_point = np.allclose(points, [
-            [0.5, 0.5]
-        ])
+        matches_single_point = np.allclose(points, [[0.5, 0.5]])
 
         assert len(points) == 1
         assert matches_single_point
 
     def test_zero_sized_axes(self):
-        shapes = [
-            (0, 1, 0),
-            (1, 0, 0),
-            (0, 1, 1),
-            (1, 0, 1)
-        ]
+        shapes = [(0, 1, 0), (1, 0, 0), (0, 1, 1), (1, 0, 1)]
 
         for shape in shapes:
             with self.subTest(shape=shape):
@@ -1111,12 +1002,7 @@ class TestRegularGridPointsSampler(unittest.TestCase):
                 assert len(points) == 1
 
     def test_unusual_channel_numbers(self):
-        shapes = [
-            (1, 1, 4),
-            (1, 1, 5),
-            (1, 1, 512),
-            (1, 1, 513)
-        ]
+        shapes = [(1, 1, 4), (1, 1, 5), (1, 1, 512), (1, 1, 513)]
 
         for shape in shapes:
             with self.subTest(shape=shape):
@@ -1143,10 +1029,7 @@ class TestRegularGridPointsSampler(unittest.TestCase):
             "RegularGridPointsSampler("
             "%s, "
             "%s"
-            ")" % (
-                str(sampler.n_rows),
-                str(sampler.n_cols)
-            )
+            ")" % (str(sampler.n_rows), str(sampler.n_cols))
         )
         assert sampler.__str__() == sampler.__repr__() == expected
 
@@ -1174,52 +1057,35 @@ class TestRelativeRegularGridPointsSampler(unittest.TestCase):
         sampler = iaa.RelativeRegularGridPointsSampler(0.2, 0.2)
         points = sampler.sample_points([image], iarandom.RNG(1))[0]
         assert len(points) == 4
-        assert np.allclose(points, [
-            [2.5, 2.5],
-            [7.5, 2.5],
-            [2.5, 7.5],
-            [7.5, 7.5]
-        ])
+        assert np.allclose(points, [[2.5, 2.5], [7.5, 2.5], [2.5, 7.5], [7.5, 7.5]])
 
     def test_sample_points_stochastic(self):
         image = np.zeros((10, 10, 3), dtype=np.uint8)
-        sampler = iaa.RelativeRegularGridPointsSampler(0.1,
-                                                       iap.Choice([0.1, 0.2]))
+        sampler = iaa.RelativeRegularGridPointsSampler(0.1, iap.Choice([0.1, 0.2]))
         points = sampler.sample_points([image], iarandom.RNG(1))[0]
 
-        matches_single_point = np.allclose(points, [
-            [5.0, 5.0]
-        ])
-        matches_two_points = np.allclose(points, [
-            [2.5, 5.0],
-            [7.5, 5.0]
-        ])
+        matches_single_point = np.allclose(points, [[5.0, 5.0]])
+        matches_two_points = np.allclose(points, [[2.5, 5.0], [7.5, 5.0]])
 
         assert len(points) in [1, 2]
         assert matches_single_point or matches_two_points
 
     def test_sample_points_cols_is_zero(self):
         image = np.zeros((10, 10, 3), dtype=np.uint8)
-        sampler = iaa.RelativeRegularGridPointsSampler(iap.Deterministic(0.001),
-                                                       0.1)
+        sampler = iaa.RelativeRegularGridPointsSampler(iap.Deterministic(0.001), 0.1)
         points = sampler.sample_points([image], iarandom.RNG(1))[0]
 
-        matches_single_point = np.allclose(points, [
-            [5.0, 5.0]
-        ])
+        matches_single_point = np.allclose(points, [[5.0, 5.0]])
 
         assert len(points) == 1
         assert matches_single_point
 
     def test_sample_points_rows_is_zero(self):
         image = np.zeros((10, 10, 3), dtype=np.uint8)
-        sampler = iaa.RelativeRegularGridPointsSampler(0.1,
-                                                       iap.Deterministic(0.001))
+        sampler = iaa.RelativeRegularGridPointsSampler(0.1, iap.Deterministic(0.001))
         points = sampler.sample_points([image], iarandom.RNG(1))[0]
 
-        matches_single_point = np.allclose(points, [
-            [5.0, 5.0]
-        ])
+        matches_single_point = np.allclose(points, [[5.0, 5.0]])
 
         assert len(points) == 1
         assert matches_single_point
@@ -1235,12 +1101,7 @@ class TestRelativeRegularGridPointsSampler(unittest.TestCase):
         assert points_seed1_1.shape != points_seed2_1.shape
 
     def test_zero_sized_axes(self):
-        shapes = [
-            (0, 1, 0),
-            (1, 0, 0),
-            (0, 1, 1),
-            (1, 0, 1)
-        ]
+        shapes = [(0, 1, 0), (1, 0, 0), (0, 1, 1), (1, 0, 1)]
 
         for shape in shapes:
             with self.subTest(shape=shape):
@@ -1252,12 +1113,7 @@ class TestRelativeRegularGridPointsSampler(unittest.TestCase):
                 assert len(points) == 1
 
     def test_unusual_channel_numbers(self):
-        shapes = [
-            (1, 1, 4),
-            (1, 1, 5),
-            (1, 1, 512),
-            (1, 1, 513)
-        ]
+        shapes = [(1, 1, 4), (1, 1, 5), (1, 1, 512), (1, 1, 513)]
 
         for shape in shapes:
             with self.subTest(shape=shape):
@@ -1274,10 +1130,7 @@ class TestRelativeRegularGridPointsSampler(unittest.TestCase):
             "RelativeRegularGridPointsSampler("
             "%s, "
             "%s"
-            ")" % (
-                str(sampler.n_rows_frac),
-                str(sampler.n_cols_frac)
-            )
+            ")" % (str(sampler.n_rows_frac), str(sampler.n_cols_frac))
         )
         assert sampler.__str__() == sampler.__repr__() == expected
 
@@ -1316,7 +1169,7 @@ class TestDropoutPointsSampler(unittest.TestCase):
 
     def test_p_drop_is_100_percent(self):
         image = np.zeros((1, 1, 3), dtype=np.uint8)
-        points = np.linspace(0.0+0.9, 1000.0-0.9, num=100000)
+        points = np.linspace(0.0 + 0.9, 1000.0 - 0.9, num=100000)
         points = np.stack([points, points], axis=-1)
         other = _FixedPointsSampler(points)
         sampler = iaa.DropoutPointsSampler(other, 1.0)
@@ -1330,7 +1183,7 @@ class TestDropoutPointsSampler(unittest.TestCase):
 
     def test_p_drop_is_50_percent(self):
         image = np.zeros((1, 1, 3), dtype=np.uint8)
-        points = np.linspace(0.0+0.9, 1000.0-0.9, num=100000)
+        points = np.linspace(0.0 + 0.9, 1000.0 - 0.9, num=100000)
         points = np.stack([points, points], axis=-1)
         other = _FixedPointsSampler(points)
         sampler = iaa.DropoutPointsSampler(other, 0.5)
@@ -1341,7 +1194,7 @@ class TestDropoutPointsSampler(unittest.TestCase):
 
     def test_determinism(self):
         image = np.zeros((1, 1, 3), dtype=np.uint8)
-        points = np.linspace(0.0+0.9, 1000.0-0.9, num=100000)
+        points = np.linspace(0.0 + 0.9, 1000.0 - 0.9, num=100000)
         points = np.stack([points, points], axis=-1)
         other = _FixedPointsSampler(points)
         sampler = iaa.DropoutPointsSampler(other, (0.3, 0.7))
@@ -1351,12 +1204,13 @@ class TestDropoutPointsSampler(unittest.TestCase):
         observed_s2_1 = sampler.sample_points([image], 2)[0]
 
         assert np.allclose(observed_s1_1, observed_s1_2)
-        assert (observed_s1_1.shape != observed_s2_1.shape
-                or not np.allclose(observed_s1_1, observed_s2_1))
+        assert observed_s1_1.shape != observed_s2_1.shape or not np.allclose(
+            observed_s1_1, observed_s2_1
+        )
 
     def test_random_state_propagates(self):
         image = np.zeros((1, 1, 3), dtype=np.uint8)
-        points = np.linspace(0.0+0.9, 1000.0-0.9, num=1)
+        points = np.linspace(0.0 + 0.9, 1000.0 - 0.9, num=1)
         points = np.stack([points, points], axis=-1)
         other = _FixedPointsSampler(points)
         sampler = iaa.DropoutPointsSampler(other, 0.5)
@@ -1372,10 +1226,7 @@ class TestDropoutPointsSampler(unittest.TestCase):
         assert not rs_s1_1.equals(rs_s2_1)
 
     def test_conversion_to_string(self):
-        sampler = iaa.DropoutPointsSampler(
-            iaa.RegularGridPointsSampler(10, 20),
-            0.2
-        )
+        sampler = iaa.DropoutPointsSampler(iaa.RegularGridPointsSampler(10, 20), 0.2)
         expected = (
             "DropoutPointsSampler("
             "RegularGridPointsSampler("
@@ -1383,10 +1234,11 @@ class TestDropoutPointsSampler(unittest.TestCase):
             "%s"
             "), "
             "%s"
-            ")" % (
+            ")"
+            % (
                 str(sampler.other_points_sampler.n_rows),
                 str(sampler.other_points_sampler.n_cols),
-                str(sampler.p_drop)
+                str(sampler.p_drop),
             )
         )
         assert sampler.__str__() == sampler.__repr__() == expected
@@ -1425,17 +1277,13 @@ class TestUniformPointsSampler(unittest.TestCase):
         points_rel[:, 1] /= 1000
         points_rel[:, 0] /= 3000
 
-        points_quadrants = np.clip(
-            np.floor(points_rel * 2),
-            0, 1
-        ).astype(np.int32)
+        points_quadrants = np.clip(np.floor(points_rel * 2), 0, 1).astype(np.int32)
         n_points_per_quadrant = np.zeros((2, 2), dtype=np.int32)
         np.add.at(
-            n_points_per_quadrant,
-            (points_quadrants[:, 1], points_quadrants[:, 0]),
-            1)
+            n_points_per_quadrant, (points_quadrants[:, 1], points_quadrants[:, 0]), 1
+        )
 
-        assert np.all(n_points_per_quadrant > 0.8*(10000/4))
+        assert np.all(n_points_per_quadrant > 0.8 * (10000 / 4))
 
     def test_sampled_points_uniformly_distributed_by_distance_from_origin(self):
         # Sample N points, compute distances from origin each axis,
@@ -1449,10 +1297,7 @@ class TestUniformPointsSampler(unittest.TestCase):
         points_rel[:, 1] /= 1000
         points_rel[:, 0] /= 3000
 
-        points_bins = np.clip(
-            np.floor(points_rel * 10),
-            0, 1
-        ).astype(np.int32)
+        points_bins = np.clip(np.floor(points_rel * 10), 0, 1).astype(np.int32)
 
         # Don't use euclidean (2d) distance here, but instead axis-wise (1d)
         # distance. The euclidean distance leads to non-uniform density of
@@ -1462,14 +1307,14 @@ class TestUniformPointsSampler(unittest.TestCase):
         points_bincounts_x = np.bincount(points_bins[:, 0])
         points_bincounts_y = np.bincount(points_bins[:, 1])
 
-        assert np.all(points_bincounts_x > 0.8*(10000/10))
-        assert np.all(points_bincounts_y > 0.8*(10000/10))
+        assert np.all(points_bincounts_x > 0.8 * (10000 / 10))
+        assert np.all(points_bincounts_y > 0.8 * (10000 / 10))
 
     def test_many_images(self):
         sampler = iaa.UniformPointsSampler(1000)
         images = [
             np.zeros((100, 500, 3), dtype=np.uint8),
-            np.zeros((500, 100, 1), dtype=np.uint8)
+            np.zeros((500, 100, 1), dtype=np.uint8),
         ]
 
         points = sampler.sample_points(images, 1)
@@ -1479,13 +1324,13 @@ class TestUniformPointsSampler(unittest.TestCase):
         assert len(points[1]) == 1000
         assert not np.allclose(points[0], points[1])
         assert np.any(points[0][:, 1] < 20)
-        assert np.any(points[0][:, 1] > 0.9*100)
+        assert np.any(points[0][:, 1] > 0.9 * 100)
         assert np.any(points[0][:, 0] < 20)
-        assert np.any(points[0][:, 0] > 0.9*500)
+        assert np.any(points[0][:, 0] > 0.9 * 500)
         assert np.any(points[1][:, 1] < 20)
-        assert np.any(points[1][:, 1] > 0.9*500)
+        assert np.any(points[1][:, 1] > 0.9 * 500)
         assert np.any(points[1][:, 0] < 20)
-        assert np.any(points[1][:, 0] > 0.9*100)
+        assert np.any(points[1][:, 0] > 0.9 * 100)
 
     def test_always_at_least_one_point(self):
         sampler = iaa.UniformPointsSampler(iap.Deterministic(0))
@@ -1511,9 +1356,7 @@ class TestUniformPointsSampler(unittest.TestCase):
 
     def test_n_points_can_vary_between_images(self):
         sampler = iaa.UniformPointsSampler(iap.Choice([1, 10]))
-        images = [
-            np.zeros((10, 10, 1), dtype=np.uint8)
-            for _ in sm.xrange(50)]
+        images = [np.zeros((10, 10, 1), dtype=np.uint8) for _ in sm.xrange(50)]
 
         points = sampler.sample_points(images, 1)
         point_counts = set([len(points_i) for points_i in points])
@@ -1535,12 +1378,7 @@ class TestUniformPointsSampler(unittest.TestCase):
         assert not np.allclose(observed_s1_1, observed_s2_1)
 
     def test_zero_sized_axes(self):
-        shapes = [
-            (0, 1, 0),
-            (1, 0, 0),
-            (0, 1, 1),
-            (1, 0, 1)
-        ]
+        shapes = [(0, 1, 0), (1, 0, 0), (0, 1, 1), (1, 0, 1)]
 
         for shape in shapes:
             with self.subTest(shape=shape):
@@ -1555,12 +1393,7 @@ class TestUniformPointsSampler(unittest.TestCase):
                 assert len(points) == 1
 
     def test_unusual_channel_numbers(self):
-        shapes = [
-            (1, 1, 4),
-            (1, 1, 5),
-            (1, 1, 512),
-            (1, 1, 513)
-        ]
+        shapes = [(1, 1, 4), (1, 1, 5), (1, 1, 512), (1, 1, 513)]
 
         for shape in shapes:
             with self.subTest(shape=shape):
@@ -1573,9 +1406,7 @@ class TestUniformPointsSampler(unittest.TestCase):
 
     def test_conversion_to_string(self):
         sampler = iaa.UniformPointsSampler(10)
-        expected = "UniformPointsSampler(%s)" % (
-            str(sampler.n_points)
-        )
+        expected = "UniformPointsSampler(%s)" % (str(sampler.n_points))
         assert sampler.__str__() == sampler.__repr__() == expected
 
 
@@ -1610,12 +1441,7 @@ class TestSubsamplingPointsSampler(unittest.TestCase):
         observed = sampler.sample_points([image], 1)[0]
 
         assert len(observed) == 4
-        assert np.allclose(observed, [
-            [2.5, 2.5],
-            [7.5, 2.5],
-            [2.5, 7.5],
-            [7.5, 7.5]
-        ])
+        assert np.allclose(observed, [[2.5, 2.5], [7.5, 2.5], [2.5, 7.5], [7.5, 7.5]])
 
     def test_max_is_below_point_count(self):
         image = np.zeros((10, 10, 3), dtype=np.uint8)
@@ -1624,7 +1450,7 @@ class TestSubsamplingPointsSampler(unittest.TestCase):
 
         observed = sampler.sample_points([image], 1)[0]
 
-        assert len(observed) == 5*5
+        assert len(observed) == 5 * 5
 
     def test_max_is_sometimes_below_point_count(self):
         image = np.zeros((1, 10, 3), dtype=np.uint8)
@@ -1641,7 +1467,7 @@ class TestSubsamplingPointsSampler(unittest.TestCase):
 
     def test_random_state_propagates(self):
         image = np.zeros((1, 1, 3), dtype=np.uint8)
-        points = np.linspace(0.0+0.9, 1000.0-0.9, num=1)
+        points = np.linspace(0.0 + 0.9, 1000.0 - 0.9, num=1)
         points = np.stack([points, points], axis=-1)
         other = _FixedPointsSampler(points)
         sampler = iaa.SubsamplingPointsSampler(other, 100)
@@ -1657,10 +1483,7 @@ class TestSubsamplingPointsSampler(unittest.TestCase):
         assert not rs_s1_1.equals(rs_s2_1)
 
     def test_conversion_to_string(self):
-        sampler = iaa.SubsamplingPointsSampler(
-            iaa.RegularGridPointsSampler(10, 20),
-            10
-        )
+        sampler = iaa.SubsamplingPointsSampler(iaa.RegularGridPointsSampler(10, 20), 10)
         expected = (
             "SubsamplingPointsSampler("
             "RegularGridPointsSampler("
@@ -1668,9 +1491,10 @@ class TestSubsamplingPointsSampler(unittest.TestCase):
             "%s"
             "), "
             "10"
-            ")" % (
+            ")"
+            % (
                 str(sampler.other_points_sampler.n_rows),
-                str(sampler.other_points_sampler.n_cols)
+                str(sampler.other_points_sampler.n_cols),
             )
         )
         assert sampler.__str__() == sampler.__repr__() == expected

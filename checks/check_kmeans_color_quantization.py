@@ -22,7 +22,7 @@ def main():
 
     images_aug = []
     for aug in augs:
-        images_aug.extend(aug(images=[image]*8))
+        images_aug.extend(aug(images=[image] * 8))
 
     ia.imshow(ia.draw_grid(images_aug, cols=8))
 

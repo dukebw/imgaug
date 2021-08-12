@@ -30,17 +30,24 @@ from ..augmentables.batches import _BatchInAugmentation
 
 
 class _ContrastFuncWrapper(meta.Augmenter):
-    def __init__(self, func, params1d, per_channel, dtypes_allowed=None,
-                 dtypes_disallowed=None,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        func,
+        params1d,
+        per_channel,
+        dtypes_allowed=None,
+        dtypes_disallowed=None,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(_ContrastFuncWrapper, self).__init__(
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed, name=name, random_state=random_state, deterministic=deterministic
+        )
         self.func = func
         self.params1d = params1d
-        self.per_channel = iap.handle_probability_param(per_channel,
-                                                        "per_channel")
+        self.per_channel = iap.handle_probability_param(per_channel, "per_channel")
         self.dtypes_allowed = dtypes_allowed
         self.dtypes_disallowed = dtypes_disallowed
 
@@ -56,13 +63,12 @@ class _ContrastFuncWrapper(meta.Augmenter):
                 images,
                 allowed=self.dtypes_allowed,
                 disallowed=self.dtypes_disallowed,
-                augmenter=self
+                augmenter=self,
             )
 
         nb_images = len(images)
-        rss = random_state.duplicate(1+nb_images)
-        per_channel = self.per_channel.draw_samples((nb_images,),
-                                                    random_state=rss[0])
+        rss = random_state.duplicate(1 + nb_images)
+        per_channel = self.per_channel.draw_samples((nb_images,), random_state=rss[0])
 
         gen = enumerate(zip(images, per_channel, rss[1:]))
         for i, (image, per_channel_i, rs) in gen:
@@ -70,7 +76,8 @@ class _ContrastFuncWrapper(meta.Augmenter):
             # TODO improve efficiency by sampling once
             samples_i = [
                 param.draw_samples((nb_channels,), random_state=rs)
-                for param in self.params1d]
+                for param in self.params1d
+            ]
             if per_channel_i > 0.5:
                 input_dtype = image.dtype
                 # TODO This was previously a cast of image to float64. Do the
@@ -155,19 +162,15 @@ def adjust_contrast_gamma(arr, gamma):
     # https://docs.opencv.org/3.0-beta/modules/core/doc/operations_on_arrays.html#cv2.LUT ,
     # but here it seemed like `d` was 0 for CV_8S, causing that to fail
     if arr.dtype == iadt._UINT8_DTYPE:
-        min_value, _center_value, max_value = \
-            iadt.get_value_range_of_dtype(arr.dtype)
+        min_value, _center_value, max_value = iadt.get_value_range_of_dtype(arr.dtype)
         dynamic_range = max_value - min_value
 
-        value_range = np.linspace(0, 1.0, num=dynamic_range+1,
-                                  dtype=np.float32)
+        value_range = np.linspace(0, 1.0, num=dynamic_range + 1, dtype=np.float32)
 
         # 255 * ((I_ij/255)**gamma)
         # using np.float32(.) here still works when the input is a numpy array
         # of size 1
-        table = (min_value
-                 + (value_range ** np.float32(gamma))
-                 * dynamic_range)
+        table = min_value + (value_range ** np.float32(gamma)) * dynamic_range
         table = np.clip(table, min_value, max_value).astype(arr.dtype)
         arr_aug = ia.apply_lut(arr, table)
         return arr_aug
@@ -239,21 +242,19 @@ def adjust_contrast_sigmoid(arr, gain, cutoff):
     # https://docs.opencv.org/3.0-beta/modules/core/doc/operations_on_arrays.html#cv2.LUT ,
     # but here it seemed like `d` was 0 for CV_8S, causing that to fail
     if arr.dtype == iadt._UINT8_DTYPE:
-        min_value, _center_value, max_value = \
-            iadt.get_value_range_of_dtype(arr.dtype)
+        min_value, _center_value, max_value = iadt.get_value_range_of_dtype(arr.dtype)
         dynamic_range = max_value - min_value
 
-        value_range = np.linspace(0, 1.0, num=dynamic_range+1,
-                                  dtype=np.float32)
+        value_range = np.linspace(0, 1.0, num=dynamic_range + 1, dtype=np.float32)
 
         # 255 * 1/(1 + exp(gain*(cutoff - I_ij/255)))
         # using np.float32(.) here still works when the input is a numpy array
         # of size 1
         gain = np.float32(gain)
         cutoff = np.float32(cutoff)
-        table = (min_value
-                 + dynamic_range
-                 * 1/(1 + np.exp(gain * (cutoff - value_range))))
+        table = min_value + dynamic_range * 1 / (
+            1 + np.exp(gain * (cutoff - value_range))
+        )
         table = np.clip(table, min_value, max_value).astype(arr.dtype)
         arr_aug = ia.apply_lut(arr, table)
         return arr_aug
@@ -324,12 +325,10 @@ def adjust_contrast_log(arr, gain):
     # https://docs.opencv.org/3.0-beta/modules/core/doc/operations_on_arrays.html#cv2.LUT ,
     # but here it seemed like `d` was 0 for CV_8S, causing that to fail
     if arr.dtype == iadt._UINT8_DTYPE:
-        min_value, _center_value, max_value = \
-            iadt.get_value_range_of_dtype(arr.dtype)
+        min_value, _center_value, max_value = iadt.get_value_range_of_dtype(arr.dtype)
         dynamic_range = max_value - min_value
 
-        value_range = np.linspace(0, 1.0, num=dynamic_range+1,
-                                  dtype=np.float32)
+        value_range = np.linspace(0, 1.0, num=dynamic_range + 1, dtype=np.float32)
 
         # 255 * 1/(1 + exp(gain*(cutoff - I_ij/255)))
         # using np.float32(.) here still works when the input is a numpy array
@@ -394,8 +393,7 @@ def adjust_contrast_linear(arr, alpha):
     # https://docs.opencv.org/3.0-beta/modules/core/doc/operations_on_arrays.html#cv2.LUT ,
     # but here it seemed like `d` was 0 for CV_8S, causing that to fail
     if arr.dtype == iadt._UINT8_DTYPE:
-        min_value, center_value, max_value = \
-            iadt.get_value_range_of_dtype(arr.dtype)
+        min_value, center_value, max_value = iadt.get_value_range_of_dtype(arr.dtype)
         # TODO get rid of this int(...)
         center_value = int(center_value)
 
@@ -411,14 +409,13 @@ def adjust_contrast_linear(arr, alpha):
         return arr_aug
     else:
         input_dtype = arr.dtype
-        _min_value, center_value, _max_value = \
-            iadt.get_value_range_of_dtype(input_dtype)
+        _min_value, center_value, _max_value = iadt.get_value_range_of_dtype(
+            input_dtype
+        )
         # TODO get rid of this int(...)
         if input_dtype.kind in ["u", "i"]:
             center_value = int(center_value)
-        image_aug = (center_value
-                     + alpha
-                     * (arr.astype(np.float64)-center_value))
+        image_aug = center_value + alpha * (arr.astype(np.float64) - center_value)
         image_aug = iadt.restore_dtypes_(image_aug, input_dtype)
         return image_aug
 
@@ -485,20 +482,37 @@ class GammaContrast(_ContrastFuncWrapper):
 
     """
 
-    def __init__(self, gamma=(0.7, 1.7), per_channel=False,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
-        params1d = [iap.handle_continuous_param(
-            gamma, "gamma", value_range=None, tuple_to_uniform=True,
-            list_to_choice=True)]
+    def __init__(
+        self,
+        gamma=(0.7, 1.7),
+        per_channel=False,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
+        params1d = [
+            iap.handle_continuous_param(
+                gamma,
+                "gamma",
+                value_range=None,
+                tuple_to_uniform=True,
+                list_to_choice=True,
+            )
+        ]
         func = adjust_contrast_gamma
         super(GammaContrast, self).__init__(
-            func, params1d, per_channel,
+            func,
+            params1d,
+            per_channel,
             dtypes_allowed="uint8 uint16 uint32 uint64 int8 int16 int32 int64 "
-                           "float16 float32 float64",
+            "float16 float32 float64",
             dtypes_disallowed="float128 bool",
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed,
+            name=name,
+            random_state=random_state,
+            deterministic=deterministic,
+        )
 
 
 class SigmoidContrast(_ContrastFuncWrapper):
@@ -583,27 +597,48 @@ class SigmoidContrast(_ContrastFuncWrapper):
     sampled once per image *and* channel.
 
     """
-    def __init__(self, gain=(5, 6), cutoff=(0.3, 0.6), per_channel=False,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+
+    def __init__(
+        self,
+        gain=(5, 6),
+        cutoff=(0.3, 0.6),
+        per_channel=False,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         # TODO add inv parameter?
         params1d = [
             iap.handle_continuous_param(
-                gain, "gain", value_range=(0, None), tuple_to_uniform=True,
-                list_to_choice=True),
+                gain,
+                "gain",
+                value_range=(0, None),
+                tuple_to_uniform=True,
+                list_to_choice=True,
+            ),
             iap.handle_continuous_param(
-                cutoff, "cutoff", value_range=(0, 1.0), tuple_to_uniform=True,
-                list_to_choice=True)
+                cutoff,
+                "cutoff",
+                value_range=(0, 1.0),
+                tuple_to_uniform=True,
+                list_to_choice=True,
+            ),
         ]
         func = adjust_contrast_sigmoid
 
         super(SigmoidContrast, self).__init__(
-            func, params1d, per_channel,
+            func,
+            params1d,
+            per_channel,
             dtypes_allowed="uint8 uint16 uint32 uint64 int8 int16 int32 int64 "
-                           "float16 float32 float64",
+            "float16 float32 float64",
             dtypes_disallowed="float128 bool",
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed,
+            name=name,
+            random_state=random_state,
+            deterministic=deterministic,
+        )
 
 
 class LogContrast(_ContrastFuncWrapper):
@@ -669,22 +704,40 @@ class LogContrast(_ContrastFuncWrapper):
     *and* channel.
 
     """
-    def __init__(self, gain=(0.4, 1.6), per_channel=False,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+
+    def __init__(
+        self,
+        gain=(0.4, 1.6),
+        per_channel=False,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         # TODO add inv parameter?
-        params1d = [iap.handle_continuous_param(
-            gain, "gain", value_range=(0, None), tuple_to_uniform=True,
-            list_to_choice=True)]
+        params1d = [
+            iap.handle_continuous_param(
+                gain,
+                "gain",
+                value_range=(0, None),
+                tuple_to_uniform=True,
+                list_to_choice=True,
+            )
+        ]
         func = adjust_contrast_log
 
         super(LogContrast, self).__init__(
-            func, params1d, per_channel,
+            func,
+            params1d,
+            per_channel,
             dtypes_allowed="uint8 uint16 uint32 uint64 int8 int16 int32 int64 "
-                           "float16 float32 float64",
+            "float16 float32 float64",
             dtypes_disallowed="float128 bool",
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed,
+            name=name,
+            random_state=random_state,
+            deterministic=deterministic,
+        )
 
 
 class LinearContrast(_ContrastFuncWrapper):
@@ -747,23 +800,39 @@ class LinearContrast(_ContrastFuncWrapper):
     *and* channel.
 
     """
-    def __init__(self, alpha=(0.6, 1.4), per_channel=False,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+
+    def __init__(
+        self,
+        alpha=(0.6, 1.4),
+        per_channel=False,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         params1d = [
             iap.handle_continuous_param(
-                alpha, "alpha", value_range=None, tuple_to_uniform=True,
-                list_to_choice=True)
+                alpha,
+                "alpha",
+                value_range=None,
+                tuple_to_uniform=True,
+                list_to_choice=True,
+            )
         ]
         func = adjust_contrast_linear
 
         super(LinearContrast, self).__init__(
-            func, params1d, per_channel,
+            func,
+            params1d,
+            per_channel,
             dtypes_allowed="uint8 uint16 uint32 int8 int16 int32 float16 "
-                           "float32 float64",
+            "float32 float64",
             dtypes_disallowed="uint64 int64 float128 bool",
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed,
+            name=name,
+            random_state=random_state,
+            deterministic=deterministic,
+        )
 
 
 # TODO maybe offer the other contrast augmenters also wrapped in this, similar
@@ -775,26 +844,27 @@ class _IntensityChannelBasedApplier(object):
     HSV = color_lib.CSPACE_HSV
     HLS = color_lib.CSPACE_HLS
     Lab = color_lib.CSPACE_Lab
-    _CHANNEL_MAPPING = {
-        HSV: 2,
-        HLS: 1,
-        Lab: 0
-    }
+    _CHANNEL_MAPPING = {HSV: 2, HLS: 1, Lab: 0}
 
     def __init__(self, from_colorspace, to_colorspace):
         super(_IntensityChannelBasedApplier, self).__init__()
 
         # TODO maybe add CIE, Luv?
-        valid_from_colorspaces = [self.RGB, self.BGR, self.Lab, self.HLS,
-                                  self.HSV]
-        assert from_colorspace in valid_from_colorspaces, (
-            "Expected 'from_colorspace' to be one of %s, got %s." % (
-                valid_from_colorspaces, from_colorspace))
+        valid_from_colorspaces = [self.RGB, self.BGR, self.Lab, self.HLS, self.HSV]
+        assert (
+            from_colorspace in valid_from_colorspaces
+        ), "Expected 'from_colorspace' to be one of %s, got %s." % (
+            valid_from_colorspaces,
+            from_colorspace,
+        )
 
         valid_to_colorspaces = [self.Lab, self.HLS, self.HSV]
-        assert to_colorspace in valid_to_colorspaces, (
-            "Expected 'to_colorspace' to be one of %s, got %s." % (
-                valid_to_colorspaces, to_colorspace))
+        assert (
+            to_colorspace in valid_to_colorspaces
+        ), "Expected 'to_colorspace' to be one of %s, got %s." % (
+            valid_to_colorspaces,
+            to_colorspace,
+        )
 
         self.from_colorspace = from_colorspace
         self.to_colorspace = to_colorspace
@@ -831,9 +901,9 @@ class _IntensityChannelBasedApplier(object):
                 ia.warn(
                     "Got image with %d channels in "
                     "_IntensityChannelBasedApplier (parents: %s), "
-                    "expected 0, 1, 3 or 4 channels." % (
-                        nb_channels, ", ".join(
-                            parent.name for parent in parents)))
+                    "expected 0, 1, 3 or 4 channels."
+                    % (nb_channels, ", ".join(parent.name for parent in parents))
+                )
                 images_normalized.append(image)
 
         # convert colorspaces of normalized 3-channel images
@@ -842,13 +912,16 @@ class _IntensityChannelBasedApplier(object):
             images_new_cs = color_lib.change_colorspaces_(
                 images_change_cs,
                 to_colorspaces=self.to_colorspace,
-                from_colorspaces=self.from_colorspace)
+                from_colorspaces=self.from_colorspace,
+            )
 
-            for image_new_cs, target_idx in zip(images_new_cs,
-                                                images_change_cs_indices):
+            for image_new_cs, target_idx in zip(
+                images_new_cs, images_change_cs_indices
+            ):
                 chan_idx = self._CHANNEL_MAPPING[self.to_colorspace]
                 images_normalized[target_idx] = image_new_cs[
-                    ..., chan_idx:chan_idx+1]
+                    ..., chan_idx : chan_idx + 1
+                ]
                 images_after_color_conversion[target_idx] = image_new_cs
 
         # apply function channelwise
@@ -864,7 +937,7 @@ class _IntensityChannelBasedApplier(object):
             if nb_channels in [3, 4]:
                 chan_idx = self._CHANNEL_MAPPING[self.to_colorspace]
                 image_tmp = image_conv
-                image_tmp[..., chan_idx:chan_idx+1] = image_aug
+                image_tmp[..., chan_idx : chan_idx + 1] = image_aug
 
                 result.append(None if nb_channels == 3 else image[..., 3:4])
                 images_change_cs.append(image_tmp)
@@ -877,16 +950,17 @@ class _IntensityChannelBasedApplier(object):
             images_new_cs = color_lib.change_colorspaces_(
                 images_change_cs,
                 to_colorspaces=self.from_colorspace,
-                from_colorspaces=self.to_colorspace)
-            for image_new_cs, target_idx in zip(images_new_cs,
-                                                images_change_cs_indices):
+                from_colorspaces=self.to_colorspace,
+            )
+            for image_new_cs, target_idx in zip(
+                images_new_cs, images_change_cs_indices
+            ):
                 if result[target_idx] is None:
                     result[target_idx] = image_new_cs
                 else:
                     # input image had four channels, 4th channel is already
                     # in result
-                    result[target_idx] = np.dstack((image_new_cs,
-                                                    result[target_idx]))
+                    result[target_idx] = np.dstack((image_new_cs, result[target_idx]))
 
         # convert to array if necessary
         if input_was_array:
@@ -991,23 +1065,36 @@ class AllChannelsCLAHE(meta.Augmenter):
 
     """
 
-    def __init__(self, clip_limit=(0.1, 8), tile_grid_size_px=(3, 12),
-                 tile_grid_size_px_min=3, per_channel=False,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        clip_limit=(0.1, 8),
+        tile_grid_size_px=(3, 12),
+        tile_grid_size_px_min=3,
+        per_channel=False,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(AllChannelsCLAHE, self).__init__(
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed, name=name, random_state=random_state, deterministic=deterministic
+        )
 
         self.clip_limit = iap.handle_continuous_param(
-            clip_limit, "clip_limit", value_range=(0+1e-4, None),
-            tuple_to_uniform=True, list_to_choice=True)
+            clip_limit,
+            "clip_limit",
+            value_range=(0 + 1e-4, None),
+            tuple_to_uniform=True,
+            list_to_choice=True,
+        )
         self.tile_grid_size_px = iap.handle_discrete_kernel_size_param(
-            tile_grid_size_px, "tile_grid_size_px", value_range=(0, None),
-            allow_floats=False)
+            tile_grid_size_px,
+            "tile_grid_size_px",
+            value_range=(0, None),
+            allow_floats=False,
+        )
         self.tile_grid_size_px_min = tile_grid_size_px_min
-        self.per_channel = iap.handle_probability_param(per_channel,
-                                                        "per_channel")
+        self.per_channel = iap.handle_probability_param(per_channel, "per_channel")
 
     # Added in 0.4.0.
     def _augment_batch_(self, batch, random_state, parents, hooks):
@@ -1020,8 +1107,8 @@ class AllChannelsCLAHE(meta.Augmenter):
             images,
             allowed="uint8 uint16",
             disallowed="bool uint32 uint64 int8 int16 int32 int64 "
-                       "float16 float32 float64 float128",
-            augmenter=self
+            "float16 float32 float64 float128",
+            augmenter=self,
         )
 
         nb_images = len(images)
@@ -1029,25 +1116,36 @@ class AllChannelsCLAHE(meta.Augmenter):
 
         mode = "single" if self.tile_grid_size_px[1] is None else "two"
         rss = random_state.duplicate(3 if mode == "single" else 4)
-        per_channel = self.per_channel.draw_samples((nb_images,),
-                                                    random_state=rss[0])
-        clip_limit = self.clip_limit.draw_samples((nb_images, nb_channels),
-                                                  random_state=rss[1])
+        per_channel = self.per_channel.draw_samples((nb_images,), random_state=rss[0])
+        clip_limit = self.clip_limit.draw_samples(
+            (nb_images, nb_channels), random_state=rss[1]
+        )
         tile_grid_size_px_h = self.tile_grid_size_px[0].draw_samples(
-            (nb_images, nb_channels), random_state=rss[2])
+            (nb_images, nb_channels), random_state=rss[2]
+        )
         if mode == "single":
             tile_grid_size_px_w = tile_grid_size_px_h
         else:
             tile_grid_size_px_w = self.tile_grid_size_px[1].draw_samples(
-                (nb_images, nb_channels), random_state=rss[3])
+                (nb_images, nb_channels), random_state=rss[3]
+            )
 
-        tile_grid_size_px_w = np.maximum(tile_grid_size_px_w,
-                                         self.tile_grid_size_px_min)
-        tile_grid_size_px_h = np.maximum(tile_grid_size_px_h,
-                                         self.tile_grid_size_px_min)
+        tile_grid_size_px_w = np.maximum(
+            tile_grid_size_px_w, self.tile_grid_size_px_min
+        )
+        tile_grid_size_px_h = np.maximum(
+            tile_grid_size_px_h, self.tile_grid_size_px_min
+        )
 
-        gen = enumerate(zip(images, clip_limit, tile_grid_size_px_h,
-                            tile_grid_size_px_w, per_channel))
+        gen = enumerate(
+            zip(
+                images,
+                clip_limit,
+                tile_grid_size_px_h,
+                tile_grid_size_px_w,
+                per_channel,
+            )
+        )
         for i, (image, clip_limit_i, tgs_px_h_i, tgs_px_w_i, pchannel_i) in gen:
             if image.size == 0:
                 continue
@@ -1059,7 +1157,7 @@ class AllChannelsCLAHE(meta.Augmenter):
                 if tgs_px_w_i[c_param] > 1 or tgs_px_h_i[c_param] > 1:
                     clahe = cv2.createCLAHE(
                         clipLimit=clip_limit_i[c_param],
-                        tileGridSize=(tgs_px_w_i[c_param], tgs_px_h_i[c_param])
+                        tileGridSize=(tgs_px_w_i[c_param], tgs_px_h_i[c_param]),
                     )
                     channel_warped = clahe.apply(
                         _normalize_cv2_input_arr_(image[..., c])
@@ -1078,8 +1176,12 @@ class AllChannelsCLAHE(meta.Augmenter):
 
     def get_parameters(self):
         """See :func:`~imgaug.augmenters.meta.Augmenter.get_parameters`."""
-        return [self.clip_limit, self.tile_grid_size_px,
-                self.tile_grid_size_px_min, self.per_channel]
+        return [
+            self.clip_limit,
+            self.tile_grid_size_px,
+            self.tile_grid_size_px_min,
+            self.per_channel,
+        ]
 
 
 class CLAHE(meta.Augmenter):
@@ -1245,30 +1347,39 @@ class CLAHE(meta.Augmenter):
     does not have to be changed for them).
 
     """
+
     RGB = color_lib.CSPACE_RGB
     BGR = color_lib.CSPACE_BGR
     HSV = color_lib.CSPACE_HSV
     HLS = color_lib.CSPACE_HLS
     Lab = color_lib.CSPACE_Lab
 
-    def __init__(self, clip_limit=(0.1, 8), tile_grid_size_px=(3, 12),
-                 tile_grid_size_px_min=3,
-                 from_colorspace=color_lib.CSPACE_RGB,
-                 to_colorspace=color_lib.CSPACE_Lab,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        clip_limit=(0.1, 8),
+        tile_grid_size_px=(3, 12),
+        tile_grid_size_px_min=3,
+        from_colorspace=color_lib.CSPACE_RGB,
+        to_colorspace=color_lib.CSPACE_Lab,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(CLAHE, self).__init__(
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed, name=name, random_state=random_state, deterministic=deterministic
+        )
 
         self.all_channel_clahe = AllChannelsCLAHE(
             clip_limit=clip_limit,
             tile_grid_size_px=tile_grid_size_px,
             tile_grid_size_px_min=tile_grid_size_px_min,
-            name="%s_AllChannelsCLAHE" % (name,))
+            name="%s_AllChannelsCLAHE" % (name,),
+        )
 
         self.intensity_channel_based_applier = _IntensityChannelBasedApplier(
-            from_colorspace, to_colorspace)
+            from_colorspace, to_colorspace
+        )
 
     # Added in 0.4.0.
     def _augment_batch_(self, batch, random_state, parents, hooks):
@@ -1279,20 +1390,17 @@ class CLAHE(meta.Augmenter):
 
         iadt.allow_only_uint8(images, augmenter=self)
 
-        def _augment_all_channels_clahe(images_normalized,
-                                        random_state_derived):
+        def _augment_all_channels_clahe(images_normalized, random_state_derived):
             # pylint: disable=protected-access
             # TODO would .augment_batch() be sufficient here?
-            batch_imgs = _BatchInAugmentation(
-                images=images_normalized)
+            batch_imgs = _BatchInAugmentation(images=images_normalized)
             return self.all_channel_clahe._augment_batch_(
-                batch_imgs, random_state_derived, parents + [self],
-                hooks
+                batch_imgs, random_state_derived, parents + [self], hooks
             ).images
 
         batch.images = self.intensity_channel_based_applier.apply(
-            images, random_state, parents + [self], hooks,
-            _augment_all_channels_clahe)
+            images, random_state, parents + [self], hooks, _augment_all_channels_clahe
+        )
         return batch
 
     def get_parameters(self):
@@ -1302,7 +1410,7 @@ class CLAHE(meta.Augmenter):
         return [
             ac_clahe.clip_limit,
             ac_clahe.tile_grid_size_px,
-            ac_clahe.tile_grid_size_px_min
+            ac_clahe.tile_grid_size_px_min,
         ] + intb_applier.get_parameters()
 
 
@@ -1370,11 +1478,17 @@ class AllChannelsHistogramEqualization(meta.Augmenter):
     strengths. This leads to random strengths of the contrast adjustment.
 
     """
-    def __init__(self, seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+
+    def __init__(
+        self,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(AllChannelsHistogramEqualization, self).__init__(
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed, name=name, random_state=random_state, deterministic=deterministic
+        )
 
     # Added in 0.4.0.
     def _augment_batch_(self, batch, random_state, parents, hooks):
@@ -1391,7 +1505,8 @@ class AllChannelsHistogramEqualization(meta.Augmenter):
 
             image_warped = [
                 cv2.equalizeHist(_normalize_cv2_input_arr_(image[..., c]))
-                for c in sm.xrange(image.shape[2])]
+                for c in sm.xrange(image.shape[2])
+            ]
             image_warped = np.array(image_warped, dtype=image_warped[0].dtype)
             image_warped = image_warped.transpose((1, 2, 0))
 
@@ -1507,26 +1622,33 @@ class HistogramEqualization(meta.Augmenter):
     is applied to the ``V`` channel in ``HSV`` colorspace.
 
     """
+
     RGB = color_lib.CSPACE_RGB
     BGR = color_lib.CSPACE_BGR
     HSV = color_lib.CSPACE_HSV
     HLS = color_lib.CSPACE_HLS
     Lab = color_lib.CSPACE_Lab
 
-    def __init__(self, from_colorspace=color_lib.CSPACE_RGB,
-                 to_colorspace=color_lib.CSPACE_Lab,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        from_colorspace=color_lib.CSPACE_RGB,
+        to_colorspace=color_lib.CSPACE_Lab,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(HistogramEqualization, self).__init__(
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed, name=name, random_state=random_state, deterministic=deterministic
+        )
 
-        self.all_channel_histogram_equalization = \
-            AllChannelsHistogramEqualization(
-                name="%s_AllChannelsHistogramEqualization" % (name,))
+        self.all_channel_histogram_equalization = AllChannelsHistogramEqualization(
+            name="%s_AllChannelsHistogramEqualization" % (name,)
+        )
 
         self.intensity_channel_based_applier = _IntensityChannelBasedApplier(
-            from_colorspace, to_colorspace)
+            from_colorspace, to_colorspace
+        )
 
     # Added in 0.4.0.
     def _augment_batch_(self, batch, random_state, parents, hooks):
@@ -1537,20 +1659,23 @@ class HistogramEqualization(meta.Augmenter):
 
         iadt.allow_only_uint8(images, augmenter=self)
 
-        def _augment_all_channels_histogram_equalization(images_normalized,
-                                                         random_state_derived):
+        def _augment_all_channels_histogram_equalization(
+            images_normalized, random_state_derived
+        ):
             # pylint: disable=protected-access
             # TODO would .augment_batch() be sufficient here
-            batch_imgs = _BatchInAugmentation(
-                images=images_normalized)
+            batch_imgs = _BatchInAugmentation(images=images_normalized)
             return self.all_channel_histogram_equalization._augment_batch_(
-                batch_imgs, random_state_derived, parents + [self],
-                hooks
+                batch_imgs, random_state_derived, parents + [self], hooks
             ).images
 
         batch.images = self.intensity_channel_based_applier.apply(
-            images, random_state, parents + [self], hooks,
-            _augment_all_channels_histogram_equalization)
+            images,
+            random_state,
+            parents + [self],
+            hooks,
+            _augment_all_channels_histogram_equalization,
+        )
         return batch
 
     def get_parameters(self):

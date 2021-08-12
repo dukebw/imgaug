@@ -2,6 +2,7 @@ from __future__ import print_function, division, absolute_import
 
 import itertools
 import sys
+
 # unittest only added in 3.4 self.subTest()
 if sys.version_info[0] < 3 or sys.version_info[1] < 4:
     import unittest2 as unittest
@@ -23,14 +24,13 @@ import imgaug.random as iarandom
 from imgaug import augmenters as iaa
 from imgaug import parameters as iap
 import imgaug.augmenters.meta as meta
-from imgaug.testutils import (reseed, runtest_pickleable_uint8_img,
-                              is_parameter_instance)
+from imgaug.testutils import reseed, runtest_pickleable_uint8_img, is_parameter_instance
 import imgaug.augmenters.color as colorlib
 
 
 class Test_change_colorspace_(unittest.TestCase):
     def test_non_uint8_fails(self):
-        image = np.arange(4*5*3).astype(np.uint8).reshape((4, 5, 3))
+        image = np.arange(4 * 5 * 3).astype(np.uint8).reshape((4, 5, 3))
         image = np.copy(image)  # reshape sets flag OWNDATA=False
         image_float = image.astype(np.float32) / 255.0
         with self.assertRaises(ValueError) as cm:
@@ -38,50 +38,52 @@ class Test_change_colorspace_(unittest.TestCase):
         assert "which is a forbidden dtype" in str(cm.exception)
 
     def test_unknown_to_colorspace_fails(self):
-        image = np.arange(4*5*3).astype(np.uint8).reshape((4, 5, 3))
+        image = np.arange(4 * 5 * 3).astype(np.uint8).reshape((4, 5, 3))
         image = np.copy(image)  # reshape sets flag OWNDATA=False
         from_cspace = iaa.CSPACE_RGB
         to_cspace = "foo"
         with self.assertRaises(AssertionError) as cm:
             _ = iaa.change_colorspace_(
-                image, to_colorspace=to_cspace, from_colorspace=from_cspace)
+                image, to_colorspace=to_cspace, from_colorspace=from_cspace
+            )
         assert "Expected `to_colorspace` to be one of" in str(cm.exception)
 
     def test_unknown_from_colorspace_fails(self):
-        image = np.arange(4*5*3).astype(np.uint8).reshape((4, 5, 3))
+        image = np.arange(4 * 5 * 3).astype(np.uint8).reshape((4, 5, 3))
         image = np.copy(image)  # reshape sets flag OWNDATA=False
         from_cspace = "foo"
         to_cspace = iaa.CSPACE_RGB
         with self.assertRaises(AssertionError) as cm:
             _ = iaa.change_colorspace_(
-                image, to_colorspace=to_cspace, from_colorspace=from_cspace)
+                image, to_colorspace=to_cspace, from_colorspace=from_cspace
+            )
         assert "Expected `from_colorspace` to be one of" in str(cm.exception)
 
     def test_change_to_same_colorspace_does_nothing(self):
-        image = np.arange(4*5*3).astype(np.uint8).reshape((4, 5, 3))
+        image = np.arange(4 * 5 * 3).astype(np.uint8).reshape((4, 5, 3))
         image = np.copy(image)  # reshape sets flag OWNDATA=False
         from_cspace = iaa.CSPACE_RGB
         to_cspace = iaa.CSPACE_RGB
         image_out = iaa.change_colorspace_(
-            np.copy(image),
-            to_colorspace=to_cspace, from_colorspace=from_cspace)
+            np.copy(image), to_colorspace=to_cspace, from_colorspace=from_cspace
+        )
         assert np.array_equal(image_out, image)
 
     def test_function_works_inplace(self):
-        image = np.arange(4*5*3).astype(np.uint8).reshape((4, 5, 3))
+        image = np.arange(4 * 5 * 3).astype(np.uint8).reshape((4, 5, 3))
         image = np.copy(image)  # reshape sets flag OWNDATA=False
         image_orig = np.copy(image)
         from_cspace = iaa.CSPACE_RGB
         to_cspace = iaa.CSPACE_BGR
         image_out = iaa.change_colorspace_(
-            image,
-            to_colorspace=to_cspace, from_colorspace=from_cspace)
+            image, to_colorspace=to_cspace, from_colorspace=from_cspace
+        )
         assert image_out is image
         assert np.array_equal(image_out, image)
         assert not np.array_equal(image_out, image_orig)
 
     def test_image_is_view(self):
-        image = np.arange(4*5*4).astype(np.uint8).reshape((4, 5, 4))
+        image = np.arange(4 * 5 * 4).astype(np.uint8).reshape((4, 5, 4))
         image = np.copy(image)  # reshape sets flag OWNDATA=False
         image_copy = np.copy(image)
         image_view = image[..., 0:3]
@@ -90,16 +92,16 @@ class Test_change_colorspace_(unittest.TestCase):
         from_cspace = iaa.CSPACE_RGB
         to_cspace = iaa.CSPACE_BGR
         image_out = iaa.change_colorspace_(
-            image_view,
-            to_colorspace=to_cspace, from_colorspace=from_cspace)
+            image_view, to_colorspace=to_cspace, from_colorspace=from_cspace
+        )
 
         expected = self._generate_expected_image(
-            np.ascontiguousarray(image_copy[..., 0:3]),
-            from_cspace, to_cspace)
+            np.ascontiguousarray(image_copy[..., 0:3]), from_cspace, to_cspace
+        )
         assert np.array_equal(image_out, expected)
 
     def test_image_is_noncontiguous(self):
-        image = np.arange(4*5*3).astype(np.uint8).reshape((4, 5, 3))
+        image = np.arange(4 * 5 * 3).astype(np.uint8).reshape((4, 5, 3))
         image = np.copy(image)  # reshape sets flag OWNDATA=False
         image_copy = np.copy(np.ascontiguousarray(np.fliplr(image)))
         image_noncontiguous = np.fliplr(image)
@@ -108,54 +110,49 @@ class Test_change_colorspace_(unittest.TestCase):
         from_cspace = iaa.CSPACE_RGB
         to_cspace = iaa.CSPACE_BGR
         image_out = iaa.change_colorspace_(
-            image_noncontiguous,
-            to_colorspace=to_cspace, from_colorspace=from_cspace)
+            image_noncontiguous, to_colorspace=to_cspace, from_colorspace=from_cspace
+        )
 
-        expected = self._generate_expected_image(image_copy, from_cspace,
-                                                 to_cspace)
+        expected = self._generate_expected_image(image_copy, from_cspace, to_cspace)
         assert np.array_equal(image_out, expected)
 
     def test_cannot_transform_from_grayscale_to_another_cspace(self):
-        image = np.arange(4*5*3).astype(np.uint8).reshape((4, 5, 3))
+        image = np.arange(4 * 5 * 3).astype(np.uint8).reshape((4, 5, 3))
         image = np.copy(image)  # reshape sets flag OWNDATA=False
         from_cspace = iaa.CSPACE_GRAY
         to_cspace = iaa.CSPACE_RGB
         with self.assertRaises(AssertionError) as cm:
             _ = iaa.change_colorspace_(
-                np.copy(image),
-                from_colorspace=from_cspace, to_colorspace=to_cspace)
-        assert (
-            "Cannot convert from grayscale to another colorspace"
-            in str(cm.exception))
+                np.copy(image), from_colorspace=from_cspace, to_colorspace=to_cspace
+            )
+        assert "Cannot convert from grayscale to another colorspace" in str(
+            cm.exception
+        )
 
     def test_image_without_channels_fails(self):
-        image = np.arange(4*5).astype(np.uint8).reshape((4, 5))
+        image = np.arange(4 * 5).astype(np.uint8).reshape((4, 5))
         image = np.copy(image)  # reshape sets flag OWNDATA=False
         from_cspace = iaa.CSPACE_RGB
         to_cspace = iaa.CSPACE_BGR
         with self.assertRaises(AssertionError) as cm:
             _ = iaa.change_colorspace_(
-                np.copy(image),
-                from_colorspace=from_cspace, to_colorspace=to_cspace)
-        assert (
-            "Expected image shape to be three-dimensional"
-            in str(cm.exception))
+                np.copy(image), from_colorspace=from_cspace, to_colorspace=to_cspace
+            )
+        assert "Expected image shape to be three-dimensional" in str(cm.exception)
 
     def test_image_with_four_channels_fails(self):
-        image = np.arange(4*5*4).astype(np.uint8).reshape((4, 5, 4))
+        image = np.arange(4 * 5 * 4).astype(np.uint8).reshape((4, 5, 4))
         image = np.copy(image)  # reshape sets flag OWNDATA=False
         from_cspace = iaa.CSPACE_RGB
         to_cspace = iaa.CSPACE_BGR
         with self.assertRaises(AssertionError) as cm:
             _ = iaa.change_colorspace_(
-                np.copy(image),
-                from_colorspace=from_cspace, to_colorspace=to_cspace)
-        assert (
-            "Expected number of channels to be three"
-            in str(cm.exception))
+                np.copy(image), from_colorspace=from_cspace, to_colorspace=to_cspace
+            )
+        assert "Expected number of channels to be three" in str(cm.exception)
 
     def test_colorspace_combinations(self):
-        image = np.arange(4*5*3).astype(np.uint8).reshape((4, 5, 3))
+        image = np.arange(4 * 5 * 3).astype(np.uint8).reshape((4, 5, 3))
         image = np.copy(image)  # reshape sets flag OWNDATA=False
         from_cspaces = iaa.CSPACE_ALL
         to_cspaces = iaa.CSPACE_ALL
@@ -164,16 +161,17 @@ class Test_change_colorspace_(unittest.TestCase):
             if from_cspace == iaa.CSPACE_GRAY:
                 continue
 
-            with self.subTest(from_colorspace=from_cspace,
-                              to_colorspace=to_cspace):
-                image_out = iaa.change_colorspace_(np.copy(image), to_cspace,
-                                                   from_cspace)
+            with self.subTest(from_colorspace=from_cspace, to_colorspace=to_cspace):
+                image_out = iaa.change_colorspace_(
+                    np.copy(image), to_cspace, from_cspace
+                )
 
                 if from_cspace == to_cspace:
                     expected = np.copy(image)
                 else:
-                    expected = self._generate_expected_image(image, from_cspace,
-                                                             to_cspace)
+                    expected = self._generate_expected_image(
+                        image, from_cspace, to_cspace
+                    )
 
                 if to_cspace == iaa.CSPACE_GRAY:
                     expected = np.tile(expected[..., np.newaxis], (1, 1, 3))
@@ -181,18 +179,15 @@ class Test_change_colorspace_(unittest.TestCase):
                 assert np.array_equal(image_out, expected)
 
     def test_zero_sized_axes(self):
-        shapes = [
-            (0, 0, 3),
-            (0, 1, 3),
-            (1, 0, 3)
-        ]
+        shapes = [(0, 0, 3), (0, 1, 3), (1, 0, 3)]
 
         for shape in shapes:
             with self.subTest(shape=shape):
                 image = np.zeros(shape, dtype=np.uint8)
 
                 image_aug = iaa.change_colorspace_(
-                    np.copy(image), from_colorspace="RGB", to_colorspace="BGR")
+                    np.copy(image), from_colorspace="RGB", to_colorspace="BGR"
+                )
 
                 assert image_aug.shape == image.shape
 
@@ -245,14 +240,14 @@ class Test_change_color_temperatures_(unittest.TestCase):
             (39700, [155, 188, 255]),
             (39800, [155, 188, 255]),
             (39900, [155, 188, 255]),
-            (40000, [155, 188, 255])
+            (40000, [155, 188, 255]),
         ]
 
         for kelvin, multiplier in multipliers:
             with self.subTest(kelvin=kelvin):
                 image_temp = iaa.change_color_temperatures_(
-                    [np.copy(image)],
-                    kelvins=kelvin)[0]
+                    [np.copy(image)], kelvins=kelvin
+                )[0]
 
                 expected = np.uint8(multiplier).reshape((1, 1, 3))
                 assert np.array_equal(image_temp, expected)
@@ -263,15 +258,12 @@ class Test_change_color_temperatures_(unittest.TestCase):
         image = np.full((1, 1, 3), 255, dtype=np.uint8)
 
         images_temp = iaa.change_color_temperatures_(
-            [np.copy(image), np.copy(image), np.copy(image)],
-            [11100, 11200, 11300]
+            [np.copy(image), np.copy(image), np.copy(image)], [11100, 11200, 11300]
         )
 
-        expected = np.array([
-            [196, 214, 255],
-            [195, 214, 255],
-            [195, 214, 255]
-        ], dtype=np.uint8).reshape((3, 1, 1, 3))
+        expected = np.array(
+            [[196, 214, 255], [195, 214, 255], [195, 214, 255]], dtype=np.uint8
+        ).reshape((3, 1, 1, 3))
         assert isinstance(images_temp, list)
         assert np.array_equal(images_temp[0], expected[0])
         assert np.array_equal(images_temp[1], expected[1])
@@ -281,18 +273,16 @@ class Test_change_color_temperatures_(unittest.TestCase):
         # separate tests for three and four images due to possible
         # broadcasting errors, see issue #646
         image = np.full((1, 1, 3), 255, dtype=np.uint8)
-        
+
         images_temp = iaa.change_color_temperatures_(
             [np.copy(image), np.copy(image), np.copy(image), np.copy(image)],
-            [11100, 11200, 11300, 11100]
+            [11100, 11200, 11300, 11100],
         )
 
-        expected = np.array([
-            [196, 214, 255],
-            [195, 214, 255],
-            [195, 214, 255],
-            [196, 214, 255]
-        ], dtype=np.uint8).reshape((4, 1, 1, 3))
+        expected = np.array(
+            [[196, 214, 255], [195, 214, 255], [195, 214, 255], [196, 214, 255]],
+            dtype=np.uint8,
+        ).reshape((4, 1, 1, 3))
         assert isinstance(images_temp, list)
         assert np.array_equal(images_temp[0], expected[0])
         assert np.array_equal(images_temp[1], expected[1])
@@ -305,14 +295,12 @@ class Test_change_color_temperatures_(unittest.TestCase):
 
         images_temp = iaa.change_color_temperatures_(
             np.uint8([np.copy(image), np.copy(image), np.copy(image)]),
-            np.float32([11100, 11200, 11300])
+            np.float32([11100, 11200, 11300]),
         )
 
-        expected = np.array([
-            [196, 214, 255],
-            [195, 214, 255],
-            [195, 214, 255]
-        ], dtype=np.uint8).reshape((3, 1, 1, 3))
+        expected = np.array(
+            [[196, 214, 255], [195, 214, 255], [195, 214, 255]], dtype=np.uint8
+        ).reshape((3, 1, 1, 3))
         assert ia.is_np_array(images_temp)
         assert np.array_equal(images_temp, expected)
 
@@ -322,30 +310,25 @@ class Test_change_color_temperatures_(unittest.TestCase):
         image = np.full((1, 1, 3), 255, dtype=np.uint8)
 
         images_temp = iaa.change_color_temperatures_(
-            np.uint8([np.copy(image), np.copy(image), np.copy(image),
-                      np.copy(image)]),
-            np.float32([11100, 11200, 11300, 11100])
+            np.uint8([np.copy(image), np.copy(image), np.copy(image), np.copy(image)]),
+            np.float32([11100, 11200, 11300, 11100]),
         )
 
-        expected = np.array([
-            [196, 214, 255],
-            [195, 214, 255],
-            [195, 214, 255],
-            [196, 214, 255]
-        ], dtype=np.uint8).reshape((4, 1, 1, 3))
+        expected = np.array(
+            [[196, 214, 255], [195, 214, 255], [195, 214, 255], [196, 214, 255]],
+            dtype=np.uint8,
+        ).reshape((4, 1, 1, 3))
         assert ia.is_np_array(images_temp)
         assert np.array_equal(images_temp, expected)
 
     def test_interpolation_of_kelvins(self):
         # at 1000: [255, 56, 0]
         # at 1100: [255, 71, 0]
-        at1050 = [255, 56 + (71-56)/2, 0]
+        at1050 = [255, 56 + (71 - 56) / 2, 0]
 
         image = np.full((1, 1, 3), 255, dtype=np.uint8)
 
-        image_temp = iaa.change_color_temperatures_(
-            [np.copy(image)],
-            kelvins=1050)[0]
+        image_temp = iaa.change_color_temperatures_([np.copy(image)], kelvins=1050)[0]
 
         expected = np.uint8(at1050).reshape((1, 1, 3))
         diff = np.abs(image_temp.astype(np.int32) - expected.astype(np.int32))
@@ -355,18 +338,15 @@ class Test_change_color_temperatures_(unittest.TestCase):
         image_bgr = np.uint8([100, 255, 0]).reshape((1, 1, 3))
 
         image_temp = iaa.change_color_temperatures_(
-            [np.copy(image_bgr)],
-            kelvins=1000,
-            from_colorspaces=iaa.CSPACE_BGR
+            [np.copy(image_bgr)], kelvins=1000, from_colorspaces=iaa.CSPACE_BGR
         )[0]
 
-        multiplier_rgb = np.float32(
-            [255/255.0, 56/255.0, 0/255.0]
-        ).reshape((1, 1, 3))
-        expected = (
-            image_bgr[:, :, ::-1].astype(np.float32)
-            * multiplier_rgb
-        ).astype(np.uint8)[:, :, ::-1]
+        multiplier_rgb = np.float32([255 / 255.0, 56 / 255.0, 0 / 255.0]).reshape(
+            (1, 1, 3)
+        )
+        expected = (image_bgr[:, :, ::-1].astype(np.float32) * multiplier_rgb).astype(
+            np.uint8
+        )[:, :, ::-1]
         diff = np.abs(image_temp.astype(np.int32) - expected.astype(np.int32))
         assert np.all(diff <= 1)
 
@@ -377,12 +357,10 @@ class Test_change_color_temperature_(unittest.TestCase):
         image = np.full((1, 1, 3), 255, dtype=np.uint8)
         mock_ccts.return_value = ["example"]
 
-        image_temp = iaa.change_color_temperature(
-            image, 1000, from_colorspace="foo")
+        image_temp = iaa.change_color_temperature(image, 1000, from_colorspace="foo")
 
         assert image_temp == "example"
-        assert np.array_equal(mock_ccts.call_args_list[0][0][0],
-                              image[np.newaxis, ...])
+        assert np.array_equal(mock_ccts.call_args_list[0][0][0], image[np.newaxis, ...])
         assert mock_ccts.call_args_list[0][0][1] == [1000]
         assert mock_ccts.call_args_list[0][1]["from_colorspaces"] == ["foo"]
 
@@ -440,7 +418,8 @@ class TestWithBrightnessChannels(unittest.TestCase):
 
     def test___init___to_colorspace_is_stochastic_parameter(self):
         aug = iaa.WithBrightnessChannels(
-            to_colorspace=iap.Deterministic(iaa.CSPACE_YUV))
+            to_colorspace=iap.Deterministic(iaa.CSPACE_YUV)
+        )
         assert isinstance(aug.children, iaa.Augmenter)
         assert aug.to_colorspace.value == iaa.CSPACE_YUV
         assert aug.from_colorspace == iaa.CSPACE_RGB
@@ -449,29 +428,29 @@ class TestWithBrightnessChannels(unittest.TestCase):
         def _image_to_channel(image, cspace):
             if cspace == iaa.CSPACE_YCrCb:
                 image_cvt = cv2.cvtColor(image, cv2.COLOR_RGB2YCR_CB)
-                return image_cvt[:, :, 0:0+1]
+                return image_cvt[:, :, 0 : 0 + 1]
             elif cspace == iaa.CSPACE_HSV:
                 image_cvt = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
-                return image_cvt[:, :, 2:2+1]
+                return image_cvt[:, :, 2 : 2 + 1]
             elif cspace == iaa.CSPACE_HLS:
                 image_cvt = cv2.cvtColor(image, cv2.COLOR_RGB2HLS)
-                return image_cvt[:, :, 1:1+1]
+                return image_cvt[:, :, 1 : 1 + 1]
             elif cspace == iaa.CSPACE_Lab:
                 if hasattr(cv2, "COLOR_RGB2Lab"):
                     image_cvt = cv2.cvtColor(image, cv2.COLOR_RGB2Lab)
                 else:
                     image_cvt = cv2.cvtColor(image, cv2.COLOR_RGB2LAB)
-                return image_cvt[:, :, 0:0+1]
+                return image_cvt[:, :, 0 : 0 + 1]
             elif cspace == iaa.CSPACE_Luv:
                 if hasattr(cv2, "COLOR_RGB2Luv"):
                     image_cvt = cv2.cvtColor(image, cv2.COLOR_RGB2Luv)
                 else:
                     image_cvt = cv2.cvtColor(image, cv2.COLOR_RGB2LUV)
-                return image_cvt[:, :, 0:0+1]
+                return image_cvt[:, :, 0 : 0 + 1]
             else:
                 assert cspace == iaa.CSPACE_YUV
                 image_cvt = cv2.cvtColor(image, cv2.COLOR_RGB2YUV)
-                return image_cvt[:, :, 0:0+1]
+                return image_cvt[:, :, 0 : 0 + 1]
 
         # Max differences between input image and image after augmentation
         # when no child augmenter is used (for the given example image below).
@@ -484,23 +463,20 @@ class TestWithBrightnessChannels(unittest.TestCase):
             iaa.CSPACE_HLS: 0,
             iaa.CSPACE_Lab: 2,
             iaa.CSPACE_Luv: 4,
-            iaa.CSPACE_YUV: 1
+            iaa.CSPACE_YUV: 1,
         }
 
-        image = np.arange(6*6*3).astype(np.uint8).reshape((6, 6, 3))
+        image = np.arange(6 * 6 * 3).astype(np.uint8).reshape((6, 6, 3))
 
         for cspace in self.valid_colorspaces:
             with self.subTest(colorspace=cspace):
                 child = _BatchCapturingDummyAugmenter()
-                aug = iaa.WithBrightnessChannels(
-                    children=child,
-                    to_colorspace=cspace)
+                aug = iaa.WithBrightnessChannels(children=child, to_colorspace=cspace)
 
                 image_aug = aug(image=image)
 
                 expected = _image_to_channel(image, cspace)
-                diff = np.abs(
-                    image.astype(np.int32) - image_aug.astype(np.int32))
+                diff = np.abs(image.astype(np.int32) - image_aug.astype(np.int32))
                 assert np.all(diff <= max_diff_expected[cspace])
                 assert np.array_equal(child.last_batch.images[0], expected)
 
@@ -515,14 +491,14 @@ class TestWithBrightnessChannels(unittest.TestCase):
             assert np.all(result != -1)
             return result
 
-        image = np.arange(6*6*3).astype(np.uint8).reshape((6, 6, 3))
-        expected_hsv = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)[:, :, 2:2+1]
-        expected_hls = cv2.cvtColor(image, cv2.COLOR_RGB2HLS)[:, :, 1:1+1]
+        image = np.arange(6 * 6 * 3).astype(np.uint8).reshape((6, 6, 3))
+        expected_hsv = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)[:, :, 2 : 2 + 1]
+        expected_hls = cv2.cvtColor(image, cv2.COLOR_RGB2HLS)[:, :, 1 : 1 + 1]
 
         child = _BatchCapturingDummyAugmenter()
         aug = iaa.WithBrightnessChannels(
-            children=child,
-            to_colorspace=[iaa.CSPACE_HSV, iaa.CSPACE_HLS])
+            children=child, to_colorspace=[iaa.CSPACE_HSV, iaa.CSPACE_HLS]
+        )
 
         images = [np.copy(image) for _ in sm.xrange(100)]
 
@@ -542,12 +518,11 @@ class TestWithBrightnessChannels(unittest.TestCase):
     def test_from_colorspace_is_not_rgb(self):
         child = _BatchCapturingDummyAugmenter()
         aug = iaa.WithBrightnessChannels(
-            children=child,
-            to_colorspace=iaa.CSPACE_HSV,
-            from_colorspace=iaa.CSPACE_BGR)
+            children=child, to_colorspace=iaa.CSPACE_HSV, from_colorspace=iaa.CSPACE_BGR
+        )
 
-        image = np.arange(6*6*3).astype(np.uint8).reshape((6, 6, 3))
-        expected_hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)[:, :, 2:2+1]
+        image = np.arange(6 * 6 * 3).astype(np.uint8).reshape((6, 6, 3))
+        expected_hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)[:, :, 2 : 2 + 1]
 
         _ = aug(image=image)
         observed = child.last_batch.images
@@ -556,9 +531,9 @@ class TestWithBrightnessChannels(unittest.TestCase):
 
     def test_changes_from_child_propagate(self):
         aug = iaa.WithBrightnessChannels(
-            children=iaa.Add(100),
-            to_colorspace=iaa.CSPACE_HSV)
-        image = np.arange(6*6*3).astype(np.uint8).reshape((6, 6, 3))
+            children=iaa.Add(100), to_colorspace=iaa.CSPACE_HSV
+        )
+        image = np.arange(6 * 6 * 3).astype(np.uint8).reshape((6, 6, 3))
 
         image_aug = aug(image=image)
 
@@ -569,29 +544,25 @@ class TestWithBrightnessChannels(unittest.TestCase):
             return False if augmenter.name == "foo" else default
 
         aug = iaa.WithBrightnessChannels(
-            children=iaa.Add(100),
-            to_colorspace=iaa.CSPACE_HSV,
-            name="foo")
-        image = np.arange(6*6*3).astype(np.uint8).reshape((6, 6, 3))
+            children=iaa.Add(100), to_colorspace=iaa.CSPACE_HSV, name="foo"
+        )
+        image = np.arange(6 * 6 * 3).astype(np.uint8).reshape((6, 6, 3))
 
-        image_aug = aug(image=image,
-                        hooks=ia.HooksImages(propagator=_propagator))
+        image_aug = aug(image=image, hooks=ia.HooksImages(propagator=_propagator))
 
         assert np.array_equal(image_aug, image)
 
     def test_batch_without_images(self):
-        aug = iaa.WithBrightnessChannels(
-            children=iaa.Affine(translate_px={"x": 1}))
+        aug = iaa.WithBrightnessChannels(children=iaa.Affine(translate_px={"x": 1}))
 
-        kpsoi = ia.KeypointsOnImage([ia.Keypoint(x=0, y=2)],
-                                    shape=(1, 1, 3))
+        kpsoi = ia.KeypointsOnImage([ia.Keypoint(x=0, y=2)], shape=(1, 1, 3))
         kpsoi_aug = aug(keypoints=kpsoi)
 
         assert np.isclose(kpsoi_aug.keypoints[0].x, 1.0)
         assert np.isclose(kpsoi_aug.keypoints[0].y, 2.0)
 
     def test_to_deterministic(self):
-        image = np.arange(6*6*3).astype(np.uint8).reshape((6, 6, 3))
+        image = np.arange(6 * 6 * 3).astype(np.uint8).reshape((6, 6, 3))
         aug = iaa.WithBrightnessChannels(iaa.Add((-100, 100)))
         aug_det = aug.to_deterministic()
 
@@ -617,7 +588,8 @@ class TestWithBrightnessChannels(unittest.TestCase):
             child,
             from_colorspace=iaa.CSPACE_RGB,
             to_colorspace=iaa.CSPACE_HSV,
-            name="foo")
+            name="foo",
+        )
 
         aug_str = aug.__str__()
 
@@ -628,7 +600,8 @@ class TestWithBrightnessChannels(unittest.TestCase):
             "from_colorspace=RGB, "
             "name=foo, "
             "children=%s, "
-            "deterministic=False)" % (
+            "deterministic=False)"
+            % (
                 str(aug.to_colorspace),
                 str(expected_child),
             )
@@ -680,7 +653,7 @@ class TestMultiplyBrightness(unittest.TestCase):
         assert aug.from_colorspace == iaa.CSPACE_RGB
 
     def test_single_image(self):
-        image = np.arange(6*6*3).astype(np.uint8).reshape((6, 6, 3))
+        image = np.arange(6 * 6 * 3).astype(np.uint8).reshape((6, 6, 3))
         aug = iaa.MultiplyBrightness(2.0)
 
         image_aug = aug(image=image)
@@ -712,7 +685,7 @@ class TestAddToBrightness(unittest.TestCase):
         assert aug.from_colorspace == iaa.CSPACE_RGB
 
     def test_single_image(self):
-        image = np.arange(6*6*3).astype(np.uint8).reshape((6, 6, 3))
+        image = np.arange(6 * 6 * 3).astype(np.uint8).reshape((6, 6, 3))
         aug = iaa.AddToBrightness(100)
 
         image_aug = aug(image=image)
@@ -753,10 +726,10 @@ class TestMultiplyAndAddToBrightness(unittest.TestCase):
         assert aug.from_colorspace == iaa.CSPACE_RGB
 
     def test_add_to_example_image(self):
-        aug = iaa.MultiplyAndAddToBrightness(mul=1.0, add=10,
-                                             to_colorspace=iaa.CSPACE_HSV,
-                                             random_order=False)
-        image = np.arange(6*6*3).astype(np.uint8).reshape((6, 6, 3))
+        aug = iaa.MultiplyAndAddToBrightness(
+            mul=1.0, add=10, to_colorspace=iaa.CSPACE_HSV, random_order=False
+        )
+        image = np.arange(6 * 6 * 3).astype(np.uint8).reshape((6, 6, 3))
 
         image_aug = aug(image=image)
 
@@ -766,10 +739,10 @@ class TestMultiplyAndAddToBrightness(unittest.TestCase):
         assert np.array_equal(image_aug, expected)
 
     def test_multiply_example_image(self):
-        aug = iaa.MultiplyAndAddToBrightness(mul=1.2, add=0,
-                                             to_colorspace=iaa.CSPACE_HSV,
-                                             random_order=False)
-        image = np.arange(6*6*3).astype(np.uint8).reshape((6, 6, 3))
+        aug = iaa.MultiplyAndAddToBrightness(
+            mul=1.2, add=0, to_colorspace=iaa.CSPACE_HSV, random_order=False
+        )
+        image = np.arange(6 * 6 * 3).astype(np.uint8).reshape((6, 6, 3))
 
         image_aug = aug(image=image)
 
@@ -779,10 +752,10 @@ class TestMultiplyAndAddToBrightness(unittest.TestCase):
         assert np.allclose(image_aug, expected, rtol=0, atol=1.01)
 
     def test_multiply_and_add_example_image(self):
-        aug = iaa.MultiplyAndAddToBrightness(mul=1.2, add=10,
-                                             to_colorspace=iaa.CSPACE_HSV,
-                                             random_order=False)
-        image = np.arange(6*6*3).astype(np.uint8).reshape((6, 6, 3))
+        aug = iaa.MultiplyAndAddToBrightness(
+            mul=1.2, add=10, to_colorspace=iaa.CSPACE_HSV, random_order=False
+        )
+        image = np.arange(6 * 6 * 3).astype(np.uint8).reshape((6, 6, 3))
 
         image_aug = aug(image=image)
 
@@ -807,7 +780,8 @@ class TestMultiplyAndAddToBrightness(unittest.TestCase):
                     add=add,
                     from_colorspace=iaa.CSPACE_RGB,
                     to_colorspace=iaa.CSPACE_HSV,
-                    name="foo")
+                    name="foo",
+                )
 
                 aug_str = aug.__str__()
 
@@ -819,17 +793,12 @@ class TestMultiplyAndAddToBrightness(unittest.TestCase):
                     "from_colorspace=RGB, "
                     "random_order=True, "
                     "name=foo, "
-                    "deterministic=False)" % (
-                        exp_mul,
-                        exp_add,
-                        str(aug.to_colorspace)
-                    )
+                    "deterministic=False)" % (exp_mul, exp_add, str(aug.to_colorspace))
                 )
                 assert aug_str == expected
 
     def test_pickleable(self):
-        aug = iaa.MultiplyAndAddToBrightness(mul=(0.5, 1.5), add=(0, 50),
-                                             seed=1)
+        aug = iaa.MultiplyAndAddToBrightness(mul=(0.5, 1.5), add=(0, 50), seed=1)
         runtest_pickleable_uint8_img(aug, iterations=10)
 
 
@@ -894,12 +863,14 @@ class TestWithHueAndSaturation(unittest.TestCase):
         # compute expected output
         image_hsv = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
         image_hsv = image_hsv.astype(np.int16)
-        image_hsv[..., 0] = (
-            (image_hsv[..., 0].astype(np.float32)/180)*255).astype(np.int16)
+        image_hsv[..., 0] = ((image_hsv[..., 0].astype(np.float32) / 180) * 255).astype(
+            np.int16
+        )
         image_hsv[..., 0] += 10
         image_hsv[..., 0] = np.mod(image_hsv[..., 0], 255)
-        image_hsv[..., 0] = (
-            (image_hsv[..., 0].astype(np.float32)/255)*180).astype(np.int16)
+        image_hsv[..., 0] = ((image_hsv[..., 0].astype(np.float32) / 255) * 180).astype(
+            np.int16
+        )
         image_hsv = image_hsv.astype(np.uint8)
         image_expected = cv2.cvtColor(image_hsv, cv2.COLOR_HSV2RGB)
         assert not np.array_equal(image_expected, image)
@@ -930,12 +901,14 @@ class TestWithHueAndSaturation(unittest.TestCase):
         # compute expected output
         image_hsv = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
         image_hsv = image_hsv.astype(np.int16)
-        image_hsv[..., 0] = (
-            (image_hsv[..., 0].astype(np.float32)/180)*255).astype(np.int16)
+        image_hsv[..., 0] = ((image_hsv[..., 0].astype(np.float32) / 180) * 255).astype(
+            np.int16
+        )
         image_hsv[..., 1] += 10
         image_hsv[..., 1] = np.clip(image_hsv[..., 1], 0, 255)
-        image_hsv[..., 0] = (
-            (image_hsv[..., 0].astype(np.float32)/255)*180).astype(np.int16)
+        image_hsv[..., 0] = ((image_hsv[..., 0].astype(np.float32) / 255) * 180).astype(
+            np.int16
+        )
         image_hsv = image_hsv.astype(np.uint8)
         image_expected = cv2.cvtColor(image_hsv, cv2.COLOR_HSV2RGB)
         assert not np.array_equal(image_expected, image)
@@ -989,10 +962,9 @@ class TestWithHueAndSaturation(unittest.TestCase):
                 return []
 
         aug_dummy = _DummyAugmenter()
-        kpsoi = KeypointsOnImage.from_xy_array(np.float32([
-            [0, 0],
-            [5, 1]
-        ]), shape=(16, 24, 3))
+        kpsoi = KeypointsOnImage.from_xy_array(
+            np.float32([[0, 0], [5, 1]]), shape=(16, 24, 3)
+        )
 
         aug = iaa.WithHueAndSaturation(aug_dummy)
         kpsoi_aug = aug.augment_keypoints(kpsoi)
@@ -1058,8 +1030,7 @@ class TestMultiplyHueAndSaturation(unittest.TestCase):
         reseed()
 
     def test_returns_correct_objects__mul(self):
-        aug = iaa.MultiplyHueAndSaturation(
-            (0.9, 1.1), per_channel=True)
+        aug = iaa.MultiplyHueAndSaturation((0.9, 1.1), per_channel=True)
         assert isinstance(aug, iaa.WithHueAndSaturation)
         assert isinstance(aug.children, iaa.Sequential)
         assert len(aug.children) == 1
@@ -1067,8 +1038,7 @@ class TestMultiplyHueAndSaturation(unittest.TestCase):
         assert is_parameter_instance(aug.children[0].mul, iap.Uniform)
         assert np.isclose(aug.children[0].mul.a.value, 0.9)
         assert np.isclose(aug.children[0].mul.b.value, 1.1)
-        assert is_parameter_instance(aug.children[0].per_channel,
-                                     iap.Deterministic)
+        assert is_parameter_instance(aug.children[0].per_channel, iap.Deterministic)
         assert aug.children[0].per_channel.value == 1
 
     def test_returns_correct_objects__mul_hue(self):
@@ -1080,8 +1050,7 @@ class TestMultiplyHueAndSaturation(unittest.TestCase):
         assert aug.children[0].channels == [0]
         assert len(aug.children[0].children) == 1
         assert isinstance(aug.children[0].children[0], iaa.Multiply)
-        assert is_parameter_instance(aug.children[0].children[0].mul,
-                                     iap.Uniform)
+        assert is_parameter_instance(aug.children[0].children[0].mul, iap.Uniform)
         assert np.isclose(aug.children[0].children[0].mul.a.value, 0.9)
         assert np.isclose(aug.children[0].children[0].mul.b.value, 1.1)
 
@@ -1094,14 +1063,14 @@ class TestMultiplyHueAndSaturation(unittest.TestCase):
         assert aug.children[0].channels == [1]
         assert len(aug.children[0].children) == 1
         assert isinstance(aug.children[0].children[0], iaa.Multiply)
-        assert is_parameter_instance(aug.children[0].children[0].mul,
-                                     iap.Uniform)
+        assert is_parameter_instance(aug.children[0].children[0].mul, iap.Uniform)
         assert np.isclose(aug.children[0].children[0].mul.a.value, 0.9)
         assert np.isclose(aug.children[0].children[0].mul.b.value, 1.1)
 
     def test_returns_correct_objects__mul_hue_and_mul_saturation(self):
-        aug = iaa.MultiplyHueAndSaturation(mul_hue=(0.9, 1.1),
-                                           mul_saturation=(0.8, 1.2))
+        aug = iaa.MultiplyHueAndSaturation(
+            mul_hue=(0.9, 1.1), mul_saturation=(0.8, 1.2)
+        )
         assert isinstance(aug, iaa.WithHueAndSaturation)
         assert isinstance(aug.children, iaa.Sequential)
         assert len(aug.children) == 2
@@ -1110,8 +1079,7 @@ class TestMultiplyHueAndSaturation(unittest.TestCase):
         assert aug.children[0].channels == [0]
         assert len(aug.children[0].children) == 1
         assert isinstance(aug.children[0].children[0], iaa.Multiply)
-        assert is_parameter_instance(aug.children[0].children[0].mul,
-                                     iap.Uniform)
+        assert is_parameter_instance(aug.children[0].children[0].mul, iap.Uniform)
         assert np.isclose(aug.children[0].children[0].mul.a.value, 0.9)
         assert np.isclose(aug.children[0].children[0].mul.b.value, 1.1)
 
@@ -1119,8 +1087,7 @@ class TestMultiplyHueAndSaturation(unittest.TestCase):
         assert aug.children[1].channels == [1]
         assert len(aug.children[0].children) == 1
         assert isinstance(aug.children[1].children[0], iaa.Multiply)
-        assert is_parameter_instance(aug.children[1].children[0].mul,
-                                     iap.Uniform)
+        assert is_parameter_instance(aug.children[1].children[0].mul, iap.Uniform)
         assert np.isclose(aug.children[1].children[0].mul.a.value, 0.8)
         assert np.isclose(aug.children[1].children[0].mul.b.value, 1.2)
 
@@ -1137,8 +1104,9 @@ class TestMultiplyHueAndSaturation(unittest.TestCase):
         # compute expected output
         image_hsv = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
         image_hsv = image_hsv.astype(np.int16)  # simulate WithHueAndSaturation
-        image_hsv[..., 0] = (
-            (image_hsv[..., 0].astype(np.float32)/180)*255).astype(np.int16)
+        image_hsv[..., 0] = ((image_hsv[..., 0].astype(np.float32) / 180) * 255).astype(
+            np.int16
+        )
         image_hsv = image_hsv.astype(np.float32)  # simulate Multiply
 
         image_hsv[..., 0] *= 1.5
@@ -1146,8 +1114,9 @@ class TestMultiplyHueAndSaturation(unittest.TestCase):
         image_hsv = np.round(image_hsv).astype(np.int16)
 
         image_hsv[..., 0] = np.mod(image_hsv[..., 0], 255)
-        image_hsv[..., 0] = (
-            (image_hsv[..., 0].astype(np.float32)/255)*180).astype(np.int16)
+        image_hsv[..., 0] = ((image_hsv[..., 0].astype(np.float32) / 255) * 180).astype(
+            np.int16
+        )
         image_hsv[..., 1] = np.clip(image_hsv[..., 1], 0, 255)
 
         image_hsv = image_hsv.astype(np.uint8)
@@ -1182,8 +1151,9 @@ class TestMultiplyHueAndSaturation(unittest.TestCase):
         # compute expected output
         image_hsv = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
         image_hsv = image_hsv.astype(np.int16)  # simulate WithHueAndSaturation
-        image_hsv[..., 0] = (
-            (image_hsv[..., 0].astype(np.float32)/180)*255).astype(np.int16)
+        image_hsv[..., 0] = ((image_hsv[..., 0].astype(np.float32) / 180) * 255).astype(
+            np.int16
+        )
         image_hsv = image_hsv.astype(np.float32)  # simulate Multiply
 
         image_hsv[..., 0] *= 1.5
@@ -1191,8 +1161,9 @@ class TestMultiplyHueAndSaturation(unittest.TestCase):
         image_hsv = np.round(image_hsv).astype(np.int16)
 
         image_hsv[..., 0] = np.mod(image_hsv[..., 0], 255)
-        image_hsv[..., 0] = (
-            (image_hsv[..., 0].astype(np.float32)/255)*180).astype(np.int16)
+        image_hsv[..., 0] = ((image_hsv[..., 0].astype(np.float32) / 255) * 180).astype(
+            np.int16
+        )
         image_hsv[..., 1] = np.clip(image_hsv[..., 1], 0, 255)
 
         image_hsv = image_hsv.astype(np.uint8)
@@ -1227,8 +1198,9 @@ class TestMultiplyHueAndSaturation(unittest.TestCase):
         # compute expected output
         image_hsv = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
         image_hsv = image_hsv.astype(np.int16)  # simulate WithHueAndSaturation
-        image_hsv[..., 0] = (
-            (image_hsv[..., 0].astype(np.float32)/180)*255).astype(np.int16)
+        image_hsv[..., 0] = ((image_hsv[..., 0].astype(np.float32) / 180) * 255).astype(
+            np.int16
+        )
         image_hsv = image_hsv.astype(np.float32)  # simulate Multiply
 
         image_hsv[..., 0] *= 1.0  # changed over __mul
@@ -1236,8 +1208,9 @@ class TestMultiplyHueAndSaturation(unittest.TestCase):
         image_hsv = np.round(image_hsv).astype(np.int16)
 
         image_hsv[..., 0] = np.mod(image_hsv[..., 0], 255)
-        image_hsv[..., 0] = (
-            (image_hsv[..., 0].astype(np.float32)/255)*180).astype(np.int16)
+        image_hsv[..., 0] = ((image_hsv[..., 0].astype(np.float32) / 255) * 180).astype(
+            np.int16
+        )
         image_hsv[..., 1] = np.clip(image_hsv[..., 1], 0, 255)
 
         image_hsv = image_hsv.astype(np.uint8)
@@ -1260,8 +1233,7 @@ class TestMultiplyHueAndSaturation(unittest.TestCase):
         #     image_hsv[...] *= 1.2
         # have been changed
 
-        aug = iaa.MultiplyHueAndSaturation(mul_hue=1.5,
-                                           mul_saturation=1.6)  # changed
+        aug = iaa.MultiplyHueAndSaturation(mul_hue=1.5, mul_saturation=1.6)  # changed
 
         # example image
         image = np.arange(0, 255).reshape((1, 255, 1)).astype(np.uint8)
@@ -1273,8 +1245,9 @@ class TestMultiplyHueAndSaturation(unittest.TestCase):
         # compute expected output
         image_hsv = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
         image_hsv = image_hsv.astype(np.int16)  # simulate WithHueAndSaturation
-        image_hsv[..., 0] = (
-            (image_hsv[..., 0].astype(np.float32)/180)*255).astype(np.int16)
+        image_hsv[..., 0] = ((image_hsv[..., 0].astype(np.float32) / 180) * 255).astype(
+            np.int16
+        )
         image_hsv = image_hsv.astype(np.float32)  # simulate Multiply
 
         image_hsv[..., 0] *= 1.5
@@ -1282,8 +1255,9 @@ class TestMultiplyHueAndSaturation(unittest.TestCase):
         image_hsv = np.round(image_hsv).astype(np.int16)
 
         image_hsv[..., 0] = np.mod(image_hsv[..., 0], 255)
-        image_hsv[..., 0] = (
-            (image_hsv[..., 0].astype(np.float32)/255)*180).astype(np.int16)
+        image_hsv[..., 0] = ((image_hsv[..., 0].astype(np.float32) / 255) * 180).astype(
+            np.int16
+        )
         image_hsv[..., 1] = np.clip(image_hsv[..., 1], 0, 255)
 
         image_hsv = image_hsv.astype(np.uint8)
@@ -1303,8 +1277,7 @@ class TestMultiplyHueAndSaturation(unittest.TestCase):
         images = rs.integers(0, 255, size=(32, 4, 4, 3), dtype=np.uint8)
 
         for deterministic in [False, True]:
-            aug = iaa.MultiplyHueAndSaturation(
-                mul=(0.1, 5.0))
+            aug = iaa.MultiplyHueAndSaturation(mul=(0.1, 5.0))
             if deterministic:
                 aug = aug.to_deterministic()
             images_aug1 = aug.augment_images(images)
@@ -1316,7 +1289,8 @@ class TestMultiplyHueAndSaturation(unittest.TestCase):
                 assert not equal
 
             aug = iaa.MultiplyHueAndSaturation(
-                mul_hue=(0.1, 5.0), mul_saturation=(0.1, 5.0))
+                mul_hue=(0.1, 5.0), mul_saturation=(0.1, 5.0)
+            )
             if deterministic:
                 aug = aug.to_deterministic()
             images_aug1 = aug.augment_images(images)
@@ -1328,9 +1302,9 @@ class TestMultiplyHueAndSaturation(unittest.TestCase):
                 assert not equal
 
     def test_pickleable(self):
-        aug = iaa.MultiplyHueAndSaturation(mul_hue=(0.5, 1.5),
-                                           mul_saturation=(0.5, 1.5),
-                                           seed=1)
+        aug = iaa.MultiplyHueAndSaturation(
+            mul_hue=(0.5, 1.5), mul_saturation=(0.5, 1.5), seed=1
+        )
         runtest_pickleable_uint8_img(aug, iterations=10)
 
 
@@ -1346,8 +1320,7 @@ class TestMultiplyHue(unittest.TestCase):
         assert aug.children[0].channels == [0]
         assert len(aug.children[0].children) == 1
         assert isinstance(aug.children[0].children[0], iaa.Multiply)
-        assert is_parameter_instance(aug.children[0].children[0].mul,
-                                     iap.Uniform)
+        assert is_parameter_instance(aug.children[0].children[0].mul, iap.Uniform)
         assert np.isclose(aug.children[0].children[0].mul.a.value, 0.9)
         assert np.isclose(aug.children[0].children[0].mul.b.value, 1.1)
 
@@ -1369,8 +1342,7 @@ class TestMultiplySaturation(unittest.TestCase):
         assert aug.children[0].channels == [1]
         assert len(aug.children[0].children) == 1
         assert isinstance(aug.children[0].children[0], iaa.Multiply)
-        assert is_parameter_instance(aug.children[0].children[0].mul,
-                                     iap.Uniform)
+        assert is_parameter_instance(aug.children[0].children[0].mul, iap.Uniform)
         assert np.isclose(aug.children[0].children[0].mul.a.value, 0.9)
         assert np.isclose(aug.children[0].children[0].mul.b.value, 1.1)
 
@@ -1382,9 +1354,11 @@ class TestMultiplySaturation(unittest.TestCase):
 class TestRemoveSaturation(unittest.TestCase):
     @classmethod
     def _compute_average_saturation(cls, image_rgb):
-        image_hsv = iaa.change_colorspace_(np.copy(image_rgb),
-                                           from_colorspace=iaa.CSPACE_RGB,
-                                           to_colorspace=iaa.CSPACE_HSV)
+        image_hsv = iaa.change_colorspace_(
+            np.copy(image_rgb),
+            from_colorspace=iaa.CSPACE_RGB,
+            to_colorspace=iaa.CSPACE_HSV,
+        )
         return np.average(image_hsv[:, :, 1])
 
     def test___init___defaults(self):
@@ -1404,10 +1378,9 @@ class TestRemoveSaturation(unittest.TestCase):
         assert aug.from_colorspace == iaa.CSPACE_HSV
 
     def test_on_images(self):
-        image = np.mod(
-            np.arange(20*20*3),
-            255
-        ).astype(np.uint8).reshape((20, 20, 3))
+        image = (
+            np.mod(np.arange(20 * 20 * 3), 255).astype(np.uint8).reshape((20, 20, 3))
+        )
 
         # add 100 to the red channel here to make the image more saturated
         image[..., 0] = np.clip((image[..., 0].astype(np.int32) + 100), 0, 255)
@@ -1470,8 +1443,9 @@ class TestAddToHueAndSaturation(unittest.TestCase):
     """
 
     @classmethod
-    def _add_hue_saturation(cls, img, value=None, value_hue=None,
-                            value_saturation=None):
+    def _add_hue_saturation(
+        cls, img, value=None, value_hue=None, value_saturation=None
+    ):
         if value is not None:
             assert value_hue is None and value_saturation is None
         else:
@@ -1487,9 +1461,9 @@ class TestAddToHueAndSaturation(unittest.TestCase):
         img_hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
         img_hsv = img_hsv.astype(np.int32)
         img_hsv[..., 0] = np.mod(
-            img_hsv[..., 0] + int((value_hue/255.0) * (360/2)), 180)
-        img_hsv[..., 1] = np.clip(
-            img_hsv[..., 1] + value_saturation, 0, 255)
+            img_hsv[..., 0] + int((value_hue / 255.0) * (360 / 2)), 180
+        )
+        img_hsv[..., 1] = np.clip(img_hsv[..., 1] + value_saturation, 0, 255)
         img_hsv = img_hsv.astype(np.uint8)
         return cv2.cvtColor(img_hsv, cv2.COLOR_HSV2RGB)
 
@@ -1504,8 +1478,9 @@ class TestAddToHueAndSaturation(unittest.TestCase):
         assert aug.per_channel.value == 0
 
     def test___init___value_none(self):
-        aug = iaa.AddToHueAndSaturation(value_hue=(-20, 20),
-                                        value_saturation=[0, 5, 10])
+        aug = iaa.AddToHueAndSaturation(
+            value_hue=(-20, 20), value_saturation=[0, 5, 10]
+        )
         assert aug.value is None
         assert is_parameter_instance(aug.value_hue, iap.DiscreteUniform)
         assert is_parameter_instance(aug.value_saturation, iap.Choice)
@@ -1536,33 +1511,31 @@ class TestAddToHueAndSaturation(unittest.TestCase):
         intensity_values = [0, 1, 128, 254, 255]  # = pixel values
         for iv in intensity_values:
             with self.subTest(intensity=iv):
-                assert table_hue[0, iv] == _hue(iv-255)  # add value: -255
-                assert table_hue[1, iv] == _hue(iv-254)  # add value: -254
-                assert table_hue[254, iv] == _hue(iv-1)  # add value: -1
-                assert table_hue[255, iv] == _hue(iv-0)  # add value: 0
-                assert table_hue[256, iv] == _hue(iv+1)  # add value: 1
-                assert table_hue[509, iv] == _hue(iv+254)  # add value: 254
-                assert table_hue[510, iv] == _hue(iv+255)  # add value: 255
+                assert table_hue[0, iv] == _hue(iv - 255)  # add value: -255
+                assert table_hue[1, iv] == _hue(iv - 254)  # add value: -254
+                assert table_hue[254, iv] == _hue(iv - 1)  # add value: -1
+                assert table_hue[255, iv] == _hue(iv - 0)  # add value: 0
+                assert table_hue[256, iv] == _hue(iv + 1)  # add value: 1
+                assert table_hue[509, iv] == _hue(iv + 254)  # add value: 254
+                assert table_hue[510, iv] == _hue(iv + 255)  # add value: 255
 
-                assert table_saturation[0, iv] == _sat(iv-255)  # input: -255
-                assert table_saturation[1, iv] == _sat(iv-254)  # input: -254
-                assert table_saturation[254, iv] == _sat(iv-1)  # input: -1
-                assert table_saturation[255, iv] == _sat(iv+0)  # input: 0
-                assert table_saturation[256, iv] == _sat(iv+1)  # input: 1
-                assert table_saturation[509, iv] == _sat(iv+254)  # input: 254
-                assert table_saturation[510, iv] == _sat(iv+255)  # input: 255
+                assert table_saturation[0, iv] == _sat(iv - 255)  # input: -255
+                assert table_saturation[1, iv] == _sat(iv - 254)  # input: -254
+                assert table_saturation[254, iv] == _sat(iv - 1)  # input: -1
+                assert table_saturation[255, iv] == _sat(iv + 0)  # input: 0
+                assert table_saturation[256, iv] == _sat(iv + 1)  # input: 1
+                assert table_saturation[509, iv] == _sat(iv + 254)  # input: 254
+                assert table_saturation[510, iv] == _sat(iv + 255)  # input: 255
 
     def test_augment_images_compare_backends(self):
         base_img = self.create_base_image()
         gen = itertools.product([False, True], [-255, -100, -1, 0, 1, 100, 255])
         for per_channel, value in gen:
             with self.subTest(value=value, per_channel=per_channel):
-                aug_cv2 = iaa.AddToHueAndSaturation(value,
-                                                    per_channel=per_channel)
+                aug_cv2 = iaa.AddToHueAndSaturation(value, per_channel=per_channel)
                 aug_cv2.backend = "cv2"
 
-                aug_numpy = iaa.AddToHueAndSaturation(value,
-                                                      per_channel=per_channel)
+                aug_numpy = iaa.AddToHueAndSaturation(value, per_channel=per_channel)
                 aug_numpy.backend = "numpy"
 
                 img_observed1 = aug_cv2(image=base_img)
@@ -1627,7 +1600,8 @@ class TestAddToHueAndSaturation(unittest.TestCase):
 
         aug = iaa.AddToHueAndSaturation(value=_DummyParam(), per_channel=True)
         img_expected = self._add_hue_saturation(
-            base_img, value_hue=10, value_saturation=20)
+            base_img, value_hue=10, value_saturation=20
+        )
         img_observed = aug.augment_image(base_img)
 
         assert np.array_equal(img_observed, img_expected)
@@ -1646,17 +1620,24 @@ class TestAddToHueAndSaturation(unittest.TestCase):
                 return np.float32([1.0, 0.0, 1.0])
 
         aug = iaa.AddToHueAndSaturation(
-            value=_DummyParamValue(), per_channel=_DummyParamPerChannel())
+            value=_DummyParamValue(), per_channel=_DummyParamPerChannel()
+        )
 
         img_expected1 = self._add_hue_saturation(
-            base_img, value_hue=10, value_saturation=20)
+            base_img, value_hue=10, value_saturation=20
+        )
         img_expected2 = self._add_hue_saturation(
-            base_img, value_hue=10, value_saturation=10)
+            base_img, value_hue=10, value_saturation=10
+        )
         img_expected3 = self._add_hue_saturation(
-            base_img, value_hue=10, value_saturation=20)
+            base_img, value_hue=10, value_saturation=20
+        )
 
-        img_observed1, img_observed2, img_observed3, = \
-            aug.augment_images([base_img] * 3)
+        (
+            img_observed1,
+            img_observed2,
+            img_observed3,
+        ) = aug.augment_images([base_img] * 3)
 
         assert np.array_equal(img_observed1, img_expected1)
         assert np.array_equal(img_observed2, img_expected2)
@@ -1670,7 +1651,7 @@ class TestAddToHueAndSaturation(unittest.TestCase):
         expected_imgs = [
             iaa.AddToHueAndSaturation(0).augment_image(base_img),
             iaa.AddToHueAndSaturation(10).augment_image(base_img),
-            iaa.AddToHueAndSaturation(20).augment_image(base_img)
+            iaa.AddToHueAndSaturation(20).augment_image(base_img),
         ]
 
         assert not np.array_equal(expected_imgs[0], expected_imgs[1])
@@ -1687,18 +1668,15 @@ class TestAddToHueAndSaturation(unittest.TestCase):
         assert np.sum(list(seen.values())) == nb_iterations
         n_exp = nb_iterations / 3
         n_exp_tol = nb_iterations * 0.1
-        assert all([n_exp - n_exp_tol < v < n_exp + n_exp_tol
-                    for v in seen.values()])
+        assert all([n_exp - n_exp_tol < v < n_exp + n_exp_tol for v in seen.values()])
 
     def test_augment_images__value_hue(self):
         base_img = self.create_base_image()
 
-        for value_hue in [-255, -254, -128, -64, -10, -1,
-                          0, 1, 10, 64, 128, 254, 255]:
+        for value_hue in [-255, -254, -128, -64, -10, -1, 0, 1, 10, 64, 128, 254, 255]:
             with self.subTest(value_hue=value_hue):
                 aug = iaa.AddToHueAndSaturation(value_hue=value_hue)
-                img_expected = self._add_hue_saturation(
-                    base_img, value_hue=value_hue)
+                img_expected = self._add_hue_saturation(base_img, value_hue=value_hue)
 
                 img_observed = aug(image=base_img)
 
@@ -1717,8 +1695,7 @@ class TestAddToHueAndSaturation(unittest.TestCase):
         img_expected2 = self._add_hue_saturation(base_img, value_hue=20)
         img_expected3 = self._add_hue_saturation(base_img, value_hue=30)
 
-        img_observed1, img_observed2, img_observed3 = \
-            aug.augment_images([base_img] * 3)
+        img_observed1, img_observed2, img_observed3 = aug.augment_images([base_img] * 3)
 
         assert np.array_equal(img_observed1, img_expected1)
         assert np.array_equal(img_observed2, img_expected2)
@@ -1727,13 +1704,12 @@ class TestAddToHueAndSaturation(unittest.TestCase):
     def test_augment_images__value_saturation(self):
         base_img = self.create_base_image()
 
-        for value_saturation in [-255, -254, -128, -64, -10,
-                                 0, 10, 64, 128, 254, 255]:
+        for value_saturation in [-255, -254, -128, -64, -10, 0, 10, 64, 128, 254, 255]:
             with self.subTest(value_hue=value_saturation):
-                aug = iaa.AddToHueAndSaturation(
-                    value_saturation=value_saturation)
+                aug = iaa.AddToHueAndSaturation(value_saturation=value_saturation)
                 img_expected = self._add_hue_saturation(
-                    base_img, value_saturation=value_saturation)
+                    base_img, value_saturation=value_saturation
+                )
 
                 img_observed = aug(image=base_img)
 
@@ -1752,8 +1728,7 @@ class TestAddToHueAndSaturation(unittest.TestCase):
         img_expected2 = self._add_hue_saturation(base_img, value_saturation=20)
         img_expected3 = self._add_hue_saturation(base_img, value_saturation=30)
 
-        img_observed1, img_observed2, img_observed3 = \
-            aug.augment_images([base_img] * 3)
+        img_observed1, img_observed2, img_observed3 = aug.augment_images([base_img] * 3)
 
         assert np.array_equal(img_observed1, img_expected1)
         assert np.array_equal(img_observed2, img_expected2)
@@ -1766,18 +1741,21 @@ class TestAddToHueAndSaturation(unittest.TestCase):
             def _draw_samples(self, size, random_state):
                 return np.float32([10, 20, 30])
 
-        aug = iaa.AddToHueAndSaturation(value_hue=_DummyParam(),
-                                        value_saturation=_DummyParam()+40)
+        aug = iaa.AddToHueAndSaturation(
+            value_hue=_DummyParam(), value_saturation=_DummyParam() + 40
+        )
 
-        img_expected1 = self._add_hue_saturation(base_img, value_hue=10,
-                                                 value_saturation=40+10)
-        img_expected2 = self._add_hue_saturation(base_img, value_hue=20,
-                                                 value_saturation=40+20)
-        img_expected3 = self._add_hue_saturation(base_img, value_hue=30,
-                                                 value_saturation=40+30)
+        img_expected1 = self._add_hue_saturation(
+            base_img, value_hue=10, value_saturation=40 + 10
+        )
+        img_expected2 = self._add_hue_saturation(
+            base_img, value_hue=20, value_saturation=40 + 20
+        )
+        img_expected3 = self._add_hue_saturation(
+            base_img, value_hue=30, value_saturation=40 + 30
+        )
 
-        img_observed1, img_observed2, img_observed3 = \
-            aug.augment_images([base_img] * 3)
+        img_observed1, img_observed2, img_observed3 = aug.augment_images([base_img] * 3)
 
         assert np.array_equal(img_observed1, img_expected1)
         assert np.array_equal(img_observed2, img_expected2)
@@ -1795,8 +1773,7 @@ class TestAddToHueAndSaturation(unittest.TestCase):
         assert np.isclose(params[3].p.value, 0.5)
 
     def test_get_parameters_value_hue_and_value_saturation(self):
-        aug = iaa.AddToHueAndSaturation(value_hue=(-20, 20),
-                                        value_saturation=5)
+        aug = iaa.AddToHueAndSaturation(value_hue=(-20, 20), value_saturation=5)
         params = aug.get_parameters()
         assert params[0] is None
         assert is_parameter_instance(params[1], iap.DiscreteUniform)
@@ -1808,9 +1785,9 @@ class TestAddToHueAndSaturation(unittest.TestCase):
         assert params[3].value == 0
 
     def test_pickleable(self):
-        aug = iaa.AddToHueAndSaturation(value_hue=(-50, 50),
-                                        value_saturation=(-50, 50),
-                                        seed=1)
+        aug = iaa.AddToHueAndSaturation(
+            value_hue=(-50, 50), value_saturation=(-50, 50), seed=1
+        )
         runtest_pickleable_uint8_img(aug, iterations=10, shape=(50, 50, 3))
 
 
@@ -1880,17 +1857,20 @@ class TestGrayscale(unittest.TestCase):
         aug = iaa.Grayscale((0.0, 1.0))
         base_img = np.uint8([255, 0, 0]).reshape((1, 1, 3))
         base_img_float = base_img.astype(np.float64) / 255.0
-        base_img_gray = iaa.Grayscale(1.0)\
-            .augment_image(base_img)\
-            .astype(np.float64) / 255.0
-        distance_max = np.linalg.norm(base_img_gray.flatten()
-                                      - base_img_float.flatten())
+        base_img_gray = (
+            iaa.Grayscale(1.0).augment_image(base_img).astype(np.float64) / 255.0
+        )
+        distance_max = np.linalg.norm(
+            base_img_gray.flatten() - base_img_float.flatten()
+        )
         nb_iterations = 1000
         distances = []
         for _ in sm.xrange(nb_iterations):
             observed = aug.augment_image(base_img).astype(np.float64) / 255.0
-            distance = np.linalg.norm(
-                observed.flatten() - base_img_float.flatten()) / distance_max
+            distance = (
+                np.linalg.norm(observed.flatten() - base_img_float.flatten())
+                / distance_max
+            )
             distances.append(distance)
 
         assert 0 - 1e-4 < min(distances) < 0.1
@@ -1898,14 +1878,12 @@ class TestGrayscale(unittest.TestCase):
         assert 0.9 < max(distances) < 1.0 + 1e-4
 
         nb_bins = 5
-        hist, _ = np.histogram(
-            distances, bins=nb_bins, range=(0.0, 1.0), density=False)
-        density_expected = 1.0/nb_bins
+        hist, _ = np.histogram(distances, bins=nb_bins, range=(0.0, 1.0), density=False)
+        density_expected = 1.0 / nb_bins
         density_tolerance = 0.05
         for nb_samples in hist:
             density = nb_samples / nb_iterations
-            assert np.isclose(density, density_expected,
-                              rtol=0, atol=density_tolerance)
+            assert np.isclose(density, density_expected, rtol=0, atol=density_tolerance)
 
     def test_pickleable(self):
         aug = iaa.Grayscale((0.1, 0.9), seed=1)
@@ -1947,8 +1925,7 @@ class TestChangeColorTemperature(unittest.TestCase):
     @mock.patch("imgaug.augmenters.color.change_color_temperatures_")
     def test_mocked(self, mock_ccts):
         image = np.zeros((1, 1, 3), dtype=np.uint8)
-        aug = iaa.ChangeColorTemperature((1000, 40000),
-                                         from_colorspace=iaa.CSPACE_HLS)
+        aug = iaa.ChangeColorTemperature((1000, 40000), from_colorspace=iaa.CSPACE_HLS)
 
         def _side_effect(images, kelvins, from_colorspaces):
             return images
@@ -1958,14 +1935,12 @@ class TestChangeColorTemperature(unittest.TestCase):
         _image_aug = aug(images=[image, image])
 
         assert mock_ccts.call_count == 1
-        assert np.array_equal(mock_ccts.call_args_list[0][0][0],
-                              [image, image])
+        assert np.array_equal(mock_ccts.call_args_list[0][0][0], [image, image])
         assert not np.isclose(
             mock_ccts.call_args_list[0][0][1][0],  # kelvin img 1
             mock_ccts.call_args_list[0][0][1][1],  # kelvin img 2
         )
-        assert (mock_ccts.call_args_list[0][1]["from_colorspaces"]
-                == iaa.CSPACE_HLS)
+        assert mock_ccts.call_args_list[0][1]["from_colorspaces"] == iaa.CSPACE_HLS
 
     def test_single_image(self):
         image = np.full((1, 1, 3), 255, dtype=np.uint8)
@@ -1977,8 +1952,7 @@ class TestChangeColorTemperature(unittest.TestCase):
         assert np.array_equal(image_aug, expected)
 
     def test_get_parameters(self):
-        aug = iaa.ChangeColorTemperature(1111,
-                                         from_colorspace=iaa.CSPACE_HLS)
+        aug = iaa.ChangeColorTemperature(1111, from_colorspace=iaa.CSPACE_HLS)
         params = aug.get_parameters()
         assert params[0].value == 1111
         assert params[1] == iaa.CSPACE_HLS
@@ -2009,8 +1983,7 @@ class TestKMeansColorQuantization(unittest.TestCase):
         assert aug.n_colors.b.value == 16
         assert aug.from_colorspace == iaa.CSPACE_RGB
         assert isinstance(aug.to_colorspace, list)
-        assert aug.to_colorspace == [iaa.CSPACE_RGB,
-                                     iaa.CSPACE_Lab]
+        assert aug.to_colorspace == [iaa.CSPACE_RGB, iaa.CSPACE_Lab]
         assert aug.max_size == 128
         assert aug.interpolation == "linear"
 
@@ -2020,22 +1993,22 @@ class TestKMeansColorQuantization(unittest.TestCase):
             from_colorspace=iaa.CSPACE_BGR,
             to_colorspace=[iaa.CSPACE_HSV, iaa.CSPACE_Lab],
             max_size=None,
-            interpolation="cubic"
+            interpolation="cubic",
         )
         assert is_parameter_instance(aug.n_colors, iap.DiscreteUniform)
         assert aug.n_colors.a.value == 5
         assert aug.n_colors.b.value == 8
         assert aug.from_colorspace == iaa.CSPACE_BGR
         assert isinstance(aug.to_colorspace, list)
-        assert aug.to_colorspace == [iaa.CSPACE_HSV,
-                                     iaa.CSPACE_Lab]
+        assert aug.to_colorspace == [iaa.CSPACE_HSV, iaa.CSPACE_Lab]
         assert aug.max_size is None
         assert aug.interpolation == "cubic"
 
     def test_n_colors_deterministic(self):
         aug = self.augmenter(n_colors=5)
         mock_quantize_func = mock.MagicMock(
-            return_value=np.zeros((4, 4, 3), dtype=np.uint8))
+            return_value=np.zeros((4, 4, 3), dtype=np.uint8)
+        )
 
         fname = self.quantization_func_name
         with mock.patch(fname, mock_quantize_func):
@@ -2047,7 +2020,8 @@ class TestKMeansColorQuantization(unittest.TestCase):
     def test_n_colors_tuple(self):
         aug = self.augmenter(n_colors=(2, 1000))
         mock_quantize_func = mock.MagicMock(
-            return_value=np.zeros((4, 4, 3), dtype=np.uint8))
+            return_value=np.zeros((4, 4, 3), dtype=np.uint8)
+        )
 
         n_images = 10
         fname = self.quantization_func_name
@@ -2056,16 +2030,18 @@ class TestKMeansColorQuantization(unittest.TestCase):
             _ = aug.augment_images([image] * n_images)
 
         # call i, args, argument 1
-        n_colors = [mock_quantize_func.call_args_list[i][0][1]
-                    for i in sm.xrange(n_images)]
+        n_colors = [
+            mock_quantize_func.call_args_list[i][0][1] for i in sm.xrange(n_images)
+        ]
         assert all([2 <= n_colors_i <= 1000 for n_colors_i in n_colors])
         assert len(set(n_colors)) > 1
 
     def test_to_colorspace(self):
-        image = np.arange(3*3*3, dtype=np.uint8).reshape((3, 3, 3))
+        image = np.arange(3 * 3 * 3, dtype=np.uint8).reshape((3, 3, 3))
         aug = self.augmenter(to_colorspace="HSV")
         mock_quantize_func = mock.MagicMock(
-            return_value=np.zeros((4, 4, 3), dtype=np.uint8))
+            return_value=np.zeros((4, 4, 3), dtype=np.uint8)
+        )
 
         fname = self.quantization_func_name
         with mock.patch(fname, mock_quantize_func):
@@ -2073,22 +2049,21 @@ class TestKMeansColorQuantization(unittest.TestCase):
 
         # call 0, kwargs, argument 'to_colorspace'
         expected = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
-        assert np.array_equal(mock_quantize_func.call_args_list[0][0][0],
-                              expected)
+        assert np.array_equal(mock_quantize_func.call_args_list[0][0][0], expected)
 
     def test_to_colorspace_is_none(self):
-        image = np.arange(3*3*3, dtype=np.uint8).reshape((3, 3, 3))
+        image = np.arange(3 * 3 * 3, dtype=np.uint8).reshape((3, 3, 3))
         aug = self.augmenter(to_colorspace=None)
         mock_quantize_func = mock.MagicMock(
-            return_value=np.zeros((4, 4, 3), dtype=np.uint8))
+            return_value=np.zeros((4, 4, 3), dtype=np.uint8)
+        )
 
         fname = self.quantization_func_name
         with mock.patch(fname, mock_quantize_func):
             _ = aug.augment_image(image)
 
         # call 0, kwargs, argument 'to_colorspace'
-        assert np.array_equal(mock_quantize_func.call_args_list[0][0][0],
-                              image)
+        assert np.array_equal(mock_quantize_func.call_args_list[0][0][0], image)
 
     def test_from_colorspace(self):
         def _noop(img):
@@ -2105,13 +2080,9 @@ class TestKMeansColorQuantization(unittest.TestCase):
             _ = aug.augment_image(np.zeros((4, 4, 3), dtype=np.uint8))
 
         # call 0, kwargs, argument 'from_colorspace'
-        assert (
-            mock_change_colorspace.call_args_list[0][1]["from_colorspace"]
-            == "BGR")
+        assert mock_change_colorspace.call_args_list[0][1]["from_colorspace"] == "BGR"
         # call 1, kwargs, argument 'from_colorspace' (inverse transform)
-        assert (
-            mock_change_colorspace.call_args_list[1][1]["from_colorspace"]
-            == "foo")
+        assert mock_change_colorspace.call_args_list[1][1]["from_colorspace"] == "foo"
 
     def test_max_size_is_none(self):
         image = np.zeros((1000, 4, 3), dtype=np.uint8)
@@ -2201,57 +2172,65 @@ class TestKMeansColorQuantization(unittest.TestCase):
         assert mock_imresize.call_args_list[1][1]["interpolation"] == "cubic"
 
     def test_images_with_1_channel_integrationtest(self):
-        image = np.uint8([
-            [0, 0, 255, 255],
-            [0, 1, 255, 255],
-        ])
-        expected = np.uint8([
-            [0, 0, 255, 255],
-            [0, 0, 255, 255],
-        ])
+        image = np.uint8(
+            [
+                [0, 0, 255, 255],
+                [0, 1, 255, 255],
+            ]
+        )
+        expected = np.uint8(
+            [
+                [0, 0, 255, 255],
+                [0, 0, 255, 255],
+            ]
+        )
 
         aug = self.augmenter(
-            n_colors=2,
-            from_colorspace="RGB",
-            to_colorspace="RGB",
-            max_size=None)
+            n_colors=2, from_colorspace="RGB", to_colorspace="RGB", max_size=None
+        )
 
         observed = aug(image=image)
 
         assert np.array_equal(observed, expected)
 
     def test_images_with_3_channels_integrationtest(self):
-        image = np.uint8([
-            [0, 0, 255, 255],
-            [0, 1, 255, 255],
-        ])
-        expected = np.uint8([
-            [0, 0, 255, 255],
-            [0, 0, 255, 255],
-        ])
+        image = np.uint8(
+            [
+                [0, 0, 255, 255],
+                [0, 1, 255, 255],
+            ]
+        )
+        expected = np.uint8(
+            [
+                [0, 0, 255, 255],
+                [0, 0, 255, 255],
+            ]
+        )
 
         image = np.tile(image[..., np.newaxis], (1, 1, 3))
         expected = np.tile(expected[..., np.newaxis], (1, 1, 3))
 
         aug = self.augmenter(
-            n_colors=2,
-            from_colorspace="RGB",
-            to_colorspace="RGB",
-            max_size=None)
+            n_colors=2, from_colorspace="RGB", to_colorspace="RGB", max_size=None
+        )
 
         observed = aug(image=image)
 
         assert np.array_equal(observed, expected)
 
     def test_images_with_4_channels_integrationtest(self):
-        image = np.uint8([
-            [0, 0, 255, 255],
-            [0, 1, 255, 255],
-        ])
-        expected = np.uint8([
-            [0, 0, 255, 255],
-            [0, 0, 255, 255],
-        ])
+        image = np.uint8(
+            [
+                [0, 0, 255, 255],
+                [0, 1, 255, 255],
+            ]
+        )
+        expected = np.uint8(
+            [
+                [0, 0, 255, 255],
+                [0, 0, 255, 255],
+            ]
+        )
 
         image = np.tile(image[..., np.newaxis], (1, 1, 4))
         expected = np.tile(expected[..., np.newaxis], (1, 1, 3))
@@ -2260,10 +2239,8 @@ class TestKMeansColorQuantization(unittest.TestCase):
         expected = np.concatenate([expected, image[:, :, 3:4]], axis=-1)
 
         aug = self.augmenter(
-            n_colors=2,
-            from_colorspace="RGB",
-            to_colorspace="RGB",
-            max_size=None)
+            n_colors=2, from_colorspace="RGB", to_colorspace="RGB", max_size=None
+        )
 
         observed = aug(image=image)
 
@@ -2275,7 +2252,7 @@ class TestKMeansColorQuantization(unittest.TestCase):
             from_colorspace=iaa.CSPACE_BGR,
             to_colorspace=[iaa.CSPACE_HSV, iaa.CSPACE_Lab],
             max_size=None,
-            interpolation="cubic"
+            interpolation="cubic",
         )
         params = aug.get_parameters()
         assert is_parameter_instance(params[0], iap.DiscreteUniform)
@@ -2283,8 +2260,7 @@ class TestKMeansColorQuantization(unittest.TestCase):
         assert params[0].b.value == 8
         assert params[1] == iaa.CSPACE_BGR
         assert isinstance(params[2], list)
-        assert params[2] == [iaa.CSPACE_HSV,
-                             iaa.CSPACE_Lab]
+        assert params[2] == [iaa.CSPACE_HSV, iaa.CSPACE_Lab]
         assert params[3] is None
         assert params[4] == "cubic"
 
@@ -2296,7 +2272,7 @@ class TestKMeansColorQuantization(unittest.TestCase):
 class Test_quantize_colors_kmeans(unittest.TestCase):
     @mock.patch("imgaug.imgaug.warn_deprecated")
     def test_warns_deprecated(self, mock_warn):
-        arr = np.arange(1*1*3).astype(np.uint8).reshape((1, 1, 3))
+        arr = np.arange(1 * 1 * 3).astype(np.uint8).reshape((1, 1, 3))
 
         _ = iaa.quantize_colors_kmeans(arr, 2)
 
@@ -2305,13 +2281,12 @@ class Test_quantize_colors_kmeans(unittest.TestCase):
     @mock.patch("imgaug.augmenters.color.quantize_kmeans")
     @mock.patch("imgaug.imgaug.warn_deprecated")
     def test_calls_quantize_kmeans(self, mock_warn, mock_qu):
-        arr = np.arange(1*1*3).astype(np.uint8).reshape((1, 1, 3))
+        arr = np.arange(1 * 1 * 3).astype(np.uint8).reshape((1, 1, 3))
         mock_qu.return_value = "foo"
 
         result = iaa.quantize_colors_kmeans(arr, 7)
 
-        mock_qu.assert_called_once_with(arr=arr, nb_clusters=7,
-                                        nb_max_iter=10, eps=1.0)
+        mock_qu.assert_called_once_with(arr=arr, nb_clusters=7, nb_max_iter=10, eps=1.0)
         assert result == "foo"
         assert mock_warn.call_count == 1
 
@@ -2322,14 +2297,18 @@ class Test_quantize_kmeans(unittest.TestCase):
 
     @classmethod
     def _test_images_with_n_channels(cls, nb_channels):
-        image = np.uint8([
-            [0, 0, 255, 255],
-            [0, 1, 255, 255],
-        ])
-        expected = np.uint8([
-            [0, 0, 255, 255],
-            [0, 0, 255, 255],
-        ])
+        image = np.uint8(
+            [
+                [0, 0, 255, 255],
+                [0, 1, 255, 255],
+            ]
+        )
+        expected = np.uint8(
+            [
+                [0, 0, 255, 255],
+                [0, 0, 255, 255],
+            ]
+        )
 
         if nb_channels is not None:
             image = np.tile(image[..., np.newaxis], (1, 1, nb_channels))
@@ -2349,10 +2328,12 @@ class Test_quantize_kmeans(unittest.TestCase):
         self._test_images_with_n_channels(3)
 
     def test_more_colors_than_pixels(self):
-        image = np.uint8([
-            [0, 0, 255, 255],
-            [0, 1, 255, 255],
-        ])
+        image = np.uint8(
+            [
+                [0, 0, 255, 255],
+                [0, 1, 255, 255],
+            ]
+        )
         expected = np.copy(image)
 
         observed = iaa.quantize_kmeans(image, 100)
@@ -2360,10 +2341,12 @@ class Test_quantize_kmeans(unittest.TestCase):
         assert np.array_equal(observed, expected)
 
     def test_failure_if_n_colors_less_than_2(self):
-        image = np.uint8([
-            [0, 0, 255, 255],
-            [0, 1, 255, 255],
-        ])
+        image = np.uint8(
+            [
+                [0, 0, 255, 255],
+                [0, 1, 255, 255],
+            ]
+        )
 
         got_exception = False
         try:
@@ -2387,15 +2370,7 @@ class Test_quantize_kmeans(unittest.TestCase):
             assert np.array_equal(image_quantized, images_quantized[0])
 
     def test_zero_sized_axes(self):
-        shapes = [
-            (0, 0),
-            (0, 1),
-            (1, 0),
-            (0, 1, 0),
-            (1, 0, 0),
-            (0, 1, 1),
-            (1, 0, 1)
-        ]
+        shapes = [(0, 0), (0, 1), (1, 0), (0, 1, 0), (1, 0, 0), (0, 1, 1), (1, 0, 1)]
 
         for shape in shapes:
             with self.subTest(shape=shape):
@@ -2408,12 +2383,7 @@ class Test_quantize_kmeans(unittest.TestCase):
                 assert image_aug.shape == shape
 
     def test_unusual_channel_numbers(self):
-        shapes = [
-            (1, 1, 4),
-            (1, 1, 5),
-            (1, 1, 512),
-            (1, 1, 513)
-        ]
+        shapes = [(1, 1, 4), (1, 1, 5), (1, 1, 512), (1, 1, 513)]
 
         for shape in shapes:
             with self.subTest(shape=shape):
@@ -2454,70 +2424,77 @@ class TestUniformColorQuantization(TestKMeansColorQuantization):
             from_colorspace=iaa.CSPACE_BGR,
             to_colorspace=[iaa.CSPACE_HSV, iaa.CSPACE_Lab],
             max_size=128,
-            interpolation="cubic"
+            interpolation="cubic",
         )
         assert is_parameter_instance(aug.n_colors, iap.DiscreteUniform)
         assert aug.n_colors.a.value == 5
         assert aug.n_colors.b.value == 8
         assert aug.from_colorspace == iaa.CSPACE_BGR
         assert isinstance(aug.to_colorspace, list)
-        assert aug.to_colorspace == [iaa.CSPACE_HSV,
-                                     iaa.CSPACE_Lab]
+        assert aug.to_colorspace == [iaa.CSPACE_HSV, iaa.CSPACE_Lab]
         assert aug.max_size == 128
         assert aug.interpolation == "cubic"
 
     def test_images_with_1_channel_integrationtest(self):
-        image = np.uint8([
-            [0, 0, 255, 255],
-            [0, 1, 255, 255],
-        ])
-        expected = np.uint8([
-            [64, 64, 192, 192],
-            [64, 64, 192, 192],
-        ])
+        image = np.uint8(
+            [
+                [0, 0, 255, 255],
+                [0, 1, 255, 255],
+            ]
+        )
+        expected = np.uint8(
+            [
+                [64, 64, 192, 192],
+                [64, 64, 192, 192],
+            ]
+        )
 
         aug = self.augmenter(
-            n_colors=2,
-            from_colorspace="RGB",
-            to_colorspace="RGB",
-            max_size=None)
+            n_colors=2, from_colorspace="RGB", to_colorspace="RGB", max_size=None
+        )
 
         observed = aug(image=image)
 
         assert np.array_equal(observed, expected)
 
     def test_images_with_3_channels_integrationtest(self):
-        image = np.uint8([
-            [0, 0, 255, 255],
-            [0, 1, 255, 255],
-        ])
-        expected = np.uint8([
-            [64, 64, 192, 192],
-            [64, 64, 192, 192],
-        ])
+        image = np.uint8(
+            [
+                [0, 0, 255, 255],
+                [0, 1, 255, 255],
+            ]
+        )
+        expected = np.uint8(
+            [
+                [64, 64, 192, 192],
+                [64, 64, 192, 192],
+            ]
+        )
 
         image = np.tile(image[..., np.newaxis], (1, 1, 3))
         expected = np.tile(expected[..., np.newaxis], (1, 1, 3))
 
         aug = self.augmenter(
-            n_colors=2,
-            from_colorspace="RGB",
-            to_colorspace="RGB",
-            max_size=None)
+            n_colors=2, from_colorspace="RGB", to_colorspace="RGB", max_size=None
+        )
 
         observed = aug(image=image)
 
         assert np.array_equal(observed, expected)
 
     def test_images_with_4_channels_integrationtest(self):
-        image = np.uint8([
-            [0, 0, 255, 255],
-            [0, 1, 255, 255],
-        ])
-        expected = np.uint8([
-            [64, 64, 192, 192],
-            [64, 64, 192, 192],
-        ])
+        image = np.uint8(
+            [
+                [0, 0, 255, 255],
+                [0, 1, 255, 255],
+            ]
+        )
+        expected = np.uint8(
+            [
+                [64, 64, 192, 192],
+                [64, 64, 192, 192],
+            ]
+        )
 
         image = np.tile(image[..., np.newaxis], (1, 1, 4))
         expected = np.tile(expected[..., np.newaxis], (1, 1, 3))
@@ -2526,10 +2503,8 @@ class TestUniformColorQuantization(TestKMeansColorQuantization):
         expected = np.concatenate([expected, image[:, :, 3:4]], axis=-1)
 
         aug = self.augmenter(
-            n_colors=2,
-            from_colorspace="RGB",
-            to_colorspace="RGB",
-            max_size=None)
+            n_colors=2, from_colorspace="RGB", to_colorspace="RGB", max_size=None
+        )
 
         observed = aug(image=image)
 
@@ -2542,8 +2517,7 @@ class TestUniformColorQuantization(TestKMeansColorQuantization):
         # Actual to_colorspace doesn't matter here as it is overwritten
         # via return_value. Important is just to set it to a non-None value
         # so that a colorspace conversion actually happens.
-        aug = self.augmenter(from_colorspace="BGR",
-                             to_colorspace="Lab")
+        aug = self.augmenter(from_colorspace="BGR", to_colorspace="Lab")
         mock_change_colorspace = mock.MagicMock()
         mock_change_colorspace.return_value = mock_change_colorspace
         mock_change_colorspace.augment_image.side_effect = _noop
@@ -2554,13 +2528,9 @@ class TestUniformColorQuantization(TestKMeansColorQuantization):
             _ = aug.augment_image(np.zeros((4, 4, 3), dtype=np.uint8))
 
         # call 0, kwargs, argument 'from_colorspace'
-        assert (
-            mock_change_colorspace.call_args_list[0][1]["from_colorspace"]
-            == "BGR")
+        assert mock_change_colorspace.call_args_list[0][1]["from_colorspace"] == "BGR"
         # call 1, kwargs, argument 'from_colorspace' (inverse transform)
-        assert (
-            mock_change_colorspace.call_args_list[1][1]["from_colorspace"]
-            == "foo")
+        assert mock_change_colorspace.call_args_list[1][1]["from_colorspace"] == "foo"
 
     def test_pickleable(self):
         aug = self.augmenter(n_colors=(2, 32), seed=1)
@@ -2597,56 +2567,59 @@ class TestUniformColorQuantizationToNBits(unittest.TestCase):
             from_colorspace=iaa.CSPACE_BGR,
             to_colorspace=[iaa.CSPACE_HSV, iaa.CSPACE_Lab],
             max_size=128,
-            interpolation="cubic"
+            interpolation="cubic",
         )
         assert is_parameter_instance(aug.counts, iap.DiscreteUniform)
         assert aug.counts.a.value == 5
         assert aug.counts.b.value == 8
         assert aug.from_colorspace == iaa.CSPACE_BGR
         assert isinstance(aug.to_colorspace, list)
-        assert aug.to_colorspace == [iaa.CSPACE_HSV,
-                                     iaa.CSPACE_Lab]
+        assert aug.to_colorspace == [iaa.CSPACE_HSV, iaa.CSPACE_Lab]
         assert aug.max_size == 128
         assert aug.interpolation == "cubic"
 
     def test_images_with_1_channel_integrationtest(self):
-        image = np.uint8([
-            [0, 0, 255, 255],
-            [0, 1, 255, 255],
-        ])
-        expected = np.uint8([
-            [0, 0, 128, 128],
-            [0, 0, 128, 128],
-        ])
+        image = np.uint8(
+            [
+                [0, 0, 255, 255],
+                [0, 1, 255, 255],
+            ]
+        )
+        expected = np.uint8(
+            [
+                [0, 0, 128, 128],
+                [0, 0, 128, 128],
+            ]
+        )
 
         aug = self.augmenter(
-            nb_bits=1,
-            from_colorspace="RGB",
-            to_colorspace="RGB",
-            max_size=None)
+            nb_bits=1, from_colorspace="RGB", to_colorspace="RGB", max_size=None
+        )
 
         observed = aug(image=image)
 
         assert np.array_equal(observed, expected)
 
     def test_images_with_3_channels_integrationtest(self):
-        image = np.uint8([
-            [0, 0, 255, 255],
-            [0, 1, 255, 255],
-        ])
-        expected = np.uint8([
-            [0, 0, 128, 128],
-            [0, 0, 128, 128],
-        ])
+        image = np.uint8(
+            [
+                [0, 0, 255, 255],
+                [0, 1, 255, 255],
+            ]
+        )
+        expected = np.uint8(
+            [
+                [0, 0, 128, 128],
+                [0, 0, 128, 128],
+            ]
+        )
 
         image = np.tile(image[..., np.newaxis], (1, 1, 3))
         expected = np.tile(expected[..., np.newaxis], (1, 1, 3))
 
         aug = self.augmenter(
-            nb_bits=1,
-            from_colorspace="RGB",
-            to_colorspace="RGB",
-            max_size=None)
+            nb_bits=1, from_colorspace="RGB", to_colorspace="RGB", max_size=None
+        )
 
         observed = aug(image=image)
 
@@ -2666,7 +2639,7 @@ class TestPosterize(TestUniformColorQuantizationToNBits):
 class Test_quantize_colors_uniform(unittest.TestCase):
     @mock.patch("imgaug.imgaug.warn_deprecated")
     def test_warns_deprecated(self, mock_warn):
-        arr = np.arange(1*1*3).astype(np.uint8).reshape((1, 1, 3))
+        arr = np.arange(1 * 1 * 3).astype(np.uint8).reshape((1, 1, 3))
 
         _ = iaa.quantize_colors_uniform(arr, 2)
 
@@ -2675,7 +2648,7 @@ class Test_quantize_colors_uniform(unittest.TestCase):
     @mock.patch("imgaug.augmenters.color.quantize_uniform")
     @mock.patch("imgaug.imgaug.warn_deprecated")
     def test_calls_quantize_uniform(self, mock_warn, mock_qu):
-        arr = np.arange(1*1*3).astype(np.uint8).reshape((1, 1, 3))
+        arr = np.arange(1 * 1 * 3).astype(np.uint8).reshape((1, 1, 3))
         mock_qu.return_value = "foo"
 
         result = iaa.quantize_colors_uniform(arr, 7)
@@ -2707,14 +2680,18 @@ class Test_quantize_uniform_(unittest.TestCase):
 
     @classmethod
     def _test_images_with_n_channels_2_colors(cls, nb_channels):
-        image = np.uint8([
-            [0, 0, 255, 255],
-            [0, 1, 255, 255],
-        ])
-        expected = np.uint8([
-            [64, 64, 192, 192],
-            [64, 64, 192, 192],
-        ])
+        image = np.uint8(
+            [
+                [0, 0, 255, 255],
+                [0, 1, 255, 255],
+            ]
+        )
+        expected = np.uint8(
+            [
+                [64, 64, 192, 192],
+                [64, 64, 192, 192],
+            ]
+        )
 
         if nb_channels is not None:
             image = np.tile(image[..., np.newaxis], (1, 1, nb_channels))
@@ -2726,28 +2703,20 @@ class Test_quantize_uniform_(unittest.TestCase):
 
     @classmethod
     def _test_images_with_n_channels_4_colors(cls, nb_channels):
-        image = np.uint8([
-            [0, 0, 255, 255],
-            [0, 1, 255, 255],
-            [127, 128, 220, 220]
-        ])
+        image = np.uint8([[0, 0, 255, 255], [0, 1, 255, 255], [127, 128, 220, 220]])
 
-        q = 256/4
-        c1 = np.floor(0/q) * q + q/2  # 32
-        c2 = np.floor(64/q) * q + q/2  # 96
-        c3 = np.floor(128/q) * q + q/2  # 160
-        c4 = np.floor(192/q) * q + q/2  # 224
+        q = 256 / 4
+        c1 = np.floor(0 / q) * q + q / 2  # 32
+        c2 = np.floor(64 / q) * q + q / 2  # 96
+        c3 = np.floor(128 / q) * q + q / 2  # 160
+        c4 = np.floor(192 / q) * q + q / 2  # 224
 
         assert int(c1) == 32
         assert int(c2) == 96
         assert int(c3) == 160
         assert int(c4) == 224
 
-        expected = np.uint8([
-            [c1, c1, c4, c4],
-            [c1, c1, c4, c4],
-            [c2, c3, c4, c4]
-        ])
+        expected = np.uint8([[c1, c1, c4, c4], [c1, c1, c4, c4], [c2, c3, c4, c4]])
 
         if nb_channels is not None:
             image = np.tile(image[..., np.newaxis], (1, 1, nb_channels))
@@ -2777,37 +2746,29 @@ class Test_quantize_uniform_(unittest.TestCase):
 
     def test_to_bin_centers_is_false(self):
         nb_channels = 3
-        image = np.uint8([
-            [0, 0, 255, 255],
-            [0, 1, 255, 255],
-            [127, 128, 220, 220]
-        ])
+        image = np.uint8([[0, 0, 255, 255], [0, 1, 255, 255], [127, 128, 220, 220]])
 
         c1 = 0
         c2 = 64
         c3 = 128
         c4 = 192
 
-        expected = np.uint8([
-            [c1, c1, c4, c4],
-            [c1, c1, c4, c4],
-            [c2, c3, c4, c4]
-        ])
+        expected = np.uint8([[c1, c1, c4, c4], [c1, c1, c4, c4], [c2, c3, c4, c4]])
 
         image = np.tile(image[..., np.newaxis], (1, 1, nb_channels))
         expected = np.tile(expected[..., np.newaxis], (1, 1, nb_channels))
 
-        observed = iaa.quantize_uniform_(np.copy(image),
-                                         4,
-                                         to_bin_centers=False)
+        observed = iaa.quantize_uniform_(np.copy(image), 4, to_bin_centers=False)
 
         assert np.array_equal(observed, expected)
 
     def test_failure_if_n_colors_less_than_2(self):
-        image = np.uint8([
-            [0, 0, 255, 255],
-            [0, 1, 255, 255],
-        ])
+        image = np.uint8(
+            [
+                [0, 0, 255, 255],
+                [0, 1, 255, 255],
+            ]
+        )
 
         got_exception = False
         try:
@@ -2818,14 +2779,18 @@ class Test_quantize_uniform_(unittest.TestCase):
         assert got_exception
 
     def test_noncontiguous(self):
-        image = np.uint8([
-            [0, 0, 255, 255],
-            [0, 1, 255, 255],
-        ])
-        expected = np.uint8([
-            [192, 192, 64, 64],
-            [192, 192, 64, 64],
-        ])
+        image = np.uint8(
+            [
+                [0, 0, 255, 255],
+                [0, 1, 255, 255],
+            ]
+        )
+        expected = np.uint8(
+            [
+                [192, 192, 64, 64],
+                [192, 192, 64, 64],
+            ]
+        )
 
         image_v = np.fliplr(np.copy(image))
         assert image_v.flags["C_CONTIGUOUS"] is False
@@ -2837,15 +2802,7 @@ class Test_quantize_uniform_(unittest.TestCase):
         assert np.array_equal(observed, expected)
 
     def test_zero_sized_axes(self):
-        shapes = [
-            (0, 0),
-            (0, 1),
-            (1, 0),
-            (0, 1, 0),
-            (1, 0, 0),
-            (0, 1, 1),
-            (1, 0, 1)
-        ]
+        shapes = [(0, 0), (0, 1), (1, 0), (0, 1, 0), (1, 0, 0), (0, 1, 1), (1, 0, 1)]
 
         for shape in shapes:
             with self.subTest(shape=shape):
@@ -2857,12 +2814,7 @@ class Test_quantize_uniform_(unittest.TestCase):
                 assert image_aug.shape == shape
 
     def test_unusual_channel_numbers(self):
-        shapes = [
-            (1, 1, 4),
-            (1, 1, 5),
-            (1, 1, 512),
-            (1, 1, 513)
-        ]
+        shapes = [(1, 1, 4), (1, 1, 5), (1, 1, 512), (1, 1, 513)]
 
         for shape in shapes:
             with self.subTest(shape=shape):
@@ -2906,7 +2858,7 @@ class Test_quantize_uniform_to_n_bits_(unittest.TestCase):
         assert mock_qu.call_args_list[0][0][0] is not image
         assert np.array_equal(mock_qu.call_args_list[0][0][0], image)
 
-        assert mock_qu.call_args_list[0][1]["nb_bins"] == 2**nb_bits
+        assert mock_qu.call_args_list[0][1]["nb_bins"] == 2 ** nb_bits
         assert mock_qu.call_args_list[0][1]["to_bin_centers"] is False
         assert result == "foo"
 

@@ -1,11 +1,32 @@
 from __future__ import print_function, division
 import imgaug as ia
+
 # TODO ForceSign
 from imgaug.parameters import (
-    Binomial, Choice, DiscreteUniform, Poisson, Normal, Laplace, ChiSquare,
-    Weibull, Uniform, Beta, Deterministic, Clip, Discretize, Multiply, Add,
-    Divide, Power, Absolute, RandomSign, Positive, Negative,
-    SimplexNoise, FrequencyNoise, Sigmoid
+    Binomial,
+    Choice,
+    DiscreteUniform,
+    Poisson,
+    Normal,
+    Laplace,
+    ChiSquare,
+    Weibull,
+    Uniform,
+    Beta,
+    Deterministic,
+    Clip,
+    Discretize,
+    Multiply,
+    Add,
+    Divide,
+    Power,
+    Absolute,
+    RandomSign,
+    Positive,
+    Negative,
+    SimplexNoise,
+    FrequencyNoise,
+    Sigmoid,
 )
 import numpy as np
 
@@ -25,9 +46,15 @@ def main():
         ("Normal(Choice([-1, 1]), 2)", Normal(Choice([-1, 1]), 2)),
         ("Discretize(Normal(0, 1.0))", Discretize(Normal(0, 1.0))),
         ("Positive(Normal(0, 1.0))", Positive(Normal(0, 1.0))),
-        ("Positive(Normal(0, 1.0), mode='reroll')", Positive(Normal(0, 1.0), mode="reroll")),
+        (
+            "Positive(Normal(0, 1.0), mode='reroll')",
+            Positive(Normal(0, 1.0), mode="reroll"),
+        ),
         ("Negative(Normal(0, 1.0))", Negative(Normal(0, 1.0))),
-        ("Negative(Normal(0, 1.0), mode='reroll')", Negative(Normal(0, 1.0), mode="reroll")),
+        (
+            "Negative(Normal(0, 1.0), mode='reroll')",
+            Negative(Normal(0, 1.0), mode="reroll"),
+        ),
         ("Laplace(0, 1.0)", Laplace(0, 1.0)),
         ("Laplace(1.0, 3.0)", Laplace(1.0, 3.0)),
         ("Laplace([-1.0, 1.0], 1.0)", Laplace([-1.0, 1.0], 1.0)),
@@ -43,7 +70,7 @@ def main():
         ("Add(Uniform(0, 10), 5)", Add(Uniform(0, 10), 5)),
         ("Absolute(Normal(0, 1))", Absolute(Normal(0, 1))),
         ("RandomSign(Poisson(1))", RandomSign(Poisson(1))),
-        ("RandomSign(Poisson(1), 0.9)", RandomSign(Poisson(1), 0.9))
+        ("RandomSign(Poisson(1), 0.9)", RandomSign(Poisson(1), 0.9)),
     ]
 
     params_arithmetic = [
@@ -59,7 +86,7 @@ def main():
         ("10 / Normal(0, 1.0)", Divide(10, Normal(0.0, 1.0), elementwise=True)),
         ("Normal(0, 1.0) ** 2", Normal(0.0, 1.0) ** 2),
         ("2 ** Normal(0, 1.0)", 2 ** Normal(0.0, 1.0)),
-        ("2 ** Normal(0, 1.0)", Power(2, Normal(0.0, 1.0), elementwise=True))
+        ("2 ** Normal(0, 1.0)", Power(2, Normal(0.0, 1.0), elementwise=True)),
     ]
 
     params_noise = [
@@ -69,12 +96,17 @@ def main():
         ("SimplexNoise(nearest)", SimplexNoise(upscale_method="nearest")),
         ("FrequencyNoise((-4, 4))", FrequencyNoise(exponent=(-4, 4))),
         ("FrequencyNoise(-2)", FrequencyNoise(exponent=-2)),
-        ("FrequencyNoise(2)", FrequencyNoise(exponent=2))
+        ("FrequencyNoise(2)", FrequencyNoise(exponent=2)),
     ]
 
     images_params = [param.draw_distribution_graph() for (title, param) in params]
-    images_arithmetic = [param.draw_distribution_graph() for (title, param) in params_arithmetic]
-    images_noise = [param.draw_distribution_graph(size=(1000, 10, 10)) for (title, param) in params_noise]
+    images_arithmetic = [
+        param.draw_distribution_graph() for (title, param) in params_arithmetic
+    ]
+    images_noise = [
+        param.draw_distribution_graph(size=(1000, 10, 10))
+        for (title, param) in params_noise
+    ]
 
     ia.imshow(np.vstack(images_params))
     ia.imshow(np.vstack(images_arithmetic))

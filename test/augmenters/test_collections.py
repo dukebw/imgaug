@@ -1,6 +1,7 @@
 from __future__ import print_function, division, absolute_import
 
 import sys
+
 # unittest only added in 3.4 self.subTest()
 if sys.version_info[0] < 3 or sys.version_info[1] < 4:
     import unittest2 as unittest
@@ -31,11 +32,7 @@ class TestRandAugment(unittest.TestCase):
         mock_initial.return_value = []
 
         img = np.zeros((1, 1, 3), dtype=np.uint8)
-        expected = {
-            0: [0],
-            1: [1, 2, 4],
-            2: [1+1, 1+2, 1+4, 2+2, 2+4, 4+4]
-        }
+        expected = {0: [0], 1: [1, 2, 4], 2: [1 + 1, 1 + 2, 1 + 4, 2 + 2, 2 + 4, 4 + 4]}
 
         for n in [0, 1, 2]:
             with self.subTest(n=n):

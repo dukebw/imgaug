@@ -68,22 +68,28 @@ def _crop_trbl_to_xyxy(shape, top, right, bottom, left, prevent_zero_size=True):
 
 
 def _crop_arr_(arr, top, right, bottom, left, prevent_zero_size=True):
-    x1, y1, x2, y2 = _crop_trbl_to_xyxy(arr.shape, top, right, bottom, left,
-                                        prevent_zero_size=prevent_zero_size)
+    x1, y1, x2, y2 = _crop_trbl_to_xyxy(
+        arr.shape, top, right, bottom, left, prevent_zero_size=prevent_zero_size
+    )
     return arr[y1:y2, x1:x2, ...]
 
 
-def _crop_and_pad_arr(arr, croppings, paddings, pad_mode="constant",
-                      pad_cval=0, keep_size=False):
+def _crop_and_pad_arr(
+    arr, croppings, paddings, pad_mode="constant", pad_cval=0, keep_size=False
+):
     height, width = arr.shape[0:2]
 
     image_cr = _crop_arr_(arr, *croppings)
 
     image_cr_pa = pad(
         image_cr,
-        top=paddings[0], right=paddings[1],
-        bottom=paddings[2], left=paddings[3],
-        mode=pad_mode, cval=pad_cval)
+        top=paddings[0],
+        right=paddings[1],
+        bottom=paddings[2],
+        left=paddings[3],
+        mode=pad_mode,
+        cval=pad_cval,
+    )
 
     if keep_size:
         image_cr_pa = ia.imresize_single_image(image_cr_pa, (height, width))
@@ -91,30 +97,49 @@ def _crop_and_pad_arr(arr, croppings, paddings, pad_mode="constant",
     return image_cr_pa
 
 
-def _crop_and_pad_heatmap_(heatmap, croppings_img, paddings_img,
-                           pad_mode="constant", pad_cval=0.0, keep_size=False):
-    return _crop_and_pad_hms_or_segmaps_(heatmap, croppings_img,
-                                         paddings_img, pad_mode, pad_cval,
-                                         keep_size)
+def _crop_and_pad_heatmap_(
+    heatmap,
+    croppings_img,
+    paddings_img,
+    pad_mode="constant",
+    pad_cval=0.0,
+    keep_size=False,
+):
+    return _crop_and_pad_hms_or_segmaps_(
+        heatmap, croppings_img, paddings_img, pad_mode, pad_cval, keep_size
+    )
 
 
-def _crop_and_pad_segmap_(segmap, croppings_img, paddings_img,
-                          pad_mode="constant", pad_cval=0, keep_size=False):
-    return _crop_and_pad_hms_or_segmaps_(segmap, croppings_img,
-                                         paddings_img, pad_mode, pad_cval,
-                                         keep_size)
+def _crop_and_pad_segmap_(
+    segmap,
+    croppings_img,
+    paddings_img,
+    pad_mode="constant",
+    pad_cval=0,
+    keep_size=False,
+):
+    return _crop_and_pad_hms_or_segmaps_(
+        segmap, croppings_img, paddings_img, pad_mode, pad_cval, keep_size
+    )
 
 
-def _crop_and_pad_hms_or_segmaps_(augmentable, croppings_img,
-                                  paddings_img, pad_mode="constant",
-                                  pad_cval=None, keep_size=False):
+def _crop_and_pad_hms_or_segmaps_(
+    augmentable,
+    croppings_img,
+    paddings_img,
+    pad_mode="constant",
+    pad_cval=None,
+    keep_size=False,
+):
     if isinstance(augmentable, ia.HeatmapsOnImage):
         arr_attr_name = "arr_0to1"
         pad_cval = pad_cval if pad_cval is not None else 0.0
     else:
-        assert isinstance(augmentable, ia.SegmentationMapsOnImage), (
-            "Expected HeatmapsOnImage or SegmentationMapsOnImage, got %s." % (
-                type(augmentable)))
+        assert isinstance(
+            augmentable, ia.SegmentationMapsOnImage
+        ), "Expected HeatmapsOnImage or SegmentationMapsOnImage, got %s." % (
+            type(augmentable)
+        )
         arr_attr_name = "arr"
         pad_cval = pad_cval if pad_cval is not None else 0
 
@@ -125,19 +150,22 @@ def _crop_and_pad_hms_or_segmaps_(augmentable, croppings_img,
     croppings_proj = _project_size_changes(croppings_img, augm_shape, arr.shape)
     paddings_proj = _project_size_changes(paddings_img, augm_shape, arr.shape)
 
-    croppings_proj = _prevent_zero_size_after_crop_trbl_(arr.shape[0],
-                                                         arr.shape[1],
-                                                         croppings_proj)
+    croppings_proj = _prevent_zero_size_after_crop_trbl_(
+        arr.shape[0], arr.shape[1], croppings_proj
+    )
 
-    arr_cr = _crop_arr_(arr,
-                        croppings_proj[0], croppings_proj[1],
-                        croppings_proj[2], croppings_proj[3])
+    arr_cr = _crop_arr_(
+        arr, croppings_proj[0], croppings_proj[1], croppings_proj[2], croppings_proj[3]
+    )
     arr_cr_pa = pad(
         arr_cr,
-        top=paddings_proj[0], right=paddings_proj[1],
-        bottom=paddings_proj[2], left=paddings_proj[3],
+        top=paddings_proj[0],
+        right=paddings_proj[1],
+        bottom=paddings_proj[2],
+        left=paddings_proj[3],
         mode=pad_mode,
-        cval=pad_cval)
+        cval=pad_cval,
+    )
 
     setattr(augmentable, arr_attr_name, arr_cr_pa)
 
@@ -145,7 +173,8 @@ def _crop_and_pad_hms_or_segmaps_(augmentable, croppings_img,
         augmentable = augmentable.resize(arr_shape_orig[0:2])
     else:
         augmentable.shape = _compute_shape_after_crop_and_pad(
-            augmentable.shape, croppings_img, paddings_img)
+            augmentable.shape, croppings_img, paddings_img
+        )
     return augmentable
 
 
@@ -159,10 +188,11 @@ def _crop_and_pad_kpsoi_(kpsoi, croppings_img, paddings_img, keep_size):
 
     shape_orig = kpsoi.shape
     shifted = kpsoi.shift_(
-        x=-crop_left+paddings_img[3],
-        y=-crop_top+paddings_img[0])
+        x=-crop_left + paddings_img[3], y=-crop_top + paddings_img[0]
+    )
     shifted.shape = _compute_shape_after_crop_and_pad(
-        shape_orig, croppings_img, paddings_img)
+        shape_orig, croppings_img, paddings_img
+    )
     if keep_size:
         shifted = shifted.on_(shape_orig)
     return shifted
@@ -182,13 +212,11 @@ def _prevent_zero_size_after_crop_trbl_(height, width, crop_trbl):
     crop_bottom = crop_trbl[2]
     crop_left = crop_trbl[3]
 
-    crop_top, crop_bottom = _prevent_zero_size_after_crop_(height, crop_top,
-                                                           crop_bottom)
-    crop_left, crop_right = _prevent_zero_size_after_crop_(width, crop_left,
-                                                           crop_right)
-    return (
-        crop_top, crop_right, crop_bottom, crop_left
+    crop_top, crop_bottom = _prevent_zero_size_after_crop_(
+        height, crop_top, crop_bottom
     )
+    crop_left, crop_right = _prevent_zero_size_after_crop_(width, crop_left, crop_right)
+    return (crop_top, crop_right, crop_bottom, crop_left)
 
 
 def _prevent_zero_size_after_crop_(axis_size, crop_start, crop_end):
@@ -197,15 +225,15 @@ def _prevent_zero_size_after_crop_(axis_size, crop_start, crop_end):
         _prevent_zero_sizes_after_crops_(
             np.array([axis_size], dtype=np.int32),
             np.array([crop_start], dtype=np.int32),
-            np.array([crop_end], dtype=np.int32)
-        )
+            np.array([crop_end], dtype=np.int32),
+        ),
     )
 
 
 def _prevent_zero_sizes_after_crops_(axis_sizes, crops_start, crops_end):
     remaining_sizes = axis_sizes - (crops_start + crops_end)
 
-    mask_bad_sizes = (remaining_sizes < 1)
+    mask_bad_sizes = remaining_sizes < 1
     regains = mask_bad_sizes * (np.abs(remaining_sizes) + 1)
     regains_half = regains.astype(np.float32) / 2
     regains_start = np.ceil(regains_half).astype(np.int32)
@@ -214,11 +242,11 @@ def _prevent_zero_sizes_after_crops_(axis_sizes, crops_start, crops_end):
     crops_start -= regains_start
     crops_end -= regains_end
 
-    mask_too_much_start = (crops_start < 0)
+    mask_too_much_start = crops_start < 0
     crops_end[mask_too_much_start] += crops_start[mask_too_much_start]
     crops_start = np.maximum(crops_start, 0)
 
-    mask_too_much_end = (crops_end < 0)
+    mask_too_much_end = crops_end < 0
     crops_start[mask_too_much_end] += crops_end[mask_too_much_end]
     crops_end = np.maximum(crops_end, 0)
 
@@ -251,10 +279,10 @@ def _project_size_changes(trbl, from_shape, to_shape):
     # the bottom. The changes are projected to 4*(3/8) = 1.5 and both rounded
     # up to 2.0. Hence, the maps are changed by 4 (100% of the map height,
     # vs. 6 for images, which is 75% of the image height).
-    top = _int_r(height_to * (top/height_from) - 1e-4)
-    right = _int_r(width_to * (right/width_from) + 1e-4)
-    bottom = _int_r(height_to * (bottom/height_from) + 1e-4)
-    left = _int_r(width_to * (left/width_from) - 1e-4)
+    top = _int_r(height_to * (top / height_from) - 1e-4)
+    right = _int_r(width_to * (right / width_from) + 1e-4)
+    bottom = _int_r(height_to * (bottom / height_from) + 1e-4)
+    left = _int_r(width_to * (left / width_from) - 1e-4)
 
     return top, right, bottom, left
 
@@ -267,25 +295,39 @@ def _int_r(value):
 @iap._prefetchable_str
 def _handle_pad_mode_param(pad_mode):
     pad_modes_available = {
-        "constant", "edge", "linear_ramp", "maximum", "mean", "median",
-        "minimum", "reflect", "symmetric", "wrap"}
+        "constant",
+        "edge",
+        "linear_ramp",
+        "maximum",
+        "mean",
+        "median",
+        "minimum",
+        "reflect",
+        "symmetric",
+        "wrap",
+    }
     if pad_mode == ia.ALL:
         return iap.Choice(list(pad_modes_available))
     if ia.is_string(pad_mode):
-        assert pad_mode in pad_modes_available, (
-            "Value '%s' is not a valid pad mode. Valid pad modes are: %s." % (
-                pad_mode, ", ".join(pad_modes_available)))
+        assert (
+            pad_mode in pad_modes_available
+        ), "Value '%s' is not a valid pad mode. Valid pad modes are: %s." % (
+            pad_mode,
+            ", ".join(pad_modes_available),
+        )
         return iap.Deterministic(pad_mode)
     if isinstance(pad_mode, list):
         assert all([v in pad_modes_available for v in pad_mode]), (
             "At least one in list %s is not a valid pad mode. Valid pad "
-            "modes are: %s." % (str(pad_mode), ", ".join(pad_modes_available)))
+            "modes are: %s." % (str(pad_mode), ", ".join(pad_modes_available))
+        )
         return iap.Choice(pad_mode)
     if isinstance(pad_mode, iap.StochasticParameter):
         return pad_mode
     raise Exception(
         "Expected pad_mode to be ia.ALL or string or list of strings or "
-        "StochasticParameter, got %s." % (type(pad_mode),))
+        "StochasticParameter, got %s." % (type(pad_mode),)
+    )
 
 
 @iap._prefetchable
@@ -294,46 +336,50 @@ def _handle_position_parameter(position):
         return iap.Uniform(0.0, 1.0), iap.Uniform(0.0, 1.0)
     if position == "normal":
         return (
-            iap.Clip(iap.Normal(loc=0.5, scale=0.35 / 2),
-                     minval=0.0, maxval=1.0),
-            iap.Clip(iap.Normal(loc=0.5, scale=0.35 / 2),
-                     minval=0.0, maxval=1.0)
+            iap.Clip(iap.Normal(loc=0.5, scale=0.35 / 2), minval=0.0, maxval=1.0),
+            iap.Clip(iap.Normal(loc=0.5, scale=0.35 / 2), minval=0.0, maxval=1.0),
         )
     if position == "center":
         return iap.Deterministic(0.5), iap.Deterministic(0.5)
-    if (ia.is_string(position)
-            and re.match(r"^(left|center|right)-(top|center|bottom)$",
-                         position)):
-        mapping = {"top": 0.0, "center": 0.5, "bottom": 1.0, "left": 0.0,
-                   "right": 1.0}
+    if ia.is_string(position) and re.match(
+        r"^(left|center|right)-(top|center|bottom)$", position
+    ):
+        mapping = {"top": 0.0, "center": 0.5, "bottom": 1.0, "left": 0.0, "right": 1.0}
         return (
             iap.Deterministic(mapping[position.split("-")[0]]),
-            iap.Deterministic(mapping[position.split("-")[1]])
+            iap.Deterministic(mapping[position.split("-")[1]]),
         )
     if isinstance(position, iap.StochasticParameter):
         return position
     if isinstance(position, tuple):
         assert len(position) == 2, (
             "Expected tuple with two entries as position parameter. "
-            "Got %d entries with types %s.." % (
-                len(position), str([type(item) for item in position])))
+            "Got %d entries with types %s.."
+            % (len(position), str([type(item) for item in position]))
+        )
         for item in position:
             if ia.is_single_number(item) and (item < 0 or item > 1.0):
                 raise Exception(
                     "Both position values must be within the value range "
-                    "[0.0, 1.0]. Got type %s with value %.8f." % (
-                        type(item), item,))
-        position = [iap.Deterministic(item)
-                    if ia.is_single_number(item)
-                    else item for item in position]
+                    "[0.0, 1.0]. Got type %s with value %.8f."
+                    % (
+                        type(item),
+                        item,
+                    )
+                )
+        position = [
+            iap.Deterministic(item) if ia.is_single_number(item) else item
+            for item in position
+        ]
 
-        only_sparams = all([isinstance(item, iap.StochasticParameter)
-                            for item in position])
+        only_sparams = all(
+            [isinstance(item, iap.StochasticParameter) for item in position]
+        )
         assert only_sparams, (
             "Expected tuple with two entries that are both either "
-            "StochasticParameter or float/int. Got types %s." % (
-                str([type(item) for item in position])
-            ))
+            "StochasticParameter or float/int. Got types %s."
+            % (str([type(item) for item in position]))
+        )
         return tuple(position)
     raise Exception(
         "Expected one of the following as position parameter: string "
@@ -341,11 +387,10 @@ def _handle_position_parameter(position):
         "regex ^(left|center|right)-(top|center|bottom)$, a single "
         "StochasticParameter or a tuple of two entries, both being either "
         "StochasticParameter or floats or int. Got instead type %s with "
-        "content '%s'." % (
+        "content '%s'."
+        % (
             type(position),
-            (str(position)
-             if len(str(position)) < 20
-             else str(position)[0:20] + "...")
+            (str(position) if len(str(position)) < 20 else str(position)[0:20] + "..."),
         )
     )
 
@@ -357,7 +402,8 @@ def _assert_two_or_three_dims(shape):
         shape = shape.shape
     assert len(shape) in [2, 3], (
         "Expected image with two or three dimensions, but got %d dimensions "
-        "and shape %s." % (len(shape), shape))
+        "and shape %s." % (len(shape), shape)
+    )
 
 
 def pad(arr, top=0, right=0, bottom=0, left=0, mode="constant", cval=0):
@@ -434,7 +480,8 @@ def pad(arr, top=0, right=0, bottom=0, left=0, mode="constant", cval=0):
     _assert_two_or_three_dims(arr)
     assert all([v >= 0 for v in [top, right, bottom, left]]), (
         "Expected padding amounts that are >=0, but got %d, %d, %d, %d "
-        "(top, right, bottom, left)" % (top, right, bottom, left))
+        "(top, right, bottom, left)" % (top, right, bottom, left)
+    )
 
     is_multi_cval = ia.is_iterable(cval)
 
@@ -448,8 +495,7 @@ def pad(arr, top=0, right=0, bottom=0, left=0, mode="constant", cval=0):
         # None, but 'np.dtype("float64") == None' actually equates to True
         # for whatever reason, so we check first if the constant is not None
         # (i.e. if float128 exists).
-        if (iadt._FLOAT128_DTYPE is not None
-                and arr.dtype == iadt._FLOAT128_DTYPE):
+        if iadt._FLOAT128_DTYPE is not None and arr.dtype == iadt._FLOAT128_DTYPE:
             cval = np.float128(cval)  # pylint: disable=no-member
 
         if is_multi_cval:
@@ -478,29 +524,28 @@ def pad(arr, top=0, right=0, bottom=0, left=0, mode="constant", cval=0):
             cv2.BORDER_CONSTANT: cv2.BORDER_CONSTANT,
             cv2.BORDER_REPLICATE: cv2.BORDER_REPLICATE,
             cv2.BORDER_REFLECT_101: cv2.BORDER_REFLECT_101,
-            cv2.BORDER_REFLECT: cv2.BORDER_REFLECT
+            cv2.BORDER_REFLECT: cv2.BORDER_REFLECT,
         }
         bad_mode_cv2 = mapping_mode_np_to_cv2.get(mode, None) is None
 
         # these datatypes all simply generate a "TypeError: src data type = X
         # is not supported" error
-        bad_datatype_cv2 = (
-            arr.dtype in iadt._convert_dtype_strs_to_types(
-                "uint32 uint64 int64 float16 float128 bool"
-            )
+        bad_datatype_cv2 = arr.dtype in iadt._convert_dtype_strs_to_types(
+            "uint32 uint64 int64 float16 float128 bool"
         )
 
         # OpenCV turns the channel axis for arrays with 0 channels to 512
         # TODO add direct test for this. indirectly tested via Pad
-        bad_shape_cv2 = (arr.ndim == 3 and arr.shape[-1] == 0)
+        bad_shape_cv2 = arr.ndim == 3 and arr.shape[-1] == 0
 
         if not bad_datatype_cv2 and not bad_mode_cv2 and not bad_shape_cv2:
             # convert cval to expected type, as otherwise we get TypeError
             # for np inputs
             kind = arr.dtype.kind
             if is_multi_cval:
-                cval = [float(cval_c) if kind == "f" else int(cval_c)
-                        for cval_c in cval]
+                cval = [
+                    float(cval_c) if kind == "f" else int(cval_c) for cval_c in cval
+                ]
             else:
                 cval = float(cval) if kind == "f" else int(cval)
 
@@ -513,9 +558,13 @@ def pad(arr, top=0, right=0, bottom=0, left=0, mode="constant", cval=0):
                 arr = _normalize_cv2_input_arr_(arr)
                 arr_pad = cv2.copyMakeBorder(
                     arr,
-                    top=int(top), bottom=int(bottom),
-                    left=int(left), right=int(right),
-                    borderType=mapping_mode_np_to_cv2[mode], value=cval)
+                    top=int(top),
+                    bottom=int(bottom),
+                    left=int(left),
+                    right=int(right),
+                    borderType=mapping_mode_np_to_cv2[mode],
+                    value=cval,
+                )
                 if arr.ndim == 3 and arr_pad.ndim == 2:
                     arr_pad = arr_pad[..., np.newaxis]
             else:
@@ -523,12 +572,17 @@ def pad(arr, top=0, right=0, bottom=0, left=0, mode="constant", cval=0):
                 channel_start_idx = 0
                 cval = cval if is_multi_cval else tuple([cval] * arr.shape[2])
                 while channel_start_idx < arr.shape[2]:
-                    arr_c = arr[..., channel_start_idx:channel_start_idx+4]
-                    cval_c = cval[channel_start_idx:channel_start_idx+4]
+                    arr_c = arr[..., channel_start_idx : channel_start_idx + 4]
+                    cval_c = cval[channel_start_idx : channel_start_idx + 4]
                     arr_pad_c = cv2.copyMakeBorder(
                         _normalize_cv2_input_arr_(arr_c),
-                        top=top, bottom=bottom, left=left, right=right,
-                        borderType=mapping_mode_np_to_cv2[mode], value=cval_c)
+                        top=top,
+                        bottom=bottom,
+                        left=left,
+                        right=right,
+                        borderType=mapping_mode_np_to_cv2[mode],
+                        value=cval_c,
+                    )
                     arr_pad_c = np.atleast_3d(arr_pad_c)
                     result.append(arr_pad_c)
                     channel_start_idx += 4
@@ -544,23 +598,28 @@ def pad(arr, top=0, right=0, bottom=0, left=0, mode="constant", cval=0):
             if mode == "constant":
                 if arr.ndim > 2 and is_multi_cval:
                     arr_pad_chans = [
-                        np.pad(arr[..., c], paddings_np[0:2], mode=mode,
-                               constant_values=cval[c])
-                        for c in np.arange(arr.shape[2])]
+                        np.pad(
+                            arr[..., c],
+                            paddings_np[0:2],
+                            mode=mode,
+                            constant_values=cval[c],
+                        )
+                        for c in np.arange(arr.shape[2])
+                    ]
                     arr_pad = np.stack(arr_pad_chans, axis=-1)
                 else:
-                    arr_pad = np.pad(arr, paddings_np, mode=mode,
-                                     constant_values=cval)
+                    arr_pad = np.pad(arr, paddings_np, mode=mode, constant_values=cval)
             elif mode == "linear_ramp":
                 if arr.ndim > 2 and is_multi_cval:
                     arr_pad_chans = [
-                        np.pad(arr[..., c], paddings_np[0:2], mode=mode,
-                               end_values=cval[c])
-                        for c in np.arange(arr.shape[2])]
+                        np.pad(
+                            arr[..., c], paddings_np[0:2], mode=mode, end_values=cval[c]
+                        )
+                        for c in np.arange(arr.shape[2])
+                    ]
                     arr_pad = np.stack(arr_pad_chans, axis=-1)
                 else:
-                    arr_pad = np.pad(arr, paddings_np, mode=mode,
-                                     end_values=cval)
+                    arr_pad = np.pad(arr, paddings_np, mode=mode, end_values=cval)
             else:
                 arr_pad = np.pad(arr, paddings_np, mode=mode)
 
@@ -568,8 +627,9 @@ def pad(arr, top=0, right=0, bottom=0, left=0, mode="constant", cval=0):
     return np.copy(arr)
 
 
-def pad_to_aspect_ratio(arr, aspect_ratio, mode="constant", cval=0,
-                        return_pad_amounts=False):
+def pad_to_aspect_ratio(
+    arr, aspect_ratio, mode="constant", cval=0, return_pad_amounts=False
+):
     """Pad an image array on its sides so that it matches a target aspect ratio.
 
     See :func:`~imgaug.imgaug.compute_paddings_for_aspect_ratio` for an
@@ -619,8 +679,9 @@ def pad_to_aspect_ratio(arr, aspect_ratio, mode="constant", cval=0,
         ``True``.
 
     """
-    pad_top, pad_right, pad_bottom, pad_left = \
-        compute_paddings_to_reach_aspect_ratio(arr, aspect_ratio)
+    pad_top, pad_right, pad_bottom, pad_left = compute_paddings_to_reach_aspect_ratio(
+        arr, aspect_ratio
+    )
     arr_padded = pad(
         arr,
         top=pad_top,
@@ -628,7 +689,7 @@ def pad_to_aspect_ratio(arr, aspect_ratio, mode="constant", cval=0,
         bottom=pad_bottom,
         left=pad_left,
         mode=mode,
-        cval=cval
+        cval=cval,
     )
 
     if return_pad_amounts:
@@ -636,8 +697,14 @@ def pad_to_aspect_ratio(arr, aspect_ratio, mode="constant", cval=0,
     return arr_padded
 
 
-def pad_to_multiples_of(arr, height_multiple, width_multiple, mode="constant",
-                        cval=0, return_pad_amounts=False):
+def pad_to_multiples_of(
+    arr,
+    height_multiple,
+    width_multiple,
+    mode="constant",
+    cval=0,
+    return_pad_amounts=False,
+):
     """Pad an image array until its side lengths are multiples of given values.
 
     See :func:`~imgaug.imgaug.compute_paddings_for_aspect_ratio` for an
@@ -692,9 +759,9 @@ def pad_to_multiples_of(arr, height_multiple, width_multiple, mode="constant",
         ``True``.
 
     """
-    pad_top, pad_right, pad_bottom, pad_left = \
-        compute_paddings_to_reach_multiples_of(
-            arr, height_multiple, width_multiple)
+    pad_top, pad_right, pad_bottom, pad_left = compute_paddings_to_reach_multiples_of(
+        arr, height_multiple, width_multiple
+    )
     arr_padded = pad(
         arr,
         top=pad_top,
@@ -702,7 +769,7 @@ def pad_to_multiples_of(arr, height_multiple, width_multiple, mode="constant",
         bottom=pad_bottom,
         left=pad_left,
         mode=mode,
-        cval=cval
+        cval=cval,
     )
 
     if return_pad_amounts:
@@ -747,8 +814,9 @@ def compute_paddings_to_reach_aspect_ratio(arr, aspect_ratio):
 
     """
     _assert_two_or_three_dims(arr)
-    assert aspect_ratio > 0, (
-        "Expected to get an aspect ratio >0, got %.4f." % (aspect_ratio,))
+    assert aspect_ratio > 0, "Expected to get an aspect ratio >0, got %.4f." % (
+        aspect_ratio,
+    )
 
     pad_top = 0
     pad_right = 0
@@ -774,7 +842,7 @@ def compute_paddings_to_reach_aspect_ratio(arr, aspect_ratio):
         pad_left += int(np.floor(diff / 2))
     elif aspect_ratio_current > aspect_ratio:
         # image is more horizontal than desired, height needs to be increased
-        diff = ((1/aspect_ratio) * width) - height
+        diff = ((1 / aspect_ratio) * width) - height
         pad_top += int(np.floor(diff / 2))
         pad_bottom += int(np.ceil(diff / 2))
 
@@ -820,12 +888,14 @@ def compute_croppings_to_reach_aspect_ratio(arr, aspect_ratio):
 
     """
     _assert_two_or_three_dims(arr)
-    assert aspect_ratio > 0, (
-        "Expected to get an aspect ratio >0, got %.4f." % (aspect_ratio,))
+    assert aspect_ratio > 0, "Expected to get an aspect ratio >0, got %.4f." % (
+        aspect_ratio,
+    )
 
     shape = arr.shape if hasattr(arr, "shape") else arr
-    assert shape[0] > 0, (
-        "Expected to get an array with height >0, got shape %s." % (shape,))
+    assert shape[0] > 0, "Expected to get an array with height >0, got shape %s." % (
+        shape,
+    )
 
     height, width = shape[0:2]
     aspect_ratio_current = width / height
@@ -853,8 +923,7 @@ def compute_croppings_to_reach_aspect_ratio(arr, aspect_ratio):
     return top, right, bottom, left
 
 
-def compute_paddings_to_reach_multiples_of(arr, height_multiple,
-                                           width_multiple):
+def compute_paddings_to_reach_multiples_of(arr, height_multiple, width_multiple):
     """Compute pad amounts until img height/width are multiples of given values.
 
     See :func:`~imgaug.imgaug.compute_paddings_for_aspect_ratio` for an
@@ -886,6 +955,7 @@ def compute_paddings_to_reach_multiples_of(arr, height_multiple,
         given as a ``tuple`` of the form ``(top, right, bottom, left)``.
 
     """
+
     def _compute_axis_value(axis_size, multiple):
         if multiple is None:
             return 0, 0
@@ -895,18 +965,18 @@ def compute_paddings_to_reach_multiples_of(arr, height_multiple,
             to_pad = 0
         else:
             to_pad = multiple - (axis_size % multiple)
-        return int(np.floor(to_pad/2)), int(np.ceil(to_pad/2))
+        return int(np.floor(to_pad / 2)), int(np.ceil(to_pad / 2))
 
     _assert_two_or_three_dims(arr)
 
     if height_multiple is not None:
-        assert height_multiple > 0, (
-            "Can only pad to multiples of 1 or larger, got %d." % (
-                height_multiple,))
+        assert (
+            height_multiple > 0
+        ), "Can only pad to multiples of 1 or larger, got %d." % (height_multiple,)
     if width_multiple is not None:
-        assert width_multiple > 0, (
-            "Can only pad to multiples of 1 or larger, got %d." % (
-                width_multiple,))
+        assert (
+            width_multiple > 0
+        ), "Can only pad to multiples of 1 or larger, got %d." % (width_multiple,)
 
     shape = arr.shape if hasattr(arr, "shape") else arr
     height, width = shape[0:2]
@@ -917,8 +987,7 @@ def compute_paddings_to_reach_multiples_of(arr, height_multiple,
     return top, right, bottom, left
 
 
-def compute_croppings_to_reach_multiples_of(arr, height_multiple,
-                                            width_multiple):
+def compute_croppings_to_reach_multiples_of(arr, height_multiple, width_multiple):
     """Compute croppings to reach multiples of given heights/widths.
 
     See :func:`~imgaug.imgaug.compute_paddings_for_aspect_ratio` for an
@@ -949,6 +1018,7 @@ def compute_croppings_to_reach_multiples_of(arr, height_multiple,
         given as a ``tuple`` of the form ``(top, right, bottom, left)``.
 
     """
+
     def _compute_axis_value(axis_size, multiple):
         if multiple is None:
             return 0, 0
@@ -958,18 +1028,18 @@ def compute_croppings_to_reach_multiples_of(arr, height_multiple,
             to_crop = 0
         else:
             to_crop = axis_size % multiple
-        return int(np.floor(to_crop/2)), int(np.ceil(to_crop/2))
+        return int(np.floor(to_crop / 2)), int(np.ceil(to_crop / 2))
 
     _assert_two_or_three_dims(arr)
 
     if height_multiple is not None:
-        assert height_multiple > 0, (
-            "Can only crop to multiples of 1 or larger, got %d." % (
-                height_multiple,))
+        assert (
+            height_multiple > 0
+        ), "Can only crop to multiples of 1 or larger, got %d." % (height_multiple,)
     if width_multiple is not None:
-        assert width_multiple > 0, (
-            "Can only crop to multiples of 1 or larger, got %d." % (
-                width_multiple,))
+        assert (
+            width_multiple > 0
+        ), "Can only crop to multiples of 1 or larger, got %d." % (width_multiple,)
 
     shape = arr.shape if hasattr(arr, "shape") else arr
     height, width = shape[0:2]
@@ -980,8 +1050,9 @@ def compute_croppings_to_reach_multiples_of(arr, height_multiple,
     return top, right, bottom, left
 
 
-def compute_paddings_to_reach_powers_of(arr, height_base, width_base,
-                                        allow_zero_exponent=False):
+def compute_paddings_to_reach_powers_of(
+    arr, height_base, width_base, allow_zero_exponent=False
+):
     """Compute paddings to reach powers of given base values.
 
     For given axis size ``S``, padded size ``S'`` (``S' >= S``) and base ``B``
@@ -1019,6 +1090,7 @@ def compute_paddings_to_reach_powers_of(arr, height_base, width_base,
         ``tuple`` of the form ``(top, right, bottom, left)``.
 
     """
+
     def _compute_axis_value(axis_size, base):
         if base is None:
             return 0, 0
@@ -1032,16 +1104,18 @@ def compute_paddings_to_reach_powers_of(arr, height_base, width_base,
 
             to_pad = (base ** int(np.ceil(exponent))) - axis_size
 
-        return int(np.floor(to_pad/2)), int(np.ceil(to_pad/2))
+        return int(np.floor(to_pad / 2)), int(np.ceil(to_pad / 2))
 
     _assert_two_or_three_dims(arr)
 
     if height_base is not None:
-        assert height_base > 1, (
-            "Can only pad to base larger than 1, got %d." % (height_base,))
+        assert height_base > 1, "Can only pad to base larger than 1, got %d." % (
+            height_base,
+        )
     if width_base is not None:
-        assert width_base > 1, (
-            "Can only pad to base larger than 1, got %d." % (width_base,))
+        assert width_base > 1, "Can only pad to base larger than 1, got %d." % (
+            width_base,
+        )
 
     shape = arr.shape if hasattr(arr, "shape") else arr
     height, width = shape[0:2]
@@ -1052,8 +1126,9 @@ def compute_paddings_to_reach_powers_of(arr, height_base, width_base,
     return top, right, bottom, left
 
 
-def compute_croppings_to_reach_powers_of(arr, height_base, width_base,
-                                         allow_zero_exponent=False):
+def compute_croppings_to_reach_powers_of(
+    arr, height_base, width_base, allow_zero_exponent=False
+):
     """Compute croppings to reach powers of given base values.
 
     For given axis size ``S``, cropped size ``S'`` (``S' <= S``) and base ``B``
@@ -1096,6 +1171,7 @@ def compute_croppings_to_reach_powers_of(arr, height_base, width_base,
         ``tuple`` of the form ``(top, right, bottom, left)``.
 
     """
+
     def _compute_axis_value(axis_size, base):
         if base is None:
             return 0, 0
@@ -1110,16 +1186,18 @@ def compute_croppings_to_reach_powers_of(arr, height_base, width_base,
 
             to_crop = axis_size - (base ** int(exponent))
 
-        return int(np.floor(to_crop/2)), int(np.ceil(to_crop/2))
+        return int(np.floor(to_crop / 2)), int(np.ceil(to_crop / 2))
 
     _assert_two_or_three_dims(arr)
 
     if height_base is not None:
-        assert height_base > 1, (
-            "Can only crop to base larger than 1, got %d." % (height_base,))
+        assert height_base > 1, "Can only crop to base larger than 1, got %d." % (
+            height_base,
+        )
     if width_base is not None:
-        assert width_base > 1, (
-            "Can only crop to base larger than 1, got %d." % (width_base,))
+        assert width_base > 1, "Can only crop to base larger than 1, got %d." % (
+            width_base,
+        )
 
     shape = arr.shape if hasattr(arr, "shape") else arr
     height, width = shape[0:2]
@@ -1130,8 +1208,9 @@ def compute_croppings_to_reach_powers_of(arr, height_base, width_base,
     return top, right, bottom, left
 
 
-@ia.deprecated(alt_func="Resize",
-               comment="Resize has the exactly same interface as Scale.")
+@ia.deprecated(
+    alt_func="Resize", comment="Resize has the exactly same interface as Scale."
+)
 def Scale(*args, **kwargs):
     """Augmenter that resizes images to specified heights and widths."""
     # pylint: disable=invalid-name
@@ -1276,12 +1355,18 @@ class Resize(meta.Augmenter):
 
     """
 
-    def __init__(self, size, interpolation="cubic",
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        size,
+        interpolation="cubic",
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(Resize, self).__init__(
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed, name=name, random_state=random_state, deterministic=deterministic
+        )
 
         self.size, self.size_order = self._handle_size_arg(size, False)
         self.interpolation = self._handle_interpolation_arg(interpolation)
@@ -1291,10 +1376,11 @@ class Resize(meta.Augmenter):
     def _handle_size_arg(cls, size, subcall):
         def _dict_to_size_tuple(val1, val2):
             kaa = "keep-aspect-ratio"
-            not_both_kaa = (val1 != kaa or val2 != kaa)
+            not_both_kaa = val1 != kaa or val2 != kaa
             assert not_both_kaa, (
-                "Expected at least one value to not be \"keep-aspect-ratio\", "
-                "but got it two times.")
+                'Expected at least one value to not be "keep-aspect-ratio", '
+                "but got it two times."
+            )
 
             size_tuple = []
             for k in [val1, val2]:
@@ -1332,16 +1418,22 @@ class Resize(meta.Augmenter):
             else:
                 raise ValueError(
                     "Expected dictionary containing no keys, "
-                    "the keys \"height\" and/or \"width\", "
-                    "or the keys \"shorter-side\" and/or \"longer-side\". "
-                    "Got keys: %s." % (str(size.keys()),))
+                    'the keys "height" and/or "width", '
+                    'or the keys "shorter-side" and/or "longer-side". '
+                    "Got keys: %s." % (str(size.keys()),)
+                )
         elif isinstance(size, tuple):
-            assert len(size) == 2, (
-                "Expected size tuple to contain exactly 2 values, "
-                "got %d." % (len(size),))
-            assert size[0] > 0 and size[1] > 0, (
-                "Expected size tuple to only contain values >0, "
-                "got %d and %d." % (size[0], size[1]))
+            assert (
+                len(size) == 2
+            ), "Expected size tuple to contain exactly 2 values, " "got %d." % (
+                len(size),
+            )
+            assert (
+                size[0] > 0 and size[1] > 0
+            ), "Expected size tuple to only contain values >0, " "got %d and %d." % (
+                size[0],
+                size[1],
+            )
             if ia.is_single_float(size[0]) or ia.is_single_float(size[1]):
                 result = iap.Uniform(size[0], size[1])
             else:
@@ -1352,10 +1444,8 @@ class Resize(meta.Augmenter):
             else:
                 all_int = all([ia.is_single_integer(v) for v in size])
                 all_float = all([ia.is_single_float(v) for v in size])
-                assert all_int or all_float, (
-                    "Expected to get only integers or floats.")
-                assert all([v > 0 for v in size]), (
-                    "Expected all values to be >0.")
+                assert all_int or all_float, "Expected to get only integers or floats."
+                assert all([v > 0 for v in size]), "Expected all values to be >0."
                 result = iap.Choice(size)
         elif isinstance(size, iap.StochasticParameter):
             result = size
@@ -1377,8 +1467,7 @@ class Resize(meta.Augmenter):
     @classmethod
     def _handle_interpolation_arg(cls, interpolation):
         if interpolation == ia.ALL:
-            interpolation = iap.Choice(
-                ["nearest", "linear", "area", "cubic"])
+            interpolation = iap.Choice(["nearest", "linear", "area", "cubic"])
         elif ia.is_single_integer(interpolation):
             interpolation = iap.Deterministic(interpolation)
         elif ia.is_string(interpolation):
@@ -1390,7 +1479,8 @@ class Resize(meta.Augmenter):
         else:
             raise Exception(
                 "Expected int or string or iterable or StochasticParameter, "
-                "got %s." % (type(interpolation),))
+                "got %s." % (type(interpolation),)
+            )
         return interpolation
 
     # Added in 0.4.0.
@@ -1399,27 +1489,28 @@ class Resize(meta.Augmenter):
         samples = self._draw_samples(nb_rows, random_state)
 
         if batch.images is not None:
-            batch.images = self._augment_images_by_samples(batch.images,
-                                                           samples)
+            batch.images = self._augment_images_by_samples(batch.images, samples)
 
         if batch.heatmaps is not None:
             # TODO this uses the same interpolation as for images for heatmaps
             #      while other augmenters resort to cubic
             batch.heatmaps = self._augment_maps_by_samples(
-                batch.heatmaps, "arr_0to1", samples)
+                batch.heatmaps, "arr_0to1", samples
+            )
 
         if batch.segmentation_maps is not None:
             batch.segmentation_maps = self._augment_maps_by_samples(
-                batch.segmentation_maps, "arr",
-                (samples[0], samples[1], [None] * nb_rows))
+                batch.segmentation_maps,
+                "arr",
+                (samples[0], samples[1], [None] * nb_rows),
+            )
 
-        for augm_name in ["keypoints", "bounding_boxes", "polygons",
-                          "line_strings"]:
+        for augm_name in ["keypoints", "bounding_boxes", "polygons", "line_strings"]:
             augm_value = getattr(batch, augm_name)
             if augm_value is not None:
                 func = functools.partial(
-                    self._augment_keypoints_by_samples,
-                    samples=samples)
+                    self._augment_keypoints_by_samples, samples=samples
+                )
                 cbaois = self._apply_to_cbaois_as_keypoints(augm_value, func)
                 setattr(batch, augm_name, cbaois)
 
@@ -1436,14 +1527,16 @@ class Resize(meta.Augmenter):
         samples_a, samples_b, samples_ip = samples
         result = []
         for i, image in enumerate(images):
-            h, w = self._compute_height_width(image.shape, samples_a[i],
-                                              samples_b[i], self.size_order)
-            image_rs = ia.imresize_single_image(image, (h, w),
-                                                interpolation=samples_ip[i])
+            h, w = self._compute_height_width(
+                image.shape, samples_a[i], samples_b[i], self.size_order
+            )
+            image_rs = ia.imresize_single_image(
+                image, (h, w), interpolation=samples_ip[i]
+            )
             result.append(image_rs)
 
         if input_was_array:
-            all_same_size = (len({image.shape for image in result}) == 1)
+            all_same_size = len({image.shape for image in result}) == 1
             if all_same_size:
                 result = np.array(result, dtype=input_dtype)
 
@@ -1459,7 +1552,8 @@ class Resize(meta.Augmenter):
             arr_shape = arr.shape
             img_shape = augmentable.shape
             h_img, w_img = self._compute_height_width(
-                img_shape, samples_h[i], samples_w[i], self.size_order)
+                img_shape, samples_h[i], samples_w[i], self.size_order
+            )
             h = int(np.round(h_img * (arr_shape[0] / img_shape[0])))
             w = int(np.round(w_img * (arr_shape[1] / img_shape[1])))
             h = max(h, 1)
@@ -1468,7 +1562,8 @@ class Resize(meta.Augmenter):
                 # TODO change this for heatmaps to always have cubic or
                 #      automatic interpolation?
                 augmentable_resize = augmentable.resize(
-                    (h, w), interpolation=samples_ip[i])
+                    (h, w), interpolation=samples_ip[i]
+                )
             else:
                 augmentable_resize = augmentable.resize((h, w))
             augmentable_resize.shape = (h_img, w_img) + img_shape[2:]
@@ -1482,7 +1577,8 @@ class Resize(meta.Augmenter):
         samples_a, samples_b, _samples_ip = samples
         for i, kpsoi in enumerate(kpsois):
             h, w = self._compute_height_width(
-                kpsoi.shape, samples_a[i], samples_b[i], self.size_order)
+                kpsoi.shape, samples_a[i], samples_b[i], self.size_order
+            )
             new_shape = (h, w) + kpsoi.shape[2:]
             keypoints_on_image_rs = kpsoi.on_(new_shape)
 
@@ -1493,23 +1589,20 @@ class Resize(meta.Augmenter):
     def _draw_samples(self, nb_images, random_state):
         rngs = random_state.duplicate(3)
         if isinstance(self.size, tuple):
-            samples_h = self.size[0].draw_samples(nb_images,
-                                                  random_state=rngs[0])
-            samples_w = self.size[1].draw_samples(nb_images,
-                                                  random_state=rngs[1])
+            samples_h = self.size[0].draw_samples(nb_images, random_state=rngs[0])
+            samples_w = self.size[1].draw_samples(nb_images, random_state=rngs[1])
         else:
             samples_h = self.size.draw_samples(nb_images, random_state=rngs[0])
             samples_w = samples_h
 
-        samples_ip = self.interpolation.draw_samples(nb_images,
-                                                     random_state=rngs[2])
+        samples_ip = self.interpolation.draw_samples(nb_images, random_state=rngs[2])
         return samples_h, samples_w, samples_ip
 
     @classmethod
     def _compute_height_width(cls, image_shape, sample_a, sample_b, size_order):
         imh, imw = image_shape[0:2]
 
-        if size_order == 'SL':
+        if size_order == "SL":
             # size order: short, long
             if imh < imw:
                 h, w = sample_a, sample_b
@@ -1550,8 +1643,19 @@ class Resize(meta.Augmenter):
 
 
 class _CropAndPadSamplingResult(object):
-    def __init__(self, crop_top, crop_right, crop_bottom, crop_left,
-                 pad_top, pad_right, pad_bottom, pad_left, pad_mode, pad_cval):
+    def __init__(
+        self,
+        crop_top,
+        crop_right,
+        crop_bottom,
+        crop_left,
+        pad_top,
+        pad_right,
+        pad_bottom,
+        pad_left,
+        pad_mode,
+        pad_cval,
+    ):
         self.crop_top = crop_top
         self.crop_right = crop_right
         self.crop_bottom = crop_bottom
@@ -1569,7 +1673,7 @@ class _CropAndPadSamplingResult(object):
             self.crop_top[i],
             self.crop_right[i],
             self.crop_bottom[i],
-            self.crop_left[i]
+            self.crop_left[i],
         )
 
     def paddings(self, i):
@@ -1578,7 +1682,7 @@ class _CropAndPadSamplingResult(object):
             self.pad_top[i],
             self.pad_right[i],
             self.pad_bottom[i],
-            self.pad_left[i]
+            self.pad_left[i],
         )
 
 
@@ -1820,26 +1924,46 @@ class CropAndPad(meta.Augmenter):
 
     """
 
-    def __init__(self, px=None, percent=None, pad_mode="constant", pad_cval=0,
-                 keep_size=True, sample_independently=True,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        px=None,
+        percent=None,
+        pad_mode="constant",
+        pad_cval=0,
+        keep_size=True,
+        sample_independently=True,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         # pylint: disable=invalid-name
         super(CropAndPad, self).__init__(
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed, name=name, random_state=random_state, deterministic=deterministic
+        )
 
         if px is None and percent is None:
             percent = (-0.1, 0.1)
 
-        self.mode, self.all_sides, self.top, self.right, self.bottom, \
-            self.left = self._handle_px_and_percent_args(px, percent)
+        (
+            self.mode,
+            self.all_sides,
+            self.top,
+            self.right,
+            self.bottom,
+            self.left,
+        ) = self._handle_px_and_percent_args(px, percent)
 
         self.pad_mode = _handle_pad_mode_param(pad_mode)
         # TODO enable ALL here, like in e.g. Affine
         self.pad_cval = iap.handle_discrete_param(
-            pad_cval, "pad_cval", value_range=None, tuple_to_uniform=True,
-            list_to_choice=True, allow_floats=True)
+            pad_cval,
+            "pad_cval",
+            value_range=None,
+            tuple_to_uniform=True,
+            list_to_choice=True,
+            allow_floats=True,
+        )
 
         self.keep_size = keep_size
         self.sample_independently = sample_independently
@@ -1867,8 +1991,7 @@ class CropAndPad(meta.Augmenter):
             all_sides, top, right, bottom, left = cls._handle_px_arg(px)
         else:  # = elif percent is not None:
             mode = "percent"
-            all_sides, top, right, bottom, left = cls._handle_percent_arg(
-                percent)
+            all_sides, top, right, bottom, left = cls._handle_percent_arg(percent)
         return mode, all_sides, top, right, bottom, left
 
     @classmethod
@@ -1882,33 +2005,36 @@ class CropAndPad(meta.Augmenter):
         elif isinstance(px, tuple):
             assert len(px) in [2, 4], (
                 "Expected 'px' given as a tuple to contain 2 or 4 "
-                "entries, got %d." % (len(px),))
+                "entries, got %d." % (len(px),)
+            )
 
             def handle_param(p):
                 if ia.is_single_integer(p):
                     return iap.Deterministic(p)
                 if isinstance(p, tuple):
-                    assert len(p) == 2, (
-                        "Expected tuple of 2 values, got %d." % (len(p)))
-                    only_ints = (
-                        ia.is_single_integer(p[0])
-                        and ia.is_single_integer(p[1]))
-                    assert only_ints, (
-                        "Expected tuple of integers, got %s and %s." % (
-                            type(p[0]), type(p[1])))
+                    assert len(p) == 2, "Expected tuple of 2 values, got %d." % (len(p))
+                    only_ints = ia.is_single_integer(p[0]) and ia.is_single_integer(
+                        p[1]
+                    )
+                    assert only_ints, "Expected tuple of integers, got %s and %s." % (
+                        type(p[0]),
+                        type(p[1]),
+                    )
                     return iap.DiscreteUniform(p[0], p[1])
                 if isinstance(p, list):
-                    assert len(p) > 0, (
-                        "Expected non-empty list, but got empty one.")
-                    assert all([ia.is_single_integer(val) for val in p]), (
-                        "Expected list of ints, got types %s." % (
-                            ", ".join([str(type(v)) for v in p])))
+                    assert len(p) > 0, "Expected non-empty list, but got empty one."
+                    assert all(
+                        [ia.is_single_integer(val) for val in p]
+                    ), "Expected list of ints, got types %s." % (
+                        ", ".join([str(type(v)) for v in p])
+                    )
                     return iap.Choice(p)
                 if isinstance(p, iap.StochasticParameter):
                     return p
                 raise Exception(
                     "Expected int, tuple of two ints, list of ints or "
-                    "StochasticParameter, got type %s." % (type(p),))
+                    "StochasticParameter, got type %s." % (type(p),)
+                )
 
             if len(px) == 2:
                 all_sides = handle_param(px)
@@ -1923,7 +2049,8 @@ class CropAndPad(meta.Augmenter):
             raise Exception(
                 "Expected int, tuple of 4 "
                 "ints/tuples/lists/StochasticParameters or "
-                "StochasticParameter, got type %s." % (type(px),))
+                "StochasticParameter, got type %s." % (type(px),)
+            )
         return all_sides, top, right, bottom, left
 
     @classmethod
@@ -1932,45 +2059,56 @@ class CropAndPad(meta.Augmenter):
         top, right, bottom, left = None, None, None, None
 
         if ia.is_single_number(percent):
-            assert percent > -1.0, (
-                "Expected 'percent' to be >-1.0, got %.4f." % (percent,))
+            assert percent > -1.0, "Expected 'percent' to be >-1.0, got %.4f." % (
+                percent,
+            )
             all_sides = iap.Deterministic(percent)
         elif isinstance(percent, tuple):
             assert len(percent) in [2, 4], (
                 "Expected 'percent' given as a tuple to contain 2 or 4 "
-                "entries, got %d." % (len(percent),))
+                "entries, got %d." % (len(percent),)
+            )
 
             def handle_param(p):
                 if ia.is_single_number(p):
                     return iap.Deterministic(p)
                 if isinstance(p, tuple):
-                    assert len(p) == 2, (
-                        "Expected tuple of 2 values, got %d." % (len(p),))
-                    only_numbers = (
-                        ia.is_single_number(p[0])
-                        and ia.is_single_number(p[1]))
-                    assert only_numbers, (
-                        "Expected tuple of numbers, got %s and %s." % (
-                            type(p[0]), type(p[1])))
-                    assert p[0] > -1.0 and p[1] > -1.0, (
-                        "Expected tuple of values >-1.0, got %.4f and "
-                        "%.4f." % (p[0], p[1]))
+                    assert len(p) == 2, "Expected tuple of 2 values, got %d." % (
+                        len(p),
+                    )
+                    only_numbers = ia.is_single_number(p[0]) and ia.is_single_number(
+                        p[1]
+                    )
+                    assert only_numbers, "Expected tuple of numbers, got %s and %s." % (
+                        type(p[0]),
+                        type(p[1]),
+                    )
+                    assert (
+                        p[0] > -1.0 and p[1] > -1.0
+                    ), "Expected tuple of values >-1.0, got %.4f and " "%.4f." % (
+                        p[0],
+                        p[1],
+                    )
                     return iap.Uniform(p[0], p[1])
                 if isinstance(p, list):
-                    assert len(p) > 0, (
-                        "Expected non-empty list, but got empty one.")
-                    assert all([ia.is_single_number(val) for val in p]), (
-                        "Expected list of numbers, got types %s." % (
-                            ", ".join([str(type(v)) for v in p])))
-                    assert all([val > -1.0 for val in p]), (
-                        "Expected list of values >-1.0, got values %s." % (
-                            ", ".join(["%.4f" % (v,) for v in p])))
+                    assert len(p) > 0, "Expected non-empty list, but got empty one."
+                    assert all(
+                        [ia.is_single_number(val) for val in p]
+                    ), "Expected list of numbers, got types %s." % (
+                        ", ".join([str(type(v)) for v in p])
+                    )
+                    assert all(
+                        [val > -1.0 for val in p]
+                    ), "Expected list of values >-1.0, got values %s." % (
+                        ", ".join(["%.4f" % (v,) for v in p])
+                    )
                     return iap.Choice(p)
                 if isinstance(p, iap.StochasticParameter):
                     return p
                 raise Exception(
                     "Expected int, tuple of two ints, list of ints or "
-                    "StochasticParameter, got type %s." % (type(p),))
+                    "StochasticParameter, got type %s." % (type(p),)
+                )
 
             if len(percent) == 2:
                 all_sides = handle_param(percent)
@@ -1985,7 +2123,8 @@ class CropAndPad(meta.Augmenter):
             raise Exception(
                 "Expected number, tuple of 4 "
                 "numbers/tuples/lists/StochasticParameters or "
-                "StochasticParameter, got type %s." % (type(percent),))
+                "StochasticParameter, got type %s." % (type(percent),)
+            )
         return all_sides, top, right, bottom, left
 
     # Added in 0.4.0.
@@ -1994,28 +2133,30 @@ class CropAndPad(meta.Augmenter):
         samples = self._draw_samples(random_state, shapes)
 
         if batch.images is not None:
-            batch.images = self._augment_images_by_samples(batch.images,
-                                                           samples)
+            batch.images = self._augment_images_by_samples(batch.images, samples)
 
         if batch.heatmaps is not None:
             batch.heatmaps = self._augment_maps_by_samples(
                 batch.heatmaps,
-                self._pad_mode_heatmaps, self._pad_cval_heatmaps,
-                samples)
+                self._pad_mode_heatmaps,
+                self._pad_cval_heatmaps,
+                samples,
+            )
 
         if batch.segmentation_maps is not None:
             batch.segmentation_maps = self._augment_maps_by_samples(
                 batch.segmentation_maps,
                 self._pad_mode_segmentation_maps,
-                self._pad_cval_segmentation_maps, samples)
+                self._pad_cval_segmentation_maps,
+                samples,
+            )
 
-        for augm_name in ["keypoints", "bounding_boxes", "polygons",
-                          "line_strings"]:
+        for augm_name in ["keypoints", "bounding_boxes", "polygons", "line_strings"]:
             augm_value = getattr(batch, augm_name)
             if augm_value is not None:
                 func = functools.partial(
-                    self._augment_keypoints_by_samples,
-                    samples=samples)
+                    self._augment_keypoints_by_samples, samples=samples
+                )
                 cbaois = self._apply_to_cbaois_as_keypoints(augm_value, func)
                 setattr(batch, augm_name, cbaois)
 
@@ -2026,8 +2167,13 @@ class CropAndPad(meta.Augmenter):
         result = []
         for i, image in enumerate(images):
             image_cr_pa = _crop_and_pad_arr(
-                image, samples.croppings(i), samples.paddings(i),
-                samples.pad_mode[i], samples.pad_cval[i], self.keep_size)
+                image,
+                samples.croppings(i),
+                samples.paddings(i),
+                samples.pad_mode[i],
+                samples.pad_cval[i],
+                self.keep_size,
+            )
 
             result.append(image_cr_pa)
 
@@ -2042,21 +2188,16 @@ class CropAndPad(meta.Augmenter):
         return result
 
     # Added in 0.4.0.
-    def _augment_maps_by_samples(self, augmentables, pad_mode, pad_cval,
-                                 samples):
+    def _augment_maps_by_samples(self, augmentables, pad_mode, pad_cval, samples):
         result = []
         for i, augmentable in enumerate(augmentables):
             augmentable = _crop_and_pad_hms_or_segmaps_(
                 augmentable,
                 croppings_img=samples.croppings(i),
                 paddings_img=samples.paddings(i),
-                pad_mode=(pad_mode
-                          if pad_mode is not None
-                          else samples.pad_mode[i]),
-                pad_cval=(pad_cval
-                          if pad_cval is not None
-                          else samples.pad_cval[i]),
-                keep_size=self.keep_size
+                pad_mode=(pad_mode if pad_mode is not None else samples.pad_mode[i]),
+                pad_cval=(pad_cval if pad_cval is not None else samples.pad_cval[i]),
+                keep_size=self.keep_size,
             )
 
             result.append(augmentable)
@@ -2068,8 +2209,11 @@ class CropAndPad(meta.Augmenter):
         result = []
         for i, keypoints_on_image in enumerate(keypoints_on_images):
             kpsoi_aug = _crop_and_pad_kpsoi_(
-                keypoints_on_image, croppings_img=samples.croppings(i),
-                paddings_img=samples.paddings(i), keep_size=self.keep_size)
+                keypoints_on_image,
+                croppings_img=samples.croppings(i),
+                paddings_img=samples.paddings(i),
+                keep_size=self.keep_size,
+            )
             result.append(kpsoi_aug)
 
         return result
@@ -2077,36 +2221,32 @@ class CropAndPad(meta.Augmenter):
     def _draw_samples(self, random_state, shapes):
         nb_rows = len(shapes)
 
-        shapes_arr = np.array([shape[0:2] for shape in shapes],
-                              dtype=np.int32)
+        shapes_arr = np.array([shape[0:2] for shape in shapes], dtype=np.int32)
         heights = shapes_arr[:, 0]
         widths = shapes_arr[:, 1]
 
         if self.mode == "noop":
-            top = right = bottom = left = np.full((nb_rows,), 0,
-                                                  dtype=np.int32)
+            top = right = bottom = left = np.full((nb_rows,), 0, dtype=np.int32)
         else:
             if self.all_sides is not None:
                 if self.sample_independently:
                     samples = self.all_sides.draw_samples(
-                        (nb_rows, 4), random_state=random_state)
+                        (nb_rows, 4), random_state=random_state
+                    )
                     top = samples[:, 0]
                     right = samples[:, 1]
                     bottom = samples[:, 2]
                     left = samples[:, 3]
                 else:
                     sample = self.all_sides.draw_samples(
-                        (nb_rows,), random_state=random_state)
+                        (nb_rows,), random_state=random_state
+                    )
                     top = right = bottom = left = sample
             else:
-                top = self.top.draw_samples(
-                    (nb_rows,), random_state=random_state)
-                right = self.right.draw_samples(
-                    (nb_rows,), random_state=random_state)
-                bottom = self.bottom.draw_samples(
-                    (nb_rows,), random_state=random_state)
-                left = self.left.draw_samples(
-                    (nb_rows,), random_state=random_state)
+                top = self.top.draw_samples((nb_rows,), random_state=random_state)
+                right = self.right.draw_samples((nb_rows,), random_state=random_state)
+                bottom = self.bottom.draw_samples((nb_rows,), random_state=random_state)
+                left = self.left.draw_samples((nb_rows,), random_state=random_state)
 
             if self.mode == "px":
                 # no change necessary for pixel values
@@ -2131,20 +2271,20 @@ class CropAndPad(meta.Augmenter):
         crop_bottom = np.maximum((-1) * bottom, 0)
         crop_left = np.maximum((-1) * left, 0)
 
-        crop_top, crop_bottom = _prevent_zero_sizes_after_crops_(heights, crop_top,
-                                                                 crop_bottom)
-        crop_left, crop_right = _prevent_zero_sizes_after_crops_(widths, crop_left,
-                                                                 crop_right)
+        crop_top, crop_bottom = _prevent_zero_sizes_after_crops_(
+            heights, crop_top, crop_bottom
+        )
+        crop_left, crop_right = _prevent_zero_sizes_after_crops_(
+            widths, crop_left, crop_right
+        )
 
         pad_top = np.maximum(top, 0)
         pad_right = np.maximum(right, 0)
         pad_bottom = np.maximum(bottom, 0)
         pad_left = np.maximum(left, 0)
 
-        pad_mode = self.pad_mode.draw_samples((nb_rows,),
-                                              random_state=random_state)
-        pad_cval = self.pad_cval.draw_samples((nb_rows,),
-                                              random_state=random_state)
+        pad_mode = self.pad_mode.draw_samples((nb_rows,), random_state=random_state)
+        pad_cval = self.pad_cval.draw_samples((nb_rows,), random_state=random_state)
 
         return _CropAndPadSamplingResult(
             crop_top=crop_top,
@@ -2156,13 +2296,20 @@ class CropAndPad(meta.Augmenter):
             pad_bottom=pad_bottom,
             pad_left=pad_left,
             pad_mode=pad_mode,
-            pad_cval=pad_cval
+            pad_cval=pad_cval,
         )
 
     def get_parameters(self):
         """See :func:`~imgaug.augmenters.meta.Augmenter.get_parameters`."""
-        return [self.all_sides, self.top, self.right, self.bottom, self.left,
-                self.pad_mode, self.pad_cval]
+        return [
+            self.all_sides,
+            self.top,
+            self.right,
+            self.bottom,
+            self.left,
+            self.pad_mode,
+            self.pad_cval,
+        ]
 
 
 class Pad(CropAndPad):
@@ -2361,10 +2508,19 @@ class Pad(CropAndPad):
 
     """
 
-    def __init__(self, px=None, percent=None, pad_mode="constant", pad_cval=0,
-                 keep_size=True, sample_independently=True,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        px=None,
+        percent=None,
+        pad_mode="constant",
+        pad_cval=0,
+        keep_size=True,
+        sample_independently=True,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         def recursive_validate(value):
             if value is None:
                 return value
@@ -2379,7 +2535,8 @@ class Pad(CropAndPad):
                 return [recursive_validate(v_) for v_ in value]
             raise Exception(
                 "Expected None or int or float or StochasticParameter or "
-                "list or tuple, got %s." % (type(value),))
+                "list or tuple, got %s." % (type(value),)
+            )
 
         if px is None and percent is None:
             percent = (0.0, 0.1)
@@ -2394,8 +2551,11 @@ class Pad(CropAndPad):
             pad_cval=pad_cval,
             keep_size=keep_size,
             sample_independently=sample_independently,
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed,
+            name=name,
+            random_state=random_state,
+            deterministic=deterministic,
+        )
 
 
 class Crop(CropAndPad):
@@ -2547,10 +2707,17 @@ class Crop(CropAndPad):
 
     """
 
-    def __init__(self, px=None, percent=None, keep_size=True,
-                 sample_independently=True,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        px=None,
+        percent=None,
+        keep_size=True,
+        sample_independently=True,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         def recursive_negate(value):
             if value is None:
                 return value
@@ -2565,7 +2732,8 @@ class Crop(CropAndPad):
                 return [recursive_negate(v_) for v_ in value]
             raise Exception(
                 "Expected None or int or float or StochasticParameter or "
-                "list or tuple, got %s." % (type(value),))
+                "list or tuple, got %s." % (type(value),)
+            )
 
         if px is None and percent is None:
             percent = (0.0, 0.1)
@@ -2578,8 +2746,11 @@ class Crop(CropAndPad):
             percent=percent,
             keep_size=keep_size,
             sample_independently=sample_independently,
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed,
+            name=name,
+            random_state=random_state,
+            deterministic=deterministic,
+        )
 
 
 # TODO maybe rename this to PadToMinimumSize?
@@ -2715,13 +2886,21 @@ class PadToFixedSize(meta.Augmenter):
 
     """
 
-    def __init__(self, width, height, pad_mode="constant", pad_cval=0,
-                 position="uniform",
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        width,
+        height,
+        pad_mode="constant",
+        pad_cval=0,
+        position="uniform",
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(PadToFixedSize, self).__init__(
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed, name=name, random_state=random_state, deterministic=deterministic
+        )
         self.size = (width, height)
 
         # Position of where to pad. The further to the top left this is, the
@@ -2736,8 +2915,13 @@ class PadToFixedSize(meta.Augmenter):
         self.pad_mode = _handle_pad_mode_param(pad_mode)
         # TODO enable ALL here like in eg Affine
         self.pad_cval = iap.handle_discrete_param(
-            pad_cval, "pad_cval", value_range=None, tuple_to_uniform=True,
-            list_to_choice=True, allow_floats=True)
+            pad_cval,
+            "pad_cval",
+            value_range=None,
+            tuple_to_uniform=True,
+            list_to_choice=True,
+            allow_floats=True,
+        )
 
         # set these to None to use the same values as sampled for the
         # images (not tested)
@@ -2755,26 +2939,30 @@ class PadToFixedSize(meta.Augmenter):
         samples = self._draw_samples(batch, random_state)
 
         if batch.images is not None:
-            batch.images = self._augment_images_by_samples(batch.images,
-                                                           samples)
+            batch.images = self._augment_images_by_samples(batch.images, samples)
 
         if batch.heatmaps is not None:
             batch.heatmaps = self._augment_maps_by_samples(
-                batch.heatmaps, samples, self._pad_mode_heatmaps,
-                self._pad_cval_heatmaps)
+                batch.heatmaps,
+                samples,
+                self._pad_mode_heatmaps,
+                self._pad_cval_heatmaps,
+            )
 
         if batch.segmentation_maps is not None:
             batch.segmentation_maps = self._augment_maps_by_samples(
-                batch.segmentation_maps, samples, self._pad_mode_heatmaps,
-                self._pad_cval_heatmaps)
+                batch.segmentation_maps,
+                samples,
+                self._pad_mode_heatmaps,
+                self._pad_cval_heatmaps,
+            )
 
-        for augm_name in ["keypoints", "bounding_boxes", "polygons",
-                          "line_strings"]:
+        for augm_name in ["keypoints", "bounding_boxes", "polygons", "line_strings"]:
             augm_value = getattr(batch, augm_name)
             if augm_value is not None:
                 func = functools.partial(
-                    self._augment_keypoints_by_samples,
-                    samples=samples)
+                    self._augment_keypoints_by_samples, samples=samples
+                )
                 cbaois = self._apply_to_cbaois_as_keypoints(augm_value, func)
                 setattr(batch, augm_name, cbaois)
 
@@ -2787,13 +2975,18 @@ class PadToFixedSize(meta.Augmenter):
         for i, (image, size) in enumerate(zip(images, sizes)):
             width_min, height_min = size
             height_image, width_image = image.shape[:2]
-            paddings = self._calculate_paddings(height_image, width_image,
-                                                height_min, width_min,
-                                                pad_xs[i], pad_ys[i])
+            paddings = self._calculate_paddings(
+                height_image, width_image, height_min, width_min, pad_xs[i], pad_ys[i]
+            )
 
             image = _crop_and_pad_arr(
-                image, (0, 0, 0, 0), paddings, pad_modes[i], pad_cvals[i],
-                keep_size=False)
+                image,
+                (0, 0, 0, 0),
+                paddings,
+                pad_modes[i],
+                pad_cvals[i],
+                keep_size=False,
+            )
 
             result.append(image)
 
@@ -2809,29 +3002,28 @@ class PadToFixedSize(meta.Augmenter):
         for i, (kpsoi, size) in enumerate(zip(keypoints_on_images, sizes)):
             width_min, height_min = size
             height_image, width_image = kpsoi.shape[:2]
-            paddings_img = self._calculate_paddings(height_image, width_image,
-                                                    height_min, width_min,
-                                                    pad_xs[i], pad_ys[i])
+            paddings_img = self._calculate_paddings(
+                height_image, width_image, height_min, width_min, pad_xs[i], pad_ys[i]
+            )
 
             keypoints_padded = _crop_and_pad_kpsoi_(
-                kpsoi, (0, 0, 0, 0), paddings_img,
-                keep_size=False)
+                kpsoi, (0, 0, 0, 0), paddings_img, keep_size=False
+            )
 
             result.append(keypoints_padded)
 
         return result
 
     # Added in 0.4.0.
-    def _augment_maps_by_samples(self, augmentables, samples, pad_mode,
-                                 pad_cval):
+    def _augment_maps_by_samples(self, augmentables, samples, pad_mode, pad_cval):
         sizes, pad_xs, pad_ys, pad_modes, pad_cvals = samples
 
         for i, (augmentable, size) in enumerate(zip(augmentables, sizes)):
             width_min, height_min = size
             height_img, width_img = augmentable.shape[:2]
             paddings_img = self._calculate_paddings(
-                height_img, width_img, height_min, width_min,
-                pad_xs[i], pad_ys[i])
+                height_img, width_img, height_min, width_min, pad_xs[i], pad_ys[i]
+            )
 
             # TODO for the previous method (and likely the new/current one
             #      too):
@@ -2846,7 +3038,8 @@ class PadToFixedSize(meta.Augmenter):
                 paddings_img,
                 pad_mode=pad_mode if pad_mode is not None else pad_modes[i],
                 pad_cval=pad_cval if pad_cval is not None else pad_cvals[i],
-                keep_size=False)
+                keep_size=False,
+            )
 
         return augmentables
 
@@ -2855,28 +3048,24 @@ class PadToFixedSize(meta.Augmenter):
         rngs = random_state.duplicate(4)
 
         if isinstance(self.position, tuple):
-            pad_xs = self.position[0].draw_samples(nb_images,
-                                                   random_state=rngs[0])
-            pad_ys = self.position[1].draw_samples(nb_images,
-                                                   random_state=rngs[1])
+            pad_xs = self.position[0].draw_samples(nb_images, random_state=rngs[0])
+            pad_ys = self.position[1].draw_samples(nb_images, random_state=rngs[1])
         else:
-            pads = self.position.draw_samples((nb_images, 2),
-                                              random_state=rngs[0])
+            pads = self.position.draw_samples((nb_images, 2), random_state=rngs[0])
             pad_xs = pads[:, 0]
             pad_ys = pads[:, 1]
 
-        pad_modes = self.pad_mode.draw_samples(nb_images,
-                                               random_state=rngs[2])
-        pad_cvals = self.pad_cval.draw_samples(nb_images,
-                                               random_state=rngs[3])
+        pad_modes = self.pad_mode.draw_samples(nb_images, random_state=rngs[2])
+        pad_cvals = self.pad_cval.draw_samples(nb_images, random_state=rngs[3])
 
         # We return here the sizes even though they are static as it allows
         # derived augmenters to define image-specific heights/widths.
         return [self.size] * nb_images, pad_xs, pad_ys, pad_modes, pad_cvals
 
     @classmethod
-    def _calculate_paddings(cls, height_image, width_image,
-                            height_min, width_min, pad_xs_i, pad_ys_i):
+    def _calculate_paddings(
+        cls, height_image, width_image, height_min, width_min, pad_xs_i, pad_ys_i
+    ):
         pad_top = 0
         pad_right = 0
         pad_bottom = 0
@@ -2884,20 +3073,19 @@ class PadToFixedSize(meta.Augmenter):
 
         if width_min is not None and width_image < width_min:
             pad_total_x = width_min - width_image
-            pad_left = int((1-pad_xs_i) * pad_total_x)
+            pad_left = int((1 - pad_xs_i) * pad_total_x)
             pad_right = pad_total_x - pad_left
 
         if height_min is not None and height_image < height_min:
             pad_total_y = height_min - height_image
-            pad_top = int((1-pad_ys_i) * pad_total_y)
+            pad_top = int((1 - pad_ys_i) * pad_total_y)
             pad_bottom = pad_total_y - pad_top
 
         return pad_top, pad_right, pad_bottom, pad_left
 
     def get_parameters(self):
         """See :func:`~imgaug.augmenters.meta.Augmenter.get_parameters`."""
-        return [self.size[0], self.size[1], self.pad_mode, self.pad_cval,
-                self.position]
+        return [self.size[0], self.size[1], self.pad_mode, self.pad_cval, self.position]
 
 
 class CenterPadToFixedSize(PadToFixedSize):
@@ -2957,14 +3145,28 @@ class CenterPadToFixedSize(PadToFixedSize):
     """
 
     # Added in 0.4.0.
-    def __init__(self, width, height, pad_mode="constant", pad_cval=0,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        width,
+        height,
+        pad_mode="constant",
+        pad_cval=0,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(CenterPadToFixedSize, self).__init__(
-            width=width, height=height, pad_mode=pad_mode, pad_cval=pad_cval,
+            width=width,
+            height=height,
+            pad_mode=pad_mode,
+            pad_cval=pad_cval,
             position="center",
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed,
+            name=name,
+            random_state=random_state,
+            deterministic=deterministic,
+        )
 
 
 # TODO maybe rename this to CropToMaximumSize ?
@@ -3094,12 +3296,19 @@ class CropToFixedSize(meta.Augmenter):
 
     """
 
-    def __init__(self, width, height, position="uniform",
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        width,
+        height,
+        position="uniform",
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(CropToFixedSize, self).__init__(
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed, name=name, random_state=random_state, deterministic=deterministic
+        )
         self.size = (width, height)
 
         # Position of where to crop. The further to the top left this is,
@@ -3120,24 +3329,22 @@ class CropToFixedSize(meta.Augmenter):
         samples = self._draw_samples(batch, random_state)
 
         if batch.images is not None:
-            batch.images = self._augment_images_by_samples(batch.images,
-                                                           samples)
+            batch.images = self._augment_images_by_samples(batch.images, samples)
 
         if batch.heatmaps is not None:
-            batch.heatmaps = self._augment_maps_by_samples(
-                batch.heatmaps, samples)
+            batch.heatmaps = self._augment_maps_by_samples(batch.heatmaps, samples)
 
         if batch.segmentation_maps is not None:
             batch.segmentation_maps = self._augment_maps_by_samples(
-                batch.segmentation_maps, samples)
+                batch.segmentation_maps, samples
+            )
 
-        for augm_name in ["keypoints", "bounding_boxes", "polygons",
-                          "line_strings"]:
+        for augm_name in ["keypoints", "bounding_boxes", "polygons", "line_strings"]:
             augm_value = getattr(batch, augm_name)
             if augm_value is not None:
                 func = functools.partial(
-                    self._augment_keypoints_by_samples,
-                    samples=samples)
+                    self._augment_keypoints_by_samples, samples=samples
+                )
                 cbaois = self._apply_to_cbaois_as_keypoints(augm_value, func)
                 setattr(batch, augm_name, cbaois)
 
@@ -3152,10 +3359,12 @@ class CropToFixedSize(meta.Augmenter):
             height_image, width_image = image.shape[0:2]
 
             croppings = self._calculate_crop_amounts(
-                height_image, width_image, h, w, offset_ys[i], offset_xs[i])
+                height_image, width_image, h, w, offset_ys[i], offset_xs[i]
+            )
 
-            image_cropped = _crop_and_pad_arr(image, croppings, (0, 0, 0, 0),
-                                              keep_size=False)
+            image_cropped = _crop_and_pad_arr(
+                image, croppings, (0, 0, 0, 0), keep_size=False
+            )
 
             result.append(image_cropped)
 
@@ -3170,10 +3379,12 @@ class CropToFixedSize(meta.Augmenter):
             height_image, width_image = kpsoi.shape[0:2]
 
             croppings_img = self._calculate_crop_amounts(
-                height_image, width_image, h, w, offset_ys[i], offset_xs[i])
+                height_image, width_image, h, w, offset_ys[i], offset_xs[i]
+            )
 
             kpsoi_cropped = _crop_and_pad_kpsoi_(
-                kpsoi, croppings_img, (0, 0, 0, 0), keep_size=False)
+                kpsoi, croppings_img, (0, 0, 0, 0), keep_size=False
+            )
 
             result.append(kpsoi_cropped)
 
@@ -3187,17 +3398,19 @@ class CropToFixedSize(meta.Augmenter):
             height_image, width_image = augmentable.shape[0:2]
 
             croppings_img = self._calculate_crop_amounts(
-                height_image, width_image, h, w, offset_ys[i], offset_xs[i])
+                height_image, width_image, h, w, offset_ys[i], offset_xs[i]
+            )
 
             augmentables[i] = _crop_and_pad_hms_or_segmaps_(
-                augmentable, croppings_img, (0, 0, 0, 0), keep_size=False)
+                augmentable, croppings_img, (0, 0, 0, 0), keep_size=False
+            )
 
         return augmentables
 
     @classmethod
-    def _calculate_crop_amounts(cls, height_image, width_image,
-                                height_max, width_max,
-                                offset_y, offset_x):
+    def _calculate_crop_amounts(
+        cls, height_image, width_image, height_max, width_max, offset_y, offset_x
+    ):
         crop_top = 0
         crop_right = 0
         crop_bottom = 0
@@ -3218,13 +3431,10 @@ class CropToFixedSize(meta.Augmenter):
         rngs = random_state.duplicate(2)
 
         if isinstance(self.position, tuple):
-            offset_xs = self.position[0].draw_samples(nb_images,
-                                                      random_state=rngs[0])
-            offset_ys = self.position[1].draw_samples(nb_images,
-                                                      random_state=rngs[1])
+            offset_xs = self.position[0].draw_samples(nb_images, random_state=rngs[0])
+            offset_ys = self.position[1].draw_samples(nb_images, random_state=rngs[1])
         else:
-            offsets = self.position.draw_samples((nb_images, 2),
-                                                 random_state=rngs[0])
+            offsets = self.position.draw_samples((nb_images, 2), random_state=rngs[0])
             offset_xs = offsets[:, 0]
             offset_ys = offsets[:, 1]
 
@@ -3295,13 +3505,24 @@ class CenterCropToFixedSize(CropToFixedSize):
     """
 
     # Added in 0.4.0.
-    def __init__(self, width, height,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        width,
+        height,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(CenterCropToFixedSize, self).__init__(
-            width=width, height=height, position="center",
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            width=width,
+            height=height,
+            position="center",
+            seed=seed,
+            name=name,
+            random_state=random_state,
+            deterministic=deterministic,
+        )
 
 
 class CropToMultiplesOf(CropToFixedSize):
@@ -3366,21 +3587,33 @@ class CropToMultiplesOf(CropToFixedSize):
     """
 
     # Added in 0.4.0.
-    def __init__(self, width_multiple, height_multiple, position="uniform",
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        width_multiple,
+        height_multiple,
+        position="uniform",
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(CropToMultiplesOf, self).__init__(
-            width=None, height=None, position=position,
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            width=None,
+            height=None,
+            position=position,
+            seed=seed,
+            name=name,
+            random_state=random_state,
+            deterministic=deterministic,
+        )
         self.width_multiple = width_multiple
         self.height_multiple = height_multiple
 
     # Added in 0.4.0.
     def _draw_samples(self, batch, random_state):
-        _sizes, offset_xs, offset_ys = super(
-            CropToMultiplesOf, self
-        )._draw_samples(batch, random_state)
+        _sizes, offset_xs, offset_ys = super(CropToMultiplesOf, self)._draw_samples(
+            batch, random_state
+        )
 
         shapes = batch.get_rowwise_shapes()
         sizes = []
@@ -3389,14 +3622,15 @@ class CropToMultiplesOf(CropToFixedSize):
             croppings = compute_croppings_to_reach_multiples_of(
                 shape,
                 height_multiple=self.height_multiple,
-                width_multiple=self.width_multiple)
+                width_multiple=self.width_multiple,
+            )
 
             # TODO change that
             # note that these are not in the same order as shape tuples
             # in CropToFixedSize
             new_size = (
                 width - croppings[1] - croppings[3],
-                height - croppings[0] - croppings[2]
+                height - croppings[0] - croppings[2],
             )
             sizes.append(new_size)
 
@@ -3462,15 +3696,24 @@ class CenterCropToMultiplesOf(CropToMultiplesOf):
     """
 
     # Added in 0.4.0.
-    def __init__(self, width_multiple, height_multiple,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        width_multiple,
+        height_multiple,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(CenterCropToMultiplesOf, self).__init__(
             width_multiple=width_multiple,
             height_multiple=height_multiple,
             position="center",
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed,
+            name=name,
+            random_state=random_state,
+            deterministic=deterministic,
+        )
 
 
 class PadToMultiplesOf(PadToFixedSize):
@@ -3534,16 +3777,29 @@ class PadToMultiplesOf(PadToFixedSize):
     """
 
     # Added in 0.4.0.
-    def __init__(self, width_multiple, height_multiple,
-                 pad_mode="constant", pad_cval=0,
-                 position="uniform",
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        width_multiple,
+        height_multiple,
+        pad_mode="constant",
+        pad_cval=0,
+        position="uniform",
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(PadToMultiplesOf, self).__init__(
-            width=None, height=None, pad_mode=pad_mode, pad_cval=pad_cval,
+            width=None,
+            height=None,
+            pad_mode=pad_mode,
+            pad_cval=pad_cval,
             position=position,
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed,
+            name=name,
+            random_state=random_state,
+            deterministic=deterministic,
+        )
         self.width_multiple = width_multiple
         self.height_multiple = height_multiple
 
@@ -3560,14 +3816,15 @@ class PadToMultiplesOf(PadToFixedSize):
             paddings = compute_paddings_to_reach_multiples_of(
                 shape,
                 height_multiple=self.height_multiple,
-                width_multiple=self.width_multiple)
+                width_multiple=self.width_multiple,
+            )
 
             # TODO change that
             # note that these are not in the same order as shape tuples
             # in PadToFixedSize
             new_size = (
                 width + paddings[1] + paddings[3],
-                height + paddings[0] + paddings[2]
+                height + paddings[0] + paddings[2],
             )
             sizes.append(new_size)
 
@@ -3576,9 +3833,13 @@ class PadToMultiplesOf(PadToFixedSize):
     # Added in 0.4.0.
     def get_parameters(self):
         """See :func:`~imgaug.augmenters.meta.Augmenter.get_parameters`."""
-        return [self.width_multiple, self.height_multiple,
-                self.pad_mode, self.pad_cval,
-                self.position]
+        return [
+            self.width_multiple,
+            self.height_multiple,
+            self.pad_mode,
+            self.pad_cval,
+            self.position,
+        ]
 
 
 class CenterPadToMultiplesOf(PadToMultiplesOf):
@@ -3641,18 +3902,28 @@ class CenterPadToMultiplesOf(PadToMultiplesOf):
     """
 
     # Added in 0.4.0.
-    def __init__(self, width_multiple, height_multiple,
-                 pad_mode="constant", pad_cval=0,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        width_multiple,
+        height_multiple,
+        pad_mode="constant",
+        pad_cval=0,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(CenterPadToMultiplesOf, self).__init__(
             width_multiple=width_multiple,
             height_multiple=height_multiple,
             pad_mode=pad_mode,
             pad_cval=pad_cval,
             position="center",
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed,
+            name=name,
+            random_state=random_state,
+            deterministic=deterministic,
+        )
 
 
 class CropToPowersOf(CropToFixedSize):
@@ -3724,37 +3995,48 @@ class CropToPowersOf(CropToFixedSize):
     """
 
     # Added in 0.4.0.
-    def __init__(self, width_base, height_base, position="uniform",
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        width_base,
+        height_base,
+        position="uniform",
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(CropToPowersOf, self).__init__(
-            width=None, height=None, position=position,
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            width=None,
+            height=None,
+            position=position,
+            seed=seed,
+            name=name,
+            random_state=random_state,
+            deterministic=deterministic,
+        )
         self.width_base = width_base
         self.height_base = height_base
 
     # Added in 0.4.0.
     def _draw_samples(self, batch, random_state):
-        _sizes, offset_xs, offset_ys = super(
-            CropToPowersOf, self
-        )._draw_samples(batch, random_state)
+        _sizes, offset_xs, offset_ys = super(CropToPowersOf, self)._draw_samples(
+            batch, random_state
+        )
 
         shapes = batch.get_rowwise_shapes()
         sizes = []
         for shape in shapes:
             height, width = shape[0:2]
             croppings = compute_croppings_to_reach_powers_of(
-                shape,
-                height_base=self.height_base,
-                width_base=self.width_base)
+                shape, height_base=self.height_base, width_base=self.width_base
+            )
 
             # TODO change that
             # note that these are not in the same order as shape tuples
             # in CropToFixedSize
             new_size = (
                 width - croppings[1] - croppings[3],
-                height - croppings[0] - croppings[2]
+                height - croppings[0] - croppings[2],
             )
             sizes.append(new_size)
 
@@ -3820,13 +4102,24 @@ class CenterCropToPowersOf(CropToPowersOf):
     """
 
     # Added in 0.4.0.
-    def __init__(self, width_base, height_base,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        width_base,
+        height_base,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(CenterCropToPowersOf, self).__init__(
-            width_base=width_base, height_base=height_base, position="center",
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            width_base=width_base,
+            height_base=height_base,
+            position="center",
+            seed=seed,
+            name=name,
+            random_state=random_state,
+            deterministic=deterministic,
+        )
 
 
 class PadToPowersOf(PadToFixedSize):
@@ -3897,16 +4190,29 @@ class PadToPowersOf(PadToFixedSize):
     """
 
     # Added in 0.4.0.
-    def __init__(self, width_base, height_base,
-                 pad_mode="constant", pad_cval=0,
-                 position="uniform",
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        width_base,
+        height_base,
+        pad_mode="constant",
+        pad_cval=0,
+        position="uniform",
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(PadToPowersOf, self).__init__(
-            width=None, height=None, pad_mode=pad_mode, pad_cval=pad_cval,
+            width=None,
+            height=None,
+            pad_mode=pad_mode,
+            pad_cval=pad_cval,
             position=position,
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed,
+            name=name,
+            random_state=random_state,
+            deterministic=deterministic,
+        )
         self.width_base = width_base
         self.height_base = height_base
 
@@ -3921,16 +4227,15 @@ class PadToPowersOf(PadToFixedSize):
         for shape in shapes:
             height, width = shape[0:2]
             paddings = compute_paddings_to_reach_powers_of(
-                shape,
-                height_base=self.height_base,
-                width_base=self.width_base)
+                shape, height_base=self.height_base, width_base=self.width_base
+            )
 
             # TODO change that
             # note that these are not in the same order as shape tuples
             # in PadToFixedSize
             new_size = (
                 width + paddings[1] + paddings[3],
-                height + paddings[0] + paddings[2]
+                height + paddings[0] + paddings[2],
             )
             sizes.append(new_size)
 
@@ -3939,9 +4244,13 @@ class PadToPowersOf(PadToFixedSize):
     # Added in 0.4.0.
     def get_parameters(self):
         """See :func:`~imgaug.augmenters.meta.Augmenter.get_parameters`."""
-        return [self.width_base, self.height_base,
-                self.pad_mode, self.pad_cval,
-                self.position]
+        return [
+            self.width_base,
+            self.height_base,
+            self.pad_mode,
+            self.pad_cval,
+            self.position,
+        ]
 
 
 class CenterPadToPowersOf(PadToPowersOf):
@@ -4003,16 +4312,28 @@ class CenterPadToPowersOf(PadToPowersOf):
     """
 
     # Added in 0.4.0.
-    def __init__(self, width_base, height_base,
-                 pad_mode="constant", pad_cval=0,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        width_base,
+        height_base,
+        pad_mode="constant",
+        pad_cval=0,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(CenterPadToPowersOf, self).__init__(
-            width_base=width_base, height_base=height_base,
-            pad_mode=pad_mode, pad_cval=pad_cval,
+            width_base=width_base,
+            height_base=height_base,
+            pad_mode=pad_mode,
+            pad_cval=pad_cval,
             position="center",
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed,
+            name=name,
+            random_state=random_state,
+            deterministic=deterministic,
+        )
 
 
 class CropToAspectRatio(CropToFixedSize):
@@ -4070,20 +4391,31 @@ class CropToAspectRatio(CropToFixedSize):
     """
 
     # Added in 0.4.0.
-    def __init__(self, aspect_ratio, position="uniform",
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        aspect_ratio,
+        position="uniform",
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(CropToAspectRatio, self).__init__(
-            width=None, height=None, position=position,
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            width=None,
+            height=None,
+            position=position,
+            seed=seed,
+            name=name,
+            random_state=random_state,
+            deterministic=deterministic,
+        )
         self.aspect_ratio = aspect_ratio
 
     # Added in 0.4.0.
     def _draw_samples(self, batch, random_state):
-        _sizes, offset_xs, offset_ys = super(
-            CropToAspectRatio, self
-        )._draw_samples(batch, random_state)
+        _sizes, offset_xs, offset_ys = super(CropToAspectRatio, self)._draw_samples(
+            batch, random_state
+        )
 
         shapes = batch.get_rowwise_shapes()
         sizes = []
@@ -4094,15 +4426,15 @@ class CropToAspectRatio(CropToFixedSize):
                 croppings = (0, 0, 0, 0)
             else:
                 croppings = compute_croppings_to_reach_aspect_ratio(
-                    shape,
-                    aspect_ratio=self.aspect_ratio)
+                    shape, aspect_ratio=self.aspect_ratio
+                )
 
             # TODO change that
             # note that these are not in the same order as shape tuples
             # in CropToFixedSize
             new_size = (
                 width - croppings[1] - croppings[3],
-                height - croppings[0] - croppings[2]
+                height - croppings[0] - croppings[2],
             )
             sizes.append(new_size)
 
@@ -4165,13 +4497,22 @@ class CenterCropToAspectRatio(CropToAspectRatio):
     """
 
     # Added in 0.4.0.
-    def __init__(self, aspect_ratio,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        aspect_ratio,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(CenterCropToAspectRatio, self).__init__(
-            aspect_ratio=aspect_ratio, position="center",
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            aspect_ratio=aspect_ratio,
+            position="center",
+            seed=seed,
+            name=name,
+            random_state=random_state,
+            deterministic=deterministic,
+        )
 
 
 class PadToAspectRatio(PadToFixedSize):
@@ -4232,15 +4573,28 @@ class PadToAspectRatio(PadToFixedSize):
     """
 
     # Added in 0.4.0.
-    def __init__(self, aspect_ratio, pad_mode="constant", pad_cval=0,
-                 position="uniform",
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        aspect_ratio,
+        pad_mode="constant",
+        pad_cval=0,
+        position="uniform",
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(PadToAspectRatio, self).__init__(
-            width=None, height=None, pad_mode=pad_mode, pad_cval=pad_cval,
+            width=None,
+            height=None,
+            pad_mode=pad_mode,
+            pad_cval=pad_cval,
             position=position,
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed,
+            name=name,
+            random_state=random_state,
+            deterministic=deterministic,
+        )
         self.aspect_ratio = aspect_ratio
 
     # Added in 0.4.0.
@@ -4255,15 +4609,15 @@ class PadToAspectRatio(PadToFixedSize):
             height, width = shape[0:2]
 
             paddings = compute_paddings_to_reach_aspect_ratio(
-                shape,
-                aspect_ratio=self.aspect_ratio)
+                shape, aspect_ratio=self.aspect_ratio
+            )
 
             # TODO change that
             # note that these are not in the same order as shape tuples
             # in PadToFixedSize
             new_size = (
                 width + paddings[1] + paddings[3],
-                height + paddings[0] + paddings[2]
+                height + paddings[0] + paddings[2],
             )
             sizes.append(new_size)
 
@@ -4272,8 +4626,7 @@ class PadToAspectRatio(PadToFixedSize):
     # Added in 0.4.0.
     def get_parameters(self):
         """See :func:`~imgaug.augmenters.meta.Augmenter.get_parameters`."""
-        return [self.aspect_ratio, self.pad_mode, self.pad_cval,
-                self.position]
+        return [self.aspect_ratio, self.pad_mode, self.pad_cval, self.position]
 
 
 class CenterPadToAspectRatio(PadToAspectRatio):
@@ -4325,14 +4678,26 @@ class CenterPadToAspectRatio(PadToAspectRatio):
     """
 
     # Added in 0.4.0.
-    def __init__(self, aspect_ratio, pad_mode="constant", pad_cval=0,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        aspect_ratio,
+        pad_mode="constant",
+        pad_cval=0,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(CenterPadToAspectRatio, self).__init__(
-            aspect_ratio=aspect_ratio, position="center",
-            pad_mode=pad_mode, pad_cval=pad_cval,
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            aspect_ratio=aspect_ratio,
+            position="center",
+            pad_mode=pad_mode,
+            pad_cval=pad_cval,
+            seed=seed,
+            name=name,
+            random_state=random_state,
+            deterministic=deterministic,
+        )
 
 
 class CropToSquare(CropToAspectRatio):
@@ -4384,13 +4749,22 @@ class CropToSquare(CropToAspectRatio):
     """
 
     # Added in 0.4.0.
-    def __init__(self, position="uniform",
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        position="uniform",
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(CropToSquare, self).__init__(
-            aspect_ratio=1.0, position=position,
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            aspect_ratio=1.0,
+            position=position,
+            seed=seed,
+            name=name,
+            random_state=random_state,
+            deterministic=deterministic,
+        )
 
 
 class CenterCropToSquare(CropToSquare):
@@ -4447,12 +4821,20 @@ class CenterCropToSquare(CropToSquare):
     """
 
     # Added in 0.4.0.
-    def __init__(self, seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(CenterCropToSquare, self).__init__(
             position="center",
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed,
+            name=name,
+            random_state=random_state,
+            deterministic=deterministic,
+        )
 
 
 class PadToSquare(PadToAspectRatio):
@@ -4508,14 +4890,26 @@ class PadToSquare(PadToAspectRatio):
     """
 
     # Added in 0.4.0.
-    def __init__(self, pad_mode="constant", pad_cval=0, position="uniform",
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        pad_mode="constant",
+        pad_cval=0,
+        position="uniform",
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(PadToSquare, self).__init__(
-            aspect_ratio=1.0, pad_mode=pad_mode, pad_cval=pad_cval,
+            aspect_ratio=1.0,
+            pad_mode=pad_mode,
+            pad_cval=pad_cval,
             position=position,
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed,
+            name=name,
+            random_state=random_state,
+            deterministic=deterministic,
+        )
 
 
 class CenterPadToSquare(PadToSquare):
@@ -4564,13 +4958,24 @@ class CenterPadToSquare(PadToSquare):
     """
 
     # Added in 0.4.0.
-    def __init__(self, pad_mode="constant", pad_cval=0,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        pad_mode="constant",
+        pad_cval=0,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(CenterPadToSquare, self).__init__(
-            pad_mode=pad_mode, pad_cval=pad_cval, position="center",
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            pad_mode=pad_mode,
+            pad_cval=pad_cval,
+            position="center",
+            seed=seed,
+            name=name,
+            random_state=random_state,
+            deterministic=deterministic,
+        )
 
 
 class KeepSizeByResize(meta.Augmenter):
@@ -4683,21 +5088,27 @@ class KeepSizeByResize(meta.Augmenter):
     NO_RESIZE = "NO_RESIZE"
     SAME_AS_IMAGES = "SAME_AS_IMAGES"
 
-    def __init__(self, children,
-                 interpolation="cubic",
-                 interpolation_heatmaps=SAME_AS_IMAGES,
-                 interpolation_segmaps="nearest",
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        children,
+        interpolation="cubic",
+        interpolation_heatmaps=SAME_AS_IMAGES,
+        interpolation_segmaps="nearest",
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(KeepSizeByResize, self).__init__(
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed, name=name, random_state=random_state, deterministic=deterministic
+        )
         self.children = children
 
         @iap._prefetchable_str
         def _validate_param(val, allow_same_as_images):
-            valid_ips_and_resize = ia.IMRESIZE_VALID_INTERPOLATIONS \
-                                  + [KeepSizeByResize.NO_RESIZE]
+            valid_ips_and_resize = ia.IMRESIZE_VALID_INTERPOLATIONS + [
+                KeepSizeByResize.NO_RESIZE
+            ]
             if allow_same_as_images and val == self.SAME_AS_IMAGES:
                 return self.SAME_AS_IMAGES
             if val in valid_ips_and_resize:
@@ -4705,29 +5116,31 @@ class KeepSizeByResize(meta.Augmenter):
             if isinstance(val, list):
                 assert len(val) > 0, (
                     "Expected a list of at least one interpolation method. "
-                    "Got an empty list.")
+                    "Got an empty list."
+                )
                 valid_ips_here = valid_ips_and_resize
                 if allow_same_as_images:
-                    valid_ips_here = valid_ips_here \
-                                     + [KeepSizeByResize.SAME_AS_IMAGES]
+                    valid_ips_here = valid_ips_here + [KeepSizeByResize.SAME_AS_IMAGES]
                 only_valid_ips = all([ip in valid_ips_here for ip in val])
-                assert only_valid_ips, (
-                    "Expected each interpolations to be one of '%s', got "
-                    "'%s'." % (str(valid_ips_here), str(val)))
+                assert (
+                    only_valid_ips
+                ), "Expected each interpolations to be one of '%s', got " "'%s'." % (
+                    str(valid_ips_here),
+                    str(val),
+                )
                 return iap.Choice(val)
             if isinstance(val, iap.StochasticParameter):
                 return val
             raise Exception(
                 "Expected interpolation to be one of '%s' or a list of "
-                "these values or a StochasticParameter. Got type %s." % (
-                    str(ia.IMRESIZE_VALID_INTERPOLATIONS), type(val)))
+                "these values or a StochasticParameter. Got type %s."
+                % (str(ia.IMRESIZE_VALID_INTERPOLATIONS), type(val))
+            )
 
         self.children = meta.handle_children_list(children, self.name, "then")
         self.interpolation = _validate_param(interpolation, False)
-        self.interpolation_heatmaps = _validate_param(interpolation_heatmaps,
-                                                      True)
-        self.interpolation_segmaps = _validate_param(interpolation_segmaps,
-                                                     True)
+        self.interpolation_heatmaps = _validate_param(interpolation_heatmaps, True)
+        self.interpolation_segmaps = _validate_param(interpolation_segmaps, True)
 
     # Added in 0.4.0.
     def _augment_batch_(self, batch, random_state, parents, hooks):
@@ -4740,42 +5153,52 @@ class KeepSizeByResize(meta.Augmenter):
             samples = self._draw_samples(batch.nb_rows, random_state)
 
             batch = self.children.augment_batch_(
-                batch, parents=parents + [self], hooks=hooks)
+                batch, parents=parents + [self], hooks=hooks
+            )
 
             if batch.images is not None:
                 batch.images = self._keep_size_images(
-                    batch.images, shapes_orig["images"], images_were_array,
-                    samples)
+                    batch.images, shapes_orig["images"], images_were_array, samples
+                )
 
             if batch.heatmaps is not None:
                 # dont use shapes_orig["images"] because they might be None
                 batch.heatmaps = self._keep_size_maps(
-                    batch.heatmaps, shapes_orig["heatmaps"],
-                    shapes_orig["heatmaps_arr"], samples[1])
+                    batch.heatmaps,
+                    shapes_orig["heatmaps"],
+                    shapes_orig["heatmaps_arr"],
+                    samples[1],
+                )
 
             if batch.segmentation_maps is not None:
                 # dont use shapes_orig["images"] because they might be None
                 batch.segmentation_maps = self._keep_size_maps(
-                    batch.segmentation_maps, shapes_orig["segmentation_maps"],
-                    shapes_orig["segmentation_maps_arr"], samples[2])
+                    batch.segmentation_maps,
+                    shapes_orig["segmentation_maps"],
+                    shapes_orig["segmentation_maps_arr"],
+                    samples[2],
+                )
 
-            for augm_name in ["keypoints", "bounding_boxes", "polygons",
-                              "line_strings"]:
+            for augm_name in [
+                "keypoints",
+                "bounding_boxes",
+                "polygons",
+                "line_strings",
+            ]:
                 augm_value = getattr(batch, augm_name)
                 if augm_value is not None:
                     func = functools.partial(
                         self._keep_size_keypoints,
                         shapes_orig=shapes_orig[augm_name],
-                        interpolations=samples[0])
-                    cbaois = self._apply_to_cbaois_as_keypoints(augm_value,
-                                                                func)
+                        interpolations=samples[0],
+                    )
+                    cbaois = self._apply_to_cbaois_as_keypoints(augm_value, func)
                     setattr(batch, augm_name, cbaois)
         return batch
 
     # Added in 0.4.0.
     @classmethod
-    def _keep_size_images(cls, images, shapes_orig, images_were_array,
-                          samples):
+    def _keep_size_images(cls, images, shapes_orig, images_were_array, samples):
         interpolations, _, _ = samples
 
         gen = zip(images, interpolations, shapes_orig)
@@ -4785,8 +5208,8 @@ class KeepSizeByResize(meta.Augmenter):
                 result.append(image)
             else:
                 result.append(
-                    ia.imresize_single_image(image, input_shape[0:2],
-                                             interpolation))
+                    ia.imresize_single_image(image, input_shape[0:2], interpolation)
+                )
 
         if images_were_array:
             # note here that NO_RESIZE can have led to different shapes
@@ -4800,17 +5223,18 @@ class KeepSizeByResize(meta.Augmenter):
 
     # Added in 0.4.0.
     @classmethod
-    def _keep_size_maps(cls, augmentables, shapes_orig_images,
-                        shapes_orig_arrs, interpolations):
+    def _keep_size_maps(
+        cls, augmentables, shapes_orig_images, shapes_orig_arrs, interpolations
+    ):
         result = []
-        gen = zip(augmentables, interpolations,
-                  shapes_orig_arrs, shapes_orig_images)
+        gen = zip(augmentables, interpolations, shapes_orig_arrs, shapes_orig_images)
         for augmentable, interpolation, arr_shape_orig, img_shape_orig in gen:
             if interpolation == "NO_RESIZE":
                 result.append(augmentable)
             else:
                 augmentable = augmentable.resize(
-                    arr_shape_orig[0:2], interpolation=interpolation)
+                    arr_shape_orig[0:2], interpolation=interpolation
+                )
                 augmentable.shape = img_shape_orig
                 result.append(augmentable)
 
@@ -4837,19 +5261,20 @@ class KeepSizeByResize(meta.Augmenter):
             result[column.name] = [cell.shape for cell in column.value]
 
         if batch.heatmaps is not None:
-            result["heatmaps_arr"] = [
-                cell.arr_0to1.shape for cell in batch.heatmaps]
+            result["heatmaps_arr"] = [cell.arr_0to1.shape for cell in batch.heatmaps]
 
         if batch.segmentation_maps is not None:
             result["segmentation_maps_arr"] = [
-                cell.arr.shape for cell in batch.segmentation_maps]
+                cell.arr.shape for cell in batch.segmentation_maps
+            ]
 
         return result
 
     def _draw_samples(self, nb_images, random_state):
         rngs = random_state.duplicate(3)
-        interpolations = self.interpolation.draw_samples((nb_images,),
-                                                         random_state=rngs[0])
+        interpolations = self.interpolation.draw_samples(
+            (nb_images,), random_state=rngs[0]
+        )
 
         if self.interpolation_heatmaps == KeepSizeByResize.SAME_AS_IMAGES:
             interpolations_heatmaps = np.copy(interpolations)
@@ -4863,11 +5288,11 @@ class KeepSizeByResize(meta.Augmenter):
             # may contain strings. It does not work properly for e.g.
             # integer arrays and will produce a single bool output, even
             # for arrays with more than one entry.
-            same_as_imgs_idx = [ip == self.SAME_AS_IMAGES
-                                for ip in interpolations_heatmaps]
+            same_as_imgs_idx = [
+                ip == self.SAME_AS_IMAGES for ip in interpolations_heatmaps
+            ]
 
-            interpolations_heatmaps[same_as_imgs_idx] = \
-                interpolations[same_as_imgs_idx]
+            interpolations_heatmaps[same_as_imgs_idx] = interpolations[same_as_imgs_idx]
 
         if self.interpolation_segmaps == KeepSizeByResize.SAME_AS_IMAGES:
             interpolations_segmaps = np.copy(interpolations)
@@ -4884,11 +5309,11 @@ class KeepSizeByResize(meta.Augmenter):
             # may contain strings. It does not work properly for e.g.
             # integer arrays and will produce a single bool output, even
             # for arrays with more than one entry.
-            same_as_imgs_idx = [ip == self.SAME_AS_IMAGES
-                                for ip in interpolations_segmaps]
+            same_as_imgs_idx = [
+                ip == self.SAME_AS_IMAGES for ip in interpolations_segmaps
+            ]
 
-            interpolations_segmaps[same_as_imgs_idx] = \
-                interpolations[same_as_imgs_idx]
+            interpolations_segmaps[same_as_imgs_idx] = interpolations[same_as_imgs_idx]
 
         return interpolations, interpolations_heatmaps, interpolations_segmaps
 
@@ -4915,8 +5340,13 @@ class KeepSizeByResize(meta.Augmenter):
             "name=%s, "
             "children=%s, "
             "deterministic=%s"
-            ")")
+            ")"
+        )
         return pattern % (
-            self.__class__.__name__, self.interpolation,
-            self.interpolation_heatmaps, self.name, self.children,
-            self.deterministic)
+            self.__class__.__name__,
+            self.interpolation,
+            self.interpolation_heatmaps,
+            self.name,
+            self.children,
+            self.deterministic,
+        )

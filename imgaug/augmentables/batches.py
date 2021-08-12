@@ -12,18 +12,22 @@ from . import utils
 DEFAULT = "DEFAULT"
 
 _AUGMENTABLE_NAMES = [
-    "images", "heatmaps", "segmentation_maps", "keypoints",
-    "bounding_boxes", "polygons", "line_strings"]
+    "images",
+    "heatmaps",
+    "segmentation_maps",
+    "keypoints",
+    "bounding_boxes",
+    "polygons",
+    "line_strings",
+]
 
 _AugmentableColumn = collections.namedtuple(
-    "_AugmentableColumn",
-    ["name", "value", "attr_name"])
+    "_AugmentableColumn", ["name", "value", "attr_name"]
+)
 
 
 def _get_column_names(batch, postfix):
-    return [column.name
-            for column
-            in _get_columns(batch, postfix)]
+    return [column.name for column in _get_columns(batch, postfix)]
 
 
 def _get_columns(batch, postfix):
@@ -130,9 +134,17 @@ class UnnormalizedBatch(object):
 
     """
 
-    def __init__(self, images=None, heatmaps=None, segmentation_maps=None,
-                 keypoints=None, bounding_boxes=None, polygons=None,
-                 line_strings=None, data=None):
+    def __init__(
+        self,
+        images=None,
+        heatmaps=None,
+        segmentation_maps=None,
+        keypoints=None,
+        bounding_boxes=None,
+        polygons=None,
+        line_strings=None,
+        data=None,
+    ):
         """Construct a new :class:`UnnormalizedBatch` instance."""
         self.images_unaug = images
         self.images_aug = None
@@ -183,15 +195,18 @@ class UnnormalizedBatch(object):
             The batch, with ``*_unaug`` attributes being normalized.
 
         """
-        contains_no_augmented_data_yet = all([
-            attr is None
-            for attr_name, attr
-            in self.__dict__.items()
-            if attr_name.endswith("_aug")])
+        contains_no_augmented_data_yet = all(
+            [
+                attr is None
+                for attr_name, attr in self.__dict__.items()
+                if attr_name.endswith("_aug")
+            ]
+        )
         assert contains_no_augmented_data_yet, (
             "Expected UnnormalizedBatch to not contain any augmented data "
             "before normalization, but at least one '*_aug' attribute was "
-            "already set.")
+            "already set."
+        )
 
         images_unaug = nlib.normalize_images(self.images_unaug)
         shapes = None
@@ -200,19 +215,17 @@ class UnnormalizedBatch(object):
 
         return Batch(
             images=images_unaug,
-            heatmaps=nlib.normalize_heatmaps(
-                self.heatmaps_unaug, shapes),
+            heatmaps=nlib.normalize_heatmaps(self.heatmaps_unaug, shapes),
             segmentation_maps=nlib.normalize_segmentation_maps(
-                self.segmentation_maps_unaug, shapes),
-            keypoints=nlib.normalize_keypoints(
-                self.keypoints_unaug, shapes),
+                self.segmentation_maps_unaug, shapes
+            ),
+            keypoints=nlib.normalize_keypoints(self.keypoints_unaug, shapes),
             bounding_boxes=nlib.normalize_bounding_boxes(
-                self.bounding_boxes_unaug, shapes),
-            polygons=nlib.normalize_polygons(
-                self.polygons_unaug, shapes),
-            line_strings=nlib.normalize_line_strings(
-                self.line_strings_unaug, shapes),
-            data=self.data
+                self.bounding_boxes_unaug, shapes
+            ),
+            polygons=nlib.normalize_polygons(self.polygons_unaug, shapes),
+            line_strings=nlib.normalize_line_strings(self.line_strings_unaug, shapes),
+            data=self.data,
         )
 
     def fill_from_augmented_normalized_batch_(self, batch_aug_norm):
@@ -241,19 +254,26 @@ class UnnormalizedBatch(object):
 
         """
         self.images_aug = nlib.invert_normalize_images(
-            batch_aug_norm.images_aug, self.images_unaug)
+            batch_aug_norm.images_aug, self.images_unaug
+        )
         self.heatmaps_aug = nlib.invert_normalize_heatmaps(
-            batch_aug_norm.heatmaps_aug, self.heatmaps_unaug)
+            batch_aug_norm.heatmaps_aug, self.heatmaps_unaug
+        )
         self.segmentation_maps_aug = nlib.invert_normalize_segmentation_maps(
-            batch_aug_norm.segmentation_maps_aug, self.segmentation_maps_unaug)
+            batch_aug_norm.segmentation_maps_aug, self.segmentation_maps_unaug
+        )
         self.keypoints_aug = nlib.invert_normalize_keypoints(
-            batch_aug_norm.keypoints_aug, self.keypoints_unaug)
+            batch_aug_norm.keypoints_aug, self.keypoints_unaug
+        )
         self.bounding_boxes_aug = nlib.invert_normalize_bounding_boxes(
-            batch_aug_norm.bounding_boxes_aug, self.bounding_boxes_unaug)
+            batch_aug_norm.bounding_boxes_aug, self.bounding_boxes_unaug
+        )
         self.polygons_aug = nlib.invert_normalize_polygons(
-            batch_aug_norm.polygons_aug, self.polygons_unaug)
+            batch_aug_norm.polygons_aug, self.polygons_unaug
+        )
         self.line_strings_aug = nlib.invert_normalize_line_strings(
-            batch_aug_norm.line_strings_aug, self.line_strings_unaug)
+            batch_aug_norm.line_strings_aug, self.line_strings_unaug
+        )
         return self
 
     def fill_from_augmented_normalized_batch(self, batch_aug_norm):
@@ -290,23 +310,30 @@ class UnnormalizedBatch(object):
             bounding_boxes=self.bounding_boxes_unaug,
             polygons=self.polygons_unaug,
             line_strings=self.line_strings_unaug,
-            data=batch_aug_norm.data
+            data=batch_aug_norm.data,
         )
 
         batch.images_aug = nlib.invert_normalize_images(
-            batch_aug_norm.images_aug, self.images_unaug)
+            batch_aug_norm.images_aug, self.images_unaug
+        )
         batch.heatmaps_aug = nlib.invert_normalize_heatmaps(
-            batch_aug_norm.heatmaps_aug, self.heatmaps_unaug)
+            batch_aug_norm.heatmaps_aug, self.heatmaps_unaug
+        )
         batch.segmentation_maps_aug = nlib.invert_normalize_segmentation_maps(
-            batch_aug_norm.segmentation_maps_aug, self.segmentation_maps_unaug)
+            batch_aug_norm.segmentation_maps_aug, self.segmentation_maps_unaug
+        )
         batch.keypoints_aug = nlib.invert_normalize_keypoints(
-            batch_aug_norm.keypoints_aug, self.keypoints_unaug)
+            batch_aug_norm.keypoints_aug, self.keypoints_unaug
+        )
         batch.bounding_boxes_aug = nlib.invert_normalize_bounding_boxes(
-            batch_aug_norm.bounding_boxes_aug, self.bounding_boxes_unaug)
+            batch_aug_norm.bounding_boxes_aug, self.bounding_boxes_unaug
+        )
         batch.polygons_aug = nlib.invert_normalize_polygons(
-            batch_aug_norm.polygons_aug, self.polygons_unaug)
+            batch_aug_norm.polygons_aug, self.polygons_unaug
+        )
         batch.line_strings_aug = nlib.invert_normalize_line_strings(
-            batch_aug_norm.line_strings_aug, self.line_strings_unaug)
+            batch_aug_norm.line_strings_aug, self.line_strings_unaug
+        )
 
         return batch
 
@@ -347,9 +374,17 @@ class Batch(object):
 
     """
 
-    def __init__(self, images=None, heatmaps=None, segmentation_maps=None,
-                 keypoints=None, bounding_boxes=None, polygons=None,
-                 line_strings=None, data=None):
+    def __init__(
+        self,
+        images=None,
+        heatmaps=None,
+        segmentation_maps=None,
+        keypoints=None,
+        bounding_boxes=None,
+        polygons=None,
+        line_strings=None,
+        data=None,
+    ):
         """Construct a new :class:`Batch` instance."""
         self.images_unaug = images
         self.images_aug = None
@@ -441,6 +476,7 @@ class Batch(object):
             The converted batch.
 
         """
+
         def _copy(var):
             # TODO first check here if _aug is set and if it is then use that?
             if var is not None:
@@ -454,7 +490,7 @@ class Batch(object):
             keypoints=_copy(self.keypoints_unaug),
             bounding_boxes=_copy(self.bounding_boxes_unaug),
             polygons=_copy(self.polygons_unaug),
-            line_strings=_copy(self.line_strings_unaug)
+            line_strings=_copy(self.line_strings_unaug),
         )
 
     def fill_from_batch_in_augmentation_(self, batch_in_augmentation):
@@ -485,21 +521,23 @@ class Batch(object):
         self.line_strings_aug = batch_in_augmentation.line_strings
         return self
 
-    def deepcopy(self,
-                 images_unaug=DEFAULT,
-                 images_aug=DEFAULT,
-                 heatmaps_unaug=DEFAULT,
-                 heatmaps_aug=DEFAULT,
-                 segmentation_maps_unaug=DEFAULT,
-                 segmentation_maps_aug=DEFAULT,
-                 keypoints_unaug=DEFAULT,
-                 keypoints_aug=DEFAULT,
-                 bounding_boxes_unaug=DEFAULT,
-                 bounding_boxes_aug=DEFAULT,
-                 polygons_unaug=DEFAULT,
-                 polygons_aug=DEFAULT,
-                 line_strings_unaug=DEFAULT,
-                 line_strings_aug=DEFAULT):
+    def deepcopy(
+        self,
+        images_unaug=DEFAULT,
+        images_aug=DEFAULT,
+        heatmaps_unaug=DEFAULT,
+        heatmaps_aug=DEFAULT,
+        segmentation_maps_unaug=DEFAULT,
+        segmentation_maps_aug=DEFAULT,
+        keypoints_unaug=DEFAULT,
+        keypoints_aug=DEFAULT,
+        bounding_boxes_unaug=DEFAULT,
+        bounding_boxes_aug=DEFAULT,
+        polygons_unaug=DEFAULT,
+        polygons_aug=DEFAULT,
+        line_strings_unaug=DEFAULT,
+        line_strings_aug=DEFAULT,
+    ):
         """Copy this batch and all of its column values.
 
         Parameters
@@ -580,32 +618,35 @@ class Batch(object):
             Deep copy of the batch, optionally with new attributes.
 
         """
+
         def _copy_optional(self_attr, arg):
             return utils.deepcopy_fast(arg if arg is not DEFAULT else self_attr)
 
         batch = Batch(
             images=_copy_optional(self.images_unaug, images_unaug),
             heatmaps=_copy_optional(self.heatmaps_unaug, heatmaps_unaug),
-            segmentation_maps=_copy_optional(self.segmentation_maps_unaug,
-                                             segmentation_maps_unaug),
+            segmentation_maps=_copy_optional(
+                self.segmentation_maps_unaug, segmentation_maps_unaug
+            ),
             keypoints=_copy_optional(self.keypoints_unaug, keypoints_unaug),
-            bounding_boxes=_copy_optional(self.bounding_boxes_unaug,
-                                          bounding_boxes_unaug),
+            bounding_boxes=_copy_optional(
+                self.bounding_boxes_unaug, bounding_boxes_unaug
+            ),
             polygons=_copy_optional(self.polygons_unaug, polygons_unaug),
-            line_strings=_copy_optional(self.line_strings_unaug,
-                                        line_strings_unaug),
-            data=utils.deepcopy_fast(self.data)
+            line_strings=_copy_optional(self.line_strings_unaug, line_strings_unaug),
+            data=utils.deepcopy_fast(self.data),
         )
         batch.images_aug = _copy_optional(self.images_aug, images_aug)
         batch.heatmaps_aug = _copy_optional(self.heatmaps_aug, heatmaps_aug)
-        batch.segmentation_maps_aug = _copy_optional(self.segmentation_maps_aug,
-                                                     segmentation_maps_aug)
+        batch.segmentation_maps_aug = _copy_optional(
+            self.segmentation_maps_aug, segmentation_maps_aug
+        )
         batch.keypoints_aug = _copy_optional(self.keypoints_aug, keypoints_aug)
-        batch.bounding_boxes_aug = _copy_optional(self.bounding_boxes_aug,
-                                                  bounding_boxes_aug)
+        batch.bounding_boxes_aug = _copy_optional(
+            self.bounding_boxes_aug, bounding_boxes_aug
+        )
         batch.polygons_aug = _copy_optional(self.polygons_aug, polygons_aug)
-        batch.line_strings_aug = _copy_optional(self.line_strings_aug,
-                                                line_strings_aug)
+        batch.line_strings_aug = _copy_optional(self.line_strings_aug, line_strings_aug)
 
         return batch
 
@@ -622,13 +663,13 @@ class _BatchInAugmentationPropagationContext(object):
     def __enter__(self):
         if self.hooks is not None:
             self.noned_info = self.batch.apply_propagation_hooks_(
-                self.augmenter, self.hooks, self.parents)
+                self.augmenter, self.hooks, self.parents
+            )
         return self.batch
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.noned_info is not None:
-            self.batch = \
-                self.batch.invert_apply_propagation_hooks_(self.noned_info)
+            self.batch = self.batch.invert_apply_propagation_hooks_(self.noned_info)
 
 
 class _BatchInAugmentation(object):
@@ -667,9 +708,17 @@ class _BatchInAugmentation(object):
     """
 
     # Added in 0.4.0.
-    def __init__(self, images=None, heatmaps=None, segmentation_maps=None,
-                 keypoints=None, bounding_boxes=None, polygons=None,
-                 line_strings=None, data=None):
+    def __init__(
+        self,
+        images=None,
+        heatmaps=None,
+        segmentation_maps=None,
+        keypoints=None,
+        bounding_boxes=None,
+        polygons=None,
+        line_strings=None,
+        data=None,
+    ):
         """Create a new :class:`_BatchInAugmentation` instance."""
         self.images = images
         self.heatmaps = heatmaps
@@ -869,21 +918,26 @@ class _BatchInAugmentation(object):
                         dtypes = {column.dtype.name, column_sub.dtype.name}
                     else:
                         shapes = set(
-                            [column.shape[1:]]
-                            + [image.shape for image in column_sub])
+                            [column.shape[1:]] + [image.shape for image in column_sub]
+                        )
                         dtypes = set(
                             [column.dtype.name]
-                            + [image.dtype.name for image in column_sub])
+                            + [image.dtype.name for image in column_sub]
+                        )
 
                     if len(shapes) == 1 and len(dtypes) == 1:
-                        column[indices] = column_sub  # pylint: disable=unsupported-assignment-operation
+                        column[
+                            indices
+                        ] = column_sub  # pylint: disable=unsupported-assignment-operation
                     else:
                         self.images = list(column)
                         for ith_index, index in enumerate(indices):
                             self.images[index] = column_sub[ith_index]
                 else:
                     for ith_index, index in enumerate(indices):
-                        column[index] = column_sub[ith_index]  # pylint: disable=unsupported-assignment-operation
+                        column[index] = column_sub[
+                            ith_index
+                        ]  # pylint: disable=unsupported-assignment-operation
 
         return self
 
@@ -910,7 +964,8 @@ class _BatchInAugmentation(object):
 
         """
         return _BatchInAugmentationPropagationContext(
-            self, augmenter=augmenter, hooks=hooks, parents=parents)
+            self, augmenter=augmenter, hooks=hooks, parents=parents
+        )
 
     def apply_propagation_hooks_(self, augmenter, hooks, parents):
         """Set columns in this batch to ``None`` based on a propagation hook.
@@ -946,8 +1001,8 @@ class _BatchInAugmentation(object):
         noned_info = []
         for column in self.columns:
             is_prop = hooks.is_propagating(
-                column.value, augmenter=augmenter, parents=parents,
-                default=True)
+                column.value, augmenter=augmenter, parents=parents, default=True
+            )
             if not is_prop:
                 setattr(self, column.attr_name, None)
                 noned_info.append((column.attr_name, column.value))
@@ -1056,7 +1111,7 @@ class _BatchInAugmentation(object):
             bounding_boxes=batch_before_aug.bounding_boxes_unaug,
             polygons=batch_before_aug.polygons_unaug,
             line_strings=batch_before_aug.line_strings_unaug,
-            data=batch_before_aug.data
+            data=batch_before_aug.data,
         )
         batch.images_aug = self.images
         batch.heatmaps_aug = self.heatmaps

@@ -11,10 +11,9 @@ from imgaug import augmenters as iaa
 
 
 def main():
-    augseq = iaa.Sequential([
-        iaa.Fliplr(0.5),
-        iaa.CoarseDropout(p=0.1, size_percent=0.1)
-    ])
+    augseq = iaa.Sequential(
+        [iaa.Fliplr(0.5), iaa.CoarseDropout(p=0.1, size_percent=0.1)]
+    )
 
     def func_images(images, random_state, parents, hooks):
         time.sleep(0.2)
@@ -26,14 +25,16 @@ def main():
     def func_keypoints(keypoints_on_images, random_state, parents, hooks):
         return keypoints_on_images
 
-    augseq_slow = iaa.Sequential([
-        iaa.Fliplr(0.5),
-        iaa.Lambda(
-            func_images=func_images,
-            func_heatmaps=func_heatmaps,
-            func_keypoints=func_keypoints
-        )
-    ])
+    augseq_slow = iaa.Sequential(
+        [
+            iaa.Fliplr(0.5),
+            iaa.Lambda(
+                func_images=func_images,
+                func_heatmaps=func_heatmaps,
+                func_keypoints=func_keypoints,
+            ),
+        ]
+    )
 
     print("------------------")
     print("augseq.augment_batches(batches, background=True)")
@@ -173,24 +174,28 @@ def main():
         print("Many very small runs (batches=1)")
         print("------------------")
         for i in range(100):
-            batch_loader = multicore.BatchLoader(load_images(n_batches=1), queue_size=100)
+            batch_loader = multicore.BatchLoader(
+                load_images(n_batches=1), queue_size=100
+            )
             bg_augmenter = multicore.BackgroundAugmenter(batch_loader, augseq_i)
             while True:
                 batch = bg_augmenter.get_batch()
                 if batch is None:
-                    print("Finished (%d/%d)." % (i+1, 100))
+                    print("Finished (%d/%d)." % (i + 1, 100))
                     break
 
         print("------------------")
         print("Many very small runs (batches=2)")
         print("------------------")
         for i in range(100):
-            batch_loader = multicore.BatchLoader(load_images(n_batches=2), queue_size=100)
+            batch_loader = multicore.BatchLoader(
+                load_images(n_batches=2), queue_size=100
+            )
             bg_augmenter = multicore.BackgroundAugmenter(batch_loader, augseq_i)
             while True:
                 batch = bg_augmenter.get_batch()
                 if batch is None:
-                    print("Finished (%d/%d)." % (i+1, 100))
+                    print("Finished (%d/%d)." % (i + 1, 100))
                     break
 
         print("------------------")
@@ -198,7 +203,9 @@ def main():
         print("------------------")
 
         def _augment_small_1():
-            batch_loader = multicore.BatchLoader(load_images(n_batches=1), queue_size=100)
+            batch_loader = multicore.BatchLoader(
+                load_images(n_batches=1), queue_size=100
+            )
             bg_augmenter = multicore.BackgroundAugmenter(batch_loader, augseq_i)
             i = 0
             while True:
@@ -209,14 +216,16 @@ def main():
 
         for i in range(100):
             _augment_small_1()
-            print("Finished (%d/%d)." % (i+1, 100))
+            print("Finished (%d/%d)." % (i + 1, 100))
 
         print("------------------")
         print("Many very small runs, separate function (batches=2)")
         print("------------------")
 
         def _augment_small_2():
-            batch_loader = multicore.BatchLoader(load_images(n_batches=2), queue_size=100)
+            batch_loader = multicore.BatchLoader(
+                load_images(n_batches=2), queue_size=100
+            )
             bg_augmenter = multicore.BackgroundAugmenter(batch_loader, augseq_i)
             i = 0
             while True:
@@ -227,35 +236,43 @@ def main():
 
         for i in range(100):
             _augment_small_2()
-            print("Finished (%d/%d)." % (i+1, 100))
+            print("Finished (%d/%d)." % (i + 1, 100))
 
         print("------------------")
-        print("Many very small runs, separate function, incomplete fetching (batches=2)")
+        print(
+            "Many very small runs, separate function, incomplete fetching (batches=2)"
+        )
         print("------------------")
 
         def _augment_small_3():
-            batch_loader = multicore.BatchLoader(load_images(n_batches=2), queue_size=100)
+            batch_loader = multicore.BatchLoader(
+                load_images(n_batches=2), queue_size=100
+            )
             bg_augmenter = multicore.BackgroundAugmenter(batch_loader, augseq_i)
             batch = bg_augmenter.get_batch()
 
         for i in range(100):
             _augment_small_3()
-            print("Finished (%d/%d)." % (i+1, 100))
+            print("Finished (%d/%d)." % (i + 1, 100))
 
-    #for augseq_i in [augseq, augseq_slow]:
+        # for augseq_i in [augseq, augseq_slow]:
         print("------------------")
-        print("Many very small runs, separate function, incomplete fetching (batches=10)")
+        print(
+            "Many very small runs, separate function, incomplete fetching (batches=10)"
+        )
         print("------------------")
 
         def _augment_small_4():
-            batch_loader = multicore.BatchLoader(load_images(n_batches=10), queue_size=100)
+            batch_loader = multicore.BatchLoader(
+                load_images(n_batches=10), queue_size=100
+            )
             bg_augmenter = multicore.BackgroundAugmenter(batch_loader, augseq_i)
             batch = bg_augmenter.get_batch()
-            #bg_augmenter.terminate()
+            # bg_augmenter.terminate()
 
         for i in range(100):
             _augment_small_4()
-            print("Finished (%d/%d)." % (i+1, 100))
+            print("Finished (%d/%d)." % (i + 1, 100))
 
 
 def load_images(n_batches=10, sleep=0.0):
@@ -268,13 +285,14 @@ def load_images(n_batches=10, sleep=0.0):
         batch_images = []
         batch_kps = []
         for b in range(batch_size):
-            astronaut_text = ia.draw_text(astronaut, x=0, y=0, text="%d" % (counter,), color=[0, 255, 0], size=16)
+            astronaut_text = ia.draw_text(
+                astronaut, x=0, y=0, text="%d" % (counter,), color=[0, 255, 0], size=16
+            )
             batch_images.append(astronaut_text)
             batch_kps.append(kps)
             counter += 1
         batch = ia.Batch(
-            images=np.array(batch_images, dtype=np.uint8),
-            keypoints=batch_kps
+            images=np.array(batch_images, dtype=np.uint8), keypoints=batch_kps
         )
         yield batch
         if sleep > 0:

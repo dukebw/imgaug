@@ -60,7 +60,7 @@ _AFFINE_INTERPOLATION_ORDER_SKIMAGE_TO_CV2 = {
     1: cv2.INTER_LINEAR,
     2: cv2.INTER_CUBIC,
     3: cv2.INTER_CUBIC,
-    4: cv2.INTER_CUBIC
+    4: cv2.INTER_CUBIC,
 }
 
 # constant, edge, symmetric, reflect, wrap
@@ -75,7 +75,7 @@ _AFFINE_MODE_SKIMAGE_TO_CV2 = {
     "edge": cv2.BORDER_REPLICATE,
     "symmetric": cv2.BORDER_REFLECT,
     "reflect": cv2.BORDER_REFLECT_101,
-    "wrap": cv2.BORDER_WRAP
+    "wrap": cv2.BORDER_WRAP,
 }
 
 _PI = 3.141592653589793
@@ -102,29 +102,36 @@ def _handle_order_arg(order, backend):
     if ia.is_single_integer(order):
         assert 0 <= order <= 5, (
             "Expected order's integer value to be in the interval [0, 5], "
-            "got %d." % (order,))
+            "got %d." % (order,)
+        )
         if backend == "cv2":
             assert order in [0, 1, 3], (
-                "Backend \"cv2\" and order=%d was chosen, but cv2 backend "
-                "can only handle order 0, 1 or 3." % (order,))
+                'Backend "cv2" and order=%d was chosen, but cv2 backend '
+                "can only handle order 0, 1 or 3." % (order,)
+            )
         return iap.Deterministic(order)
     if isinstance(order, list):
-        assert all([ia.is_single_integer(val) for val in order]), (
-            "Expected order list to only contain integers, "
-            "got types %s." % (str([type(val) for val in order]),))
+        assert all(
+            [ia.is_single_integer(val) for val in order]
+        ), "Expected order list to only contain integers, " "got types %s." % (
+            str([type(val) for val in order]),
+        )
         assert all([0 <= val <= 5 for val in order]), (
             "Expected all of order's integer values to be in range "
-            "0 <= x <= 5, got %s." % (str(order),))
+            "0 <= x <= 5, got %s." % (str(order),)
+        )
         if backend == "cv2":
             assert all([val in [0, 1, 3] for val in order]), (
                 "cv2 backend can only handle order 0, 1 or 3. Got order "
-                "list of %s." % (order,))
+                "list of %s." % (order,)
+            )
         return iap.Choice(order)
     if isinstance(order, iap.StochasticParameter):
         return order
     raise Exception(
         "Expected order to be imgaug.ALL, int, list of int or "
-        "StochasticParameter, got %s." % (type(order),))
+        "StochasticParameter, got %s." % (type(order),)
+    )
 
 
 @iap._prefetchable
@@ -134,11 +141,7 @@ def _handle_cval_arg(cval):
         #      (or once per dtype)
         return iap.Uniform(0, 255)  # skimage transform expects float
     return iap.handle_continuous_param(
-        cval,
-        "cval",
-        value_range=None,
-        tuple_to_uniform=True,
-        list_to_choice=True
+        cval, "cval", value_range=None, tuple_to_uniform=True, list_to_choice=True
     )
 
 
@@ -151,9 +154,10 @@ def _handle_mode_arg(mode):
     if ia.is_string(mode):
         return iap.Deterministic(mode)
     if isinstance(mode, list):
-        assert all([ia.is_string(val) for val in mode]), (
-            "Expected list of modes to only contain strings, got "
-            "types %s" % (", ".join([str(type(v)) for v in mode]))
+        assert all(
+            [ia.is_string(val) for val in mode]
+        ), "Expected list of modes to only contain strings, got " "types %s" % (
+            ", ".join([str(type(v)) for v in mode])
         )
         return iap.Choice(mode)
     if isinstance(mode, iap.StochasticParameter):
@@ -164,8 +168,9 @@ def _handle_mode_arg(mode):
     )
 
 
-def _warp_affine_arr(arr, matrix, order=1, mode="constant", cval=0,
-                     output_shape=None, backend="auto"):
+def _warp_affine_arr(
+    arr, matrix, order=1, mode="constant", cval=0, output_shape=None, backend="auto"
+):
     # no changes to zero-sized arrays
     if arr.size == 0:
         return arr
@@ -173,21 +178,15 @@ def _warp_affine_arr(arr, matrix, order=1, mode="constant", cval=0,
     if ia.is_single_integer(cval) or ia.is_single_float(cval):
         cval = [cval] * len(arr.shape[2])
 
-    min_value, _center_value, max_value = \
-        iadt.get_value_range_of_dtype(arr.dtype)
+    min_value, _center_value, max_value = iadt.get_value_range_of_dtype(arr.dtype)
 
     cv2_bad_order = order not in [0, 1, 3]
     if order == 0:
-        cv2_bad_dtype = (arr.dtype
-                         not in _WARP_AFF_VALID_DTYPES_CV2_ORDER_0)
+        cv2_bad_dtype = arr.dtype not in _WARP_AFF_VALID_DTYPES_CV2_ORDER_0
     else:
-        cv2_bad_dtype = (arr.dtype
-                         not in _WARP_AFF_VALID_DTYPES_CV2_ORDER_NOT_0)
+        cv2_bad_dtype = arr.dtype not in _WARP_AFF_VALID_DTYPES_CV2_ORDER_NOT_0
     cv2_impossible = cv2_bad_order or cv2_bad_dtype
-    use_skimage = (
-        backend == "skimage"
-        or (backend == "auto" and cv2_impossible)
-    )
+    use_skimage = backend == "skimage" or (backend == "auto" and cv2_impossible)
     if use_skimage:
         # cval contains 3 values as cv2 can handle 3, but
         # skimage only 1
@@ -195,20 +194,15 @@ def _warp_affine_arr(arr, matrix, order=1, mode="constant", cval=0,
         # skimage does not clip automatically
         cval = max(min(cval, max_value), min_value)
         image_warped = _warp_affine_arr_skimage(
-            arr,
-            matrix,
-            cval=cval,
-            mode=mode,
-            order=order,
-            output_shape=output_shape
+            arr, matrix, cval=cval, mode=mode, order=order, output_shape=output_shape
         )
     else:
         assert not cv2_bad_dtype, (
             not cv2_bad_dtype,
             "cv2 backend in Affine got a dtype %s, which it "
             "cannot handle. Try using a different dtype or set "
-            "order=0." % (
-                arr.dtype,))
+            "order=0." % (arr.dtype,),
+        )
         cval_type = float if arr.dtype.kind == "f" else int
         image_warped = _warp_affine_arr_cv2(
             arr,
@@ -216,7 +210,7 @@ def _warp_affine_arr(arr, matrix, order=1, mode="constant", cval=0,
             cval=tuple([cval_type(v) for v in cval]),
             mode=mode,
             order=order,
-            output_shape=output_shape
+            output_shape=output_shape,
         )
     return image_warped
 
@@ -224,9 +218,8 @@ def _warp_affine_arr(arr, matrix, order=1, mode="constant", cval=0,
 def _warp_affine_arr_skimage(arr, matrix, cval, mode, order, output_shape):
     iadt.gate_dtypes_strs(
         {arr.dtype},
-        allowed="bool uint8 uint16 uint32 int8 int16 int32 "
-                "float16 float32 float64",
-        disallowed="uint64 int64 float128"
+        allowed="bool uint8 uint16 uint32 int8 int16 int32 " "float16 float32 float64",
+        disallowed="uint64 int64 float128",
     )
 
     input_dtype = arr.dtype
@@ -260,14 +253,14 @@ def _warp_affine_arr_cv2(arr, matrix, cval, mode, order, output_shape):
     iadt.gate_dtypes_strs(
         {arr.dtype},
         allowed="bool uint8 uint16 int8 int16 int32 float16 float32 float64",
-        disallowed="uint32 uint64 int64 float128"
+        disallowed="uint32 uint64 int64 float128",
     )
 
     if order != 0:
         assert arr.dtype != iadt._INT32_DTYPE, (
             "Affine only supports cv2-based transformations of int32 "
-            "arrays when using order=0, but order was set to %d." % (
-                order,))
+            "arrays when using order=0, but order was set to %d." % (order,)
+        )
 
     input_dtype = arr.dtype
     if input_dtype in {iadt._BOOL_DTYPE, iadt._FLOAT16_DTYPE}:
@@ -275,10 +268,7 @@ def _warp_affine_arr_cv2(arr, matrix, cval, mode, order, output_shape):
     elif input_dtype == iadt._INT8_DTYPE and order != 0:
         arr = arr.astype(np.int16)
 
-    dsize = (
-        int(np.round(output_shape[1])),
-        int(np.round(output_shape[0]))
-    )
+    dsize = (int(np.round(output_shape[1])), int(np.round(output_shape[0])))
 
     # map key X from skimage to cv2 or fall back to key X
     mode = _AFFINE_MODE_SKIMAGE_TO_CV2.get(mode, mode)
@@ -297,7 +287,7 @@ def _warp_affine_arr_cv2(arr, matrix, cval, mode, order, output_shape):
             dsize=dsize,
             flags=order,
             borderMode=mode,
-            borderValue=cval
+            borderValue=cval,
         )
 
         # cv2 warp drops last axis if shape is (H, W, 1)
@@ -313,7 +303,7 @@ def _warp_affine_arr_cv2(arr, matrix, cval, mode, order, output_shape):
                 dsize=dsize,
                 flags=order,
                 borderMode=mode,
-                borderValue=tuple([cval[0]])
+                borderValue=tuple([cval[0]]),
             )
             for c in sm.xrange(nb_channels)
         ]
@@ -356,12 +346,9 @@ def _compute_affine_warp_output_shape(matrix, input_shape):
         return matrix, input_shape
 
     # determine shape of output image
-    corners = np.array([
-        [0, 0],
-        [0, height - 1],
-        [width - 1, height - 1],
-        [width - 1, 0]
-    ])
+    corners = np.array(
+        [[0, 0], [0, height - 1], [width - 1, height - 1], [width - 1, 0]]
+    )
     corners = _warp_affine_coords(corners, matrix)
     minc = corners[:, 0].min()
     minr = corners[:, 1].min()
@@ -376,9 +363,11 @@ def _compute_affine_warp_output_shape(matrix, input_shape):
     output_shape = tuple([int(v) for v in output_shape.tolist()])
     # fit output image in new shape
     translation = (-minc, -minr)
-    matrix = _AffineMatrixGenerator(matrix).translate(
-        x_px=translation[0], y_px=translation[1]
-    ).matrix
+    matrix = (
+        _AffineMatrixGenerator(matrix)
+        .translate(x_px=translation[0], y_px=translation[1])
+        .matrix
+    )
     return matrix, output_shape
 
 
@@ -429,9 +418,12 @@ def apply_jigsaw(arr, destinations):
 
     nb_rows, nb_cols = destinations.shape[0:2]
 
-    assert arr.ndim >= 2, (
-        "Expected array with at least two dimensions, but got %d with "
-        "shape %s." % (arr.ndim, arr.shape))
+    assert (
+        arr.ndim >= 2
+    ), "Expected array with at least two dimensions, but got %d with " "shape %s." % (
+        arr.ndim,
+        arr.shape,
+    )
     assert (arr.shape[0] % nb_rows) == 0, (
         "Expected image height to by divisible by number of rows, but got "
         "height %d and %d rows. Use cropping or padding to modify the image "
@@ -446,8 +438,7 @@ def apply_jigsaw(arr, destinations):
     cell_height = arr.shape[0] // nb_rows
     cell_width = arr.shape[1] // nb_cols
 
-    dest_rows, dest_cols = np.unravel_index(
-        destinations.flatten(), (nb_rows, nb_cols))
+    dest_rows, dest_cols = np.unravel_index(destinations.flatten(), (nb_rows, nb_cols))
 
     result = np.zeros_like(arr)
     i = 0
@@ -509,15 +500,14 @@ def apply_jigsaw_to_coords(coords, destinations, image_shape):
     cell_height = height // nb_rows
     cell_width = width // nb_cols
 
-    dest_rows, dest_cols = np.unravel_index(
-        destinations.flatten(), (nb_rows, nb_cols))
+    dest_rows, dest_cols = np.unravel_index(destinations.flatten(), (nb_rows, nb_cols))
 
     result = np.copy(coords)
 
     # TODO vectorize this loop
     for i, (x, y) in enumerate(coords):
-        ooi_x = (x < 0 or x >= width)
-        ooi_y = (y < 0 or y >= height)
+        ooi_x = x < 0 or x >= width
+        ooi_y = y < 0 or y >= height
         if ooi_x or ooi_y:
             continue
 
@@ -539,8 +529,7 @@ def apply_jigsaw_to_coords(coords, destinations, image_shape):
     return result
 
 
-def generate_jigsaw_destinations(nb_rows, nb_cols, max_steps, seed,
-                                 connectivity=4):
+def generate_jigsaw_destinations(nb_rows, nb_cols, max_steps, seed, connectivity=4):
     """Generate a destination pattern for :func:`apply_jigsaw`.
 
     Added in 0.4.0.
@@ -571,15 +560,15 @@ def generate_jigsaw_destinations(nb_rows, nb_cols, max_steps, seed,
         cell.
 
     """
-    assert connectivity in (4, 8), (
-        "Expected connectivity of 4 or 8, got %d." % (connectivity,))
+    assert connectivity in (4, 8), "Expected connectivity of 4 or 8, got %d." % (
+        connectivity,
+    )
     random_state = iarandom.RNG.create_if_not_rng_(seed)
-    steps = random_state.integers(0, max_steps, size=(nb_rows, nb_cols),
-                                  endpoint=True)
-    directions = random_state.integers(0, connectivity,
-                                       size=(nb_rows, nb_cols, max_steps),
-                                       endpoint=False)
-    destinations = np.arange(nb_rows*nb_cols).reshape((nb_rows, nb_cols))
+    steps = random_state.integers(0, max_steps, size=(nb_rows, nb_cols), endpoint=True)
+    directions = random_state.integers(
+        0, connectivity, size=(nb_rows, nb_cols, max_steps), endpoint=False
+    )
+    destinations = np.arange(nb_rows * nb_cols).reshape((nb_rows, nb_cols))
 
     for step in np.arange(max_steps):
         directions_step = directions[:, :, step]
@@ -588,17 +577,17 @@ def generate_jigsaw_destinations(nb_rows, nb_cols, max_steps, seed,
             for x in np.arange(nb_cols):
                 if steps[y, x] > 0:
                     y_target, x_target = {
-                        0: (y-1, x+0),
-                        1: (y+0, x+1),
-                        2: (y+1, x+0),
-                        3: (y+0, x-1),
-                        4: (y-1, x-1),
-                        5: (y-1, x+1),
-                        6: (y+1, x+1),
-                        7: (y+1, x-1)
+                        0: (y - 1, x + 0),
+                        1: (y + 0, x + 1),
+                        2: (y + 1, x + 0),
+                        3: (y + 0, x - 1),
+                        4: (y - 1, x - 1),
+                        5: (y - 1, x + 1),
+                        6: (y + 1, x + 1),
+                        7: (y + 1, x - 1),
                     }[directions_step[y, x]]
-                    y_target = max(min(y_target, nb_rows-1), 0)
-                    x_target = max(min(x_target, nb_cols-1), 0)
+                    y_target = max(min(y_target, nb_rows - 1), 0)
+                    x_target = max(min(x_target, nb_cols - 1), 0)
 
                     target_steps = steps[y_target, x_target]
                     if (y, x) != (y_target, x_target) and target_steps >= 1:
@@ -624,35 +613,33 @@ class _AffineMatrixGenerator(object):
     # Added in 0.5.0.
     def centerize(self, image_shape):
         height, width = image_shape[0:2]
-        self.translate(-width/2, -height/2)
+        self.translate(-width / 2, -height / 2)
         return self
 
     # Added in 0.5.0.
     def invert_centerize(self, image_shape):
         height, width = image_shape[0:2]
-        self.translate(width/2, height/2)
+        self.translate(width / 2, height / 2)
         return self
 
     # Added in 0.5.0.
     def translate(self, x_px, y_px):
         if x_px < 1e-4 or x_px > 1e-4 or y_px < 1e-4 or x_px > 1e-4:
-            matrix = np.array([
-                [1, 0, x_px],
-                [0, 1, y_px],
-                [0, 0, 1]
-            ], dtype=np.float32)
+            matrix = np.array([[1, 0, x_px], [0, 1, y_px], [0, 0, 1]], dtype=np.float32)
             self._mul(matrix)
         return self
 
     # Added in 0.5.0.
     def scale(self, x_frac, y_frac):
-        if (x_frac < 1.0-1e-4 or x_frac > 1.0+1e-4
-                or y_frac < 1.0-1e-4 or y_frac > 1.0+1e-4):
-            matrix = np.array([
-                [x_frac, 0, 0],
-                [0, y_frac, 0],
-                [0, 0, 1]
-            ], dtype=np.float32)
+        if (
+            x_frac < 1.0 - 1e-4
+            or x_frac > 1.0 + 1e-4
+            or y_frac < 1.0 - 1e-4
+            or y_frac > 1.0 + 1e-4
+        ):
+            matrix = np.array(
+                [[x_frac, 0, 0], [0, y_frac, 0], [0, 0, 1]], dtype=np.float32
+            )
             self._mul(matrix)
         return self
 
@@ -660,22 +647,24 @@ class _AffineMatrixGenerator(object):
     def rotate(self, rad):
         if rad < 1e-4 or rad > 1e-4:
             rad = -rad
-            matrix = np.array([
-                [np.cos(rad), np.sin(rad), 0],
-                [-np.sin(rad), np.cos(rad), 0],
-                [0, 0, 1]
-            ], dtype=np.float32)
+            matrix = np.array(
+                [
+                    [np.cos(rad), np.sin(rad), 0],
+                    [-np.sin(rad), np.cos(rad), 0],
+                    [0, 0, 1],
+                ],
+                dtype=np.float32,
+            )
             self._mul(matrix)
         return self
 
     # Added in 0.5.0.
     def shear(self, x_rad, y_rad):
         if x_rad < 1e-4 or x_rad > 1e-4 or y_rad < 1e-4 or y_rad > 1e-4:
-            matrix = np.array([
-                [1, np.tanh(-x_rad), 0],
-                [np.tanh(y_rad), 1, 0],
-                [0, 0, 1]
-            ], dtype=np.float32)
+            matrix = np.array(
+                [[1, np.tanh(-x_rad), 0], [np.tanh(y_rad), 1, 0], [0, 0, 1]],
+                dtype=np.float32,
+            )
             self._mul(matrix)
         return self
 
@@ -685,8 +674,17 @@ class _AffineMatrixGenerator(object):
 
 
 class _AffineSamplingResult(object):
-    def __init__(self, scale=None, translate=None, translate_mode="px",
-                 rotate=None, shear=None, cval=None, mode=None, order=None):
+    def __init__(
+        self,
+        scale=None,
+        translate=None,
+        translate_mode="px",
+        rotate=None,
+        shear=None,
+        cval=None,
+        mode=None,
+        order=None,
+    ):
         self.scale = scale
         self.translate = translate
         self.translate_mode = translate_mode
@@ -703,9 +701,10 @@ class _AffineSamplingResult(object):
 
         translate_y = self.translate[1][idx]  # TODO same as above
         translate_x = self.translate[0][idx]
-        assert self.translate_mode in ["px", "percent"], (
-            "Expected 'px' or 'percent', got '%s'." % (self.translate_mode,)
-        )
+        assert self.translate_mode in [
+            "px",
+            "percent",
+        ], "Expected 'px' or 'percent', got '%s'." % (self.translate_mode,)
 
         if self.translate_mode == "percent":
             translate_y_px = translate_y * arr_shape[0]
@@ -734,19 +733,12 @@ class _AffineSamplingResult(object):
             "shear_x_rad": shear_x_rad,
             "rotate_deg": rotate_deg,
             "shear_y_deg": shear_y_deg,
-            "shear_x_deg": shear_x_deg
+            "shear_x_deg": shear_x_deg,
         }
 
     # for images we use additional shifts of (0.5, 0.5) as otherwise
     # we get an ugly black border for 90deg rotations
-    def to_matrix(
-            self,
-            idx,
-            arr_shape,
-            image_shape,
-            fit_output,
-            shift_add=(0.5, 0.5)
-    ):
+    def to_matrix(self, idx, arr_shape, image_shape, fit_output, shift_add=(0.5, 0.5)):
         if 0 in image_shape:
             return np.eye(3, dtype=np.float32), arr_shape
 
@@ -759,18 +751,16 @@ class _AffineSamplingResult(object):
         matrix_gen.translate(x_px=shift_add[1], y_px=shift_add[0])
         matrix_gen.rotate(params["rotate_rad"])
         matrix_gen.scale(x_frac=params["scale_x"], y_frac=params["scale_y"])
-        matrix_gen.shear(x_rad=params["shear_x_rad"],
-                         y_rad=params["shear_y_rad"])
-        matrix_gen.translate(x_px=params["translate_x_px"],
-                             y_px=params["translate_y_px"])
+        matrix_gen.shear(x_rad=params["shear_x_rad"], y_rad=params["shear_y_rad"])
+        matrix_gen.translate(
+            x_px=params["translate_x_px"], y_px=params["translate_y_px"]
+        )
         matrix_gen.translate(x_px=-shift_add[1], y_px=-shift_add[0])
         matrix_gen.invert_centerize(arr_shape)
 
         matrix = matrix_gen.matrix
         if fit_output:
-            matrix, arr_shape = _compute_affine_warp_output_shape(
-                matrix, arr_shape
-            )
+            matrix, arr_shape = _compute_affine_warp_output_shape(matrix, arr_shape)
         return matrix, arr_shape
 
     # Added in 0.4.0.
@@ -787,7 +777,7 @@ class _AffineSamplingResult(object):
             shear=self.shear,
             cval=self.cval,
             mode=self.mode,
-            order=self.order
+            order=self.order,
         )
 
 
@@ -1262,14 +1252,26 @@ class Affine(meta.Augmenter):
 
     """
 
-    def __init__(self, scale=None, translate_percent=None, translate_px=None,
-                 rotate=None, shear=None, order=1, cval=0, mode="constant",
-                 fit_output=False, backend="auto",
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        scale=None,
+        translate_percent=None,
+        translate_px=None,
+        rotate=None,
+        shear=None,
+        order=1,
+        cval=0,
+        mode="constant",
+        fit_output=False,
+        backend="auto",
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(Affine, self).__init__(
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed, name=name, random_state=random_state, deterministic=deterministic
+        )
 
         params = [scale, translate_percent, translate_px, rotate, shear]
         if all([p is None for p in params]):
@@ -1282,19 +1284,26 @@ class Affine(meta.Augmenter):
             rotate = rotate if rotate is not None else 0.0
             shear = shear if shear is not None else 0.0
 
-        assert backend in ["auto", "skimage", "cv2"], (
-            "Expected 'backend' to be \"auto\", \"skimage\" or \"cv2\", "
-            "got %s." % (backend,))
+        assert backend in [
+            "auto",
+            "skimage",
+            "cv2",
+        ], 'Expected \'backend\' to be "auto", "skimage" or "cv2", ' "got %s." % (
+            backend,
+        )
         self.backend = backend
         self.order = _handle_order_arg(order, backend)
         self.cval = _handle_cval_arg(cval)
         self.mode = _handle_mode_arg(mode)
         self.scale = self._handle_scale_arg(scale)
-        self.translate = self._handle_translate_arg(
-            translate_px, translate_percent)
+        self.translate = self._handle_translate_arg(translate_px, translate_percent)
         self.rotate = iap.handle_continuous_param(
-            rotate, "rotate", value_range=None, tuple_to_uniform=True,
-            list_to_choice=True)
+            rotate,
+            "rotate",
+            value_range=None,
+            tuple_to_uniform=True,
+            list_to_choice=True,
+        )
         self.shear, self._shear_param_type = self._handle_shear_arg(shear)
         self.fit_output = fit_output
 
@@ -1320,21 +1329,34 @@ class Affine(meta.Augmenter):
     def _handle_scale_arg(cls, scale):
         if isinstance(scale, dict):
             assert "x" in scale or "y" in scale, (
-                "Expected scale dictionary to contain at least key \"x\" or "
-                "key \"y\". Found neither of them.")
+                'Expected scale dictionary to contain at least key "x" or '
+                'key "y". Found neither of them.'
+            )
             x = scale.get("x", 1.0)
             y = scale.get("y", 1.0)
             return (
                 iap.handle_continuous_param(
-                    x, "scale['x']", value_range=(0+1e-4, None),
-                    tuple_to_uniform=True, list_to_choice=True),
+                    x,
+                    "scale['x']",
+                    value_range=(0 + 1e-4, None),
+                    tuple_to_uniform=True,
+                    list_to_choice=True,
+                ),
                 iap.handle_continuous_param(
-                    y, "scale['y']", value_range=(0+1e-4, None),
-                    tuple_to_uniform=True, list_to_choice=True)
+                    y,
+                    "scale['y']",
+                    value_range=(0 + 1e-4, None),
+                    tuple_to_uniform=True,
+                    list_to_choice=True,
+                ),
             )
         return iap.handle_continuous_param(
-            scale, "scale", value_range=(0+1e-4, None),
-            tuple_to_uniform=True, list_to_choice=True)
+            scale,
+            "scale",
+            value_range=(0 + 1e-4, None),
+            tuple_to_uniform=True,
+            list_to_choice=True,
+        )
 
     @classmethod
     def _handle_translate_arg(cls, translate_px, translate_percent):
@@ -1344,59 +1366,85 @@ class Affine(meta.Augmenter):
 
         assert translate_percent is None or translate_px is None, (
             "Expected either translate_percent or translate_px to be "
-            "provided, but neither of them was.")
+            "provided, but neither of them was."
+        )
 
         if translate_percent is not None:
             # translate by percent
             if isinstance(translate_percent, dict):
                 assert "x" in translate_percent or "y" in translate_percent, (
                     "Expected translate_percent dictionary to contain at "
-                    "least key \"x\" or key \"y\". Found neither of them.")
+                    'least key "x" or key "y". Found neither of them.'
+                )
                 x = translate_percent.get("x", 0)
                 y = translate_percent.get("y", 0)
                 return (
                     iap.handle_continuous_param(
-                        x, "translate_percent['x']", value_range=None,
-                        tuple_to_uniform=True, list_to_choice=True),
+                        x,
+                        "translate_percent['x']",
+                        value_range=None,
+                        tuple_to_uniform=True,
+                        list_to_choice=True,
+                    ),
                     iap.handle_continuous_param(
-                        y, "translate_percent['y']", value_range=None,
-                        tuple_to_uniform=True, list_to_choice=True),
-                    "percent"
+                        y,
+                        "translate_percent['y']",
+                        value_range=None,
+                        tuple_to_uniform=True,
+                        list_to_choice=True,
+                    ),
+                    "percent",
                 )
             return (
                 iap.handle_continuous_param(
-                    translate_percent, "translate_percent",
-                    value_range=None, tuple_to_uniform=True,
-                    list_to_choice=True),
+                    translate_percent,
+                    "translate_percent",
+                    value_range=None,
+                    tuple_to_uniform=True,
+                    list_to_choice=True,
+                ),
                 None,
-                "percent"
+                "percent",
             )
         else:
             # translate by pixels
             if isinstance(translate_px, dict):
                 assert "x" in translate_px or "y" in translate_px, (
                     "Expected translate_px dictionary to contain at "
-                    "least key \"x\" or key \"y\". Found neither of them.")
+                    'least key "x" or key "y". Found neither of them.'
+                )
                 x = translate_px.get("x", 0)
                 y = translate_px.get("y", 0)
                 return (
                     iap.handle_discrete_param(
-                        x, "translate_px['x']", value_range=None,
-                        tuple_to_uniform=True, list_to_choice=True,
-                        allow_floats=False),
+                        x,
+                        "translate_px['x']",
+                        value_range=None,
+                        tuple_to_uniform=True,
+                        list_to_choice=True,
+                        allow_floats=False,
+                    ),
                     iap.handle_discrete_param(
-                        y, "translate_px['y']", value_range=None,
-                        tuple_to_uniform=True, list_to_choice=True,
-                        allow_floats=False),
-                    "px"
+                        y,
+                        "translate_px['y']",
+                        value_range=None,
+                        tuple_to_uniform=True,
+                        list_to_choice=True,
+                        allow_floats=False,
+                    ),
+                    "px",
                 )
             return (
                 iap.handle_discrete_param(
-                    translate_px, "translate_px", value_range=None,
-                    tuple_to_uniform=True, list_to_choice=True,
-                    allow_floats=False),
+                    translate_px,
+                    "translate_px",
+                    value_range=None,
+                    tuple_to_uniform=True,
+                    list_to_choice=True,
+                    allow_floats=False,
+                ),
                 None,
-                "px"
+                "px",
             )
 
     # Added in 0.4.0.
@@ -1406,56 +1454,83 @@ class Affine(meta.Augmenter):
         if isinstance(shear, dict):
             assert "x" in shear or "y" in shear, (
                 "Expected shear dictionary to contain at "
-                "least key \"x\" or key \"y\". Found neither of them.")
+                'least key "x" or key "y". Found neither of them.'
+            )
             x = shear.get("x", 0)
             y = shear.get("y", 0)
             return (
                 iap.handle_continuous_param(
-                    x, "shear['x']", value_range=None,
-                    tuple_to_uniform=True, list_to_choice=True),
+                    x,
+                    "shear['x']",
+                    value_range=None,
+                    tuple_to_uniform=True,
+                    list_to_choice=True,
+                ),
                 iap.handle_continuous_param(
-                    y, "shear['y']", value_range=None,
-                    tuple_to_uniform=True, list_to_choice=True)
+                    y,
+                    "shear['y']",
+                    value_range=None,
+                    tuple_to_uniform=True,
+                    list_to_choice=True,
+                ),
             ), "dict"
         else:
             param_type = "other"
             if ia.is_single_number(shear):
                 param_type = "single-number"
-            return iap.handle_continuous_param(
-                shear, "shear", value_range=None, tuple_to_uniform=True,
-                list_to_choice=True
-            ), param_type
+            return (
+                iap.handle_continuous_param(
+                    shear,
+                    "shear",
+                    value_range=None,
+                    tuple_to_uniform=True,
+                    list_to_choice=True,
+                ),
+                param_type,
+            )
 
     # Added in 0.4.0.
     def _augment_batch_(self, batch, random_state, parents, hooks):
         samples = self._draw_samples(batch.nb_rows, random_state)
 
         if batch.images is not None:
-            batch.images = self._augment_images_by_samples(batch.images,
-                                                           samples)
+            batch.images = self._augment_images_by_samples(batch.images, samples)
 
         if batch.heatmaps is not None:
             batch.heatmaps = self._augment_maps_by_samples(
-                batch.heatmaps, samples, "arr_0to1", self._cval_heatmaps,
-                self._mode_heatmaps, self._order_heatmaps, "float32")
+                batch.heatmaps,
+                samples,
+                "arr_0to1",
+                self._cval_heatmaps,
+                self._mode_heatmaps,
+                self._order_heatmaps,
+                "float32",
+            )
 
         if batch.segmentation_maps is not None:
             batch.segmentation_maps = self._augment_maps_by_samples(
-                batch.segmentation_maps, samples, "arr",
-                self._cval_segmentation_maps, self._mode_segmentation_maps,
-                self._order_segmentation_maps, "int32")
+                batch.segmentation_maps,
+                samples,
+                "arr",
+                self._cval_segmentation_maps,
+                self._mode_segmentation_maps,
+                self._order_segmentation_maps,
+                "int32",
+            )
 
-        for augm_name in ["keypoints", "bounding_boxes", "polygons",
-                          "line_strings"]:
+        for augm_name in ["keypoints", "bounding_boxes", "polygons", "line_strings"]:
             augm_value = getattr(batch, augm_name)
             if augm_value is not None:
                 for i, cbaoi in enumerate(augm_value):
                     matrix, output_shape = samples.to_matrix_cba(
-                        i, cbaoi.shape, self.fit_output)
+                        i, cbaoi.shape, self.fit_output
+                    )
 
-                    if (not _is_identity_matrix(matrix)
-                            and not cbaoi.empty
-                            and 0 not in cbaoi.shape[0:2]):
+                    if (
+                        not _is_identity_matrix(matrix)
+                        and not cbaoi.empty
+                        and 0 not in cbaoi.shape[0:2]
+                    ):
                         # TODO this is hacky
                         if augm_name == "bounding_boxes":
                             # Ensure that 4 points are used for bbs.
@@ -1465,8 +1540,7 @@ class Affine(meta.Augmenter):
                             coords = kpsoi.to_xy_array()
                             coords_aug = tf.matrix_transform(coords, matrix)
                             kpsoi = kpsoi.fill_from_xy_array_(coords_aug)
-                            cbaoi = cbaoi.invert_to_keypoints_on_image_(
-                                kpsoi)
+                            cbaoi = cbaoi.invert_to_keypoints_on_image_(kpsoi)
                         else:
                             coords = cbaoi.to_xy_array()
                             coords_aug = tf.matrix_transform(coords, matrix)
@@ -1477,9 +1551,9 @@ class Affine(meta.Augmenter):
 
         return batch
 
-    def _augment_images_by_samples(self, images, samples,
-                                   image_shapes=None,
-                                   return_matrices=False):
+    def _augment_images_by_samples(
+        self, images, samples, image_shapes=None, return_matrices=False
+    ):
         if image_shapes is None:
             image_shapes = [image.shape for image in images]
 
@@ -1488,9 +1562,7 @@ class Affine(meta.Augmenter):
         result = []
         matrices = []
         gen = enumerate(
-            zip(
-                images, image_shapes, samples.cval, samples.mode, samples.order
-            )
+            zip(images, image_shapes, samples.cval, samples.mode, samples.order)
         )
         for i, (image, image_shape, cval, mode, order) in gen:
             matrix, output_shape = samples.to_matrix(
@@ -1506,7 +1578,7 @@ class Affine(meta.Augmenter):
                     mode=mode,
                     cval=cval,
                     output_shape=output_shape,
-                    backend=self.backend
+                    backend=self.backend,
                 )
 
             result.append(image_warped)
@@ -1526,8 +1598,9 @@ class Affine(meta.Augmenter):
         return result
 
     # Added in 0.4.0.
-    def _augment_maps_by_samples(self, augmentables, samples,
-                                 arr_attr_name, cval, mode, order, cval_dtype):
+    def _augment_maps_by_samples(
+        self, augmentables, samples, arr_attr_name, cval, mode, order, cval_dtype
+    ):
         nb_images = len(augmentables)
 
         samples = samples.copy()
@@ -1538,11 +1611,11 @@ class Affine(meta.Augmenter):
         if order is not None:
             samples.order = [order] * nb_images
 
-        arrs = [getattr(augmentable, arr_attr_name)
-                for augmentable in augmentables]
+        arrs = [getattr(augmentable, arr_attr_name) for augmentable in augmentables]
         image_shapes = [augmentable.shape for augmentable in augmentables]
         arrs_aug, matrices = self._augment_images_by_samples(
-            arrs, samples, image_shapes=image_shapes, return_matrices=True)
+            arrs, samples, image_shapes=image_shapes, return_matrices=True
+        )
 
         gen = zip(augmentables, arrs_aug, matrices, samples.order)
         for augmentable_i, arr_aug, matrix, order_i in gen:
@@ -1579,45 +1652,37 @@ class Affine(meta.Augmenter):
                 self.scale[1].draw_samples((nb_samples,), random_state=rngs[1]),
             )
         else:
-            scale_samples = self.scale.draw_samples((nb_samples,),
-                                                    random_state=rngs[2])
+            scale_samples = self.scale.draw_samples((nb_samples,), random_state=rngs[2])
             scale_samples = (scale_samples, scale_samples)
 
         if self.translate[1] is not None:
             translate_samples = (
-                self.translate[0].draw_samples((nb_samples,),
-                                               random_state=rngs[3]),
-                self.translate[1].draw_samples((nb_samples,),
-                                               random_state=rngs[4]),
+                self.translate[0].draw_samples((nb_samples,), random_state=rngs[3]),
+                self.translate[1].draw_samples((nb_samples,), random_state=rngs[4]),
             )
         else:
             translate_samples = self.translate[0].draw_samples(
-                (nb_samples,), random_state=rngs[5])
+                (nb_samples,), random_state=rngs[5]
+            )
             translate_samples = (translate_samples, translate_samples)
 
-        rotate_samples = self.rotate.draw_samples((nb_samples,),
-                                                  random_state=rngs[6])
+        rotate_samples = self.rotate.draw_samples((nb_samples,), random_state=rngs[6])
         if self._shear_param_type == "dict":
             shear_samples = (
                 self.shear[0].draw_samples((nb_samples,), random_state=rngs[7]),
-                self.shear[1].draw_samples((nb_samples,), random_state=rngs[8])
+                self.shear[1].draw_samples((nb_samples,), random_state=rngs[8]),
             )
         elif self._shear_param_type == "single-number":
             # only shear on the x-axis if a single number was given
-            shear_samples = self.shear.draw_samples((nb_samples,),
-                                                    random_state=rngs[7])
+            shear_samples = self.shear.draw_samples((nb_samples,), random_state=rngs[7])
             shear_samples = (shear_samples, np.zeros_like(shear_samples))
         else:
-            shear_samples = self.shear.draw_samples((nb_samples,),
-                                                    random_state=rngs[7])
+            shear_samples = self.shear.draw_samples((nb_samples,), random_state=rngs[7])
             shear_samples = (shear_samples, shear_samples)
 
-        cval_samples = self.cval.draw_samples((nb_samples, 3),
-                                              random_state=rngs[9])
-        mode_samples = self.mode.draw_samples((nb_samples,),
-                                              random_state=rngs[10])
-        order_samples = self.order.draw_samples((nb_samples,),
-                                                random_state=rngs[11])
+        cval_samples = self.cval.draw_samples((nb_samples, 3), random_state=rngs[9])
+        mode_samples = self.mode.draw_samples((nb_samples,), random_state=rngs[10])
+        order_samples = self.order.draw_samples((nb_samples,), random_state=rngs[11])
 
         return _AffineSamplingResult(
             scale=scale_samples,
@@ -1627,14 +1692,21 @@ class Affine(meta.Augmenter):
             shear=shear_samples,
             cval=cval_samples,
             mode=mode_samples,
-            order=order_samples
+            order=order_samples,
         )
 
     def get_parameters(self):
         """See :func:`~imgaug.augmenters.meta.Augmenter.get_parameters`."""
         return [
-            self.scale, self.translate, self.rotate, self.shear, self.order,
-            self.cval, self.mode, self.backend, self.fit_output
+            self.scale,
+            self.translate,
+            self.rotate,
+            self.shear,
+            self.order,
+            self.cval,
+            self.mode,
+            self.backend,
+            self.fit_output,
         ]
 
 
@@ -1700,10 +1772,19 @@ class ScaleX(Affine):
     """
 
     # Added in 0.4.0.
-    def __init__(self, scale=(0.5, 1.5), order=1, cval=0, mode="constant",
-                 fit_output=False, backend="auto",
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        scale=(0.5, 1.5),
+        order=1,
+        cval=0,
+        mode="constant",
+        fit_output=False,
+        backend="auto",
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(ScaleX, self).__init__(
             scale={"x": scale},
             order=order,
@@ -1711,8 +1792,11 @@ class ScaleX(Affine):
             mode=mode,
             fit_output=fit_output,
             backend=backend,
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed,
+            name=name,
+            random_state=random_state,
+            deterministic=deterministic,
+        )
 
 
 class ScaleY(Affine):
@@ -1777,10 +1861,19 @@ class ScaleY(Affine):
     """
 
     # Added in 0.4.0.
-    def __init__(self, scale=(0.5, 1.5), order=1, cval=0, mode="constant",
-                 fit_output=False, backend="auto",
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        scale=(0.5, 1.5),
+        order=1,
+        cval=0,
+        mode="constant",
+        fit_output=False,
+        backend="auto",
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(ScaleY, self).__init__(
             scale={"y": scale},
             order=order,
@@ -1788,8 +1881,11 @@ class ScaleY(Affine):
             mode=mode,
             fit_output=fit_output,
             backend=backend,
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed,
+            name=name,
+            random_state=random_state,
+            deterministic=deterministic,
+        )
 
 
 # TODO make Affine more efficient for translation-only transformations
@@ -1864,10 +1960,20 @@ class TranslateX(Affine):
     """
 
     # Added in 0.4.0.
-    def __init__(self, percent=None, px=None, order=1,
-                 cval=0, mode="constant", fit_output=False, backend="auto",
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        percent=None,
+        px=None,
+        order=1,
+        cval=0,
+        mode="constant",
+        fit_output=False,
+        backend="auto",
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         if percent is None and px is None:
             percent = (-0.25, 0.25)
 
@@ -1879,8 +1985,11 @@ class TranslateX(Affine):
             mode=mode,
             fit_output=fit_output,
             backend=backend,
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed,
+            name=name,
+            random_state=random_state,
+            deterministic=deterministic,
+        )
 
 
 # TODO make Affine more efficient for translation-only transformations
@@ -1955,10 +2064,20 @@ class TranslateY(Affine):
     """
 
     # Added in 0.4.0.
-    def __init__(self, percent=None, px=None, order=1,
-                 cval=0, mode="constant", fit_output=False, backend="auto",
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        percent=None,
+        px=None,
+        order=1,
+        cval=0,
+        mode="constant",
+        fit_output=False,
+        backend="auto",
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         if percent is None and px is None:
             percent = (-0.25, 0.25)
 
@@ -1970,8 +2089,11 @@ class TranslateY(Affine):
             mode=mode,
             fit_output=fit_output,
             backend=backend,
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed,
+            name=name,
+            random_state=random_state,
+            deterministic=deterministic,
+        )
 
 
 class Rotate(Affine):
@@ -2034,10 +2156,19 @@ class Rotate(Affine):
     """
 
     # Added in 0.4.0.
-    def __init__(self, rotate=(-30, 30), order=1, cval=0, mode="constant",
-                 fit_output=False, backend="auto",
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        rotate=(-30, 30),
+        order=1,
+        cval=0,
+        mode="constant",
+        fit_output=False,
+        backend="auto",
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(Rotate, self).__init__(
             rotate=rotate,
             order=order,
@@ -2045,8 +2176,11 @@ class Rotate(Affine):
             mode=mode,
             fit_output=fit_output,
             backend=backend,
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed,
+            name=name,
+            random_state=random_state,
+            deterministic=deterministic,
+        )
 
 
 class ShearX(Affine):
@@ -2109,10 +2243,19 @@ class ShearX(Affine):
     """
 
     # Added in 0.4.0.
-    def __init__(self, shear=(-30, 30), order=1, cval=0, mode="constant",
-                 fit_output=False, backend="auto",
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        shear=(-30, 30),
+        order=1,
+        cval=0,
+        mode="constant",
+        fit_output=False,
+        backend="auto",
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(ShearX, self).__init__(
             shear={"x": shear},
             order=order,
@@ -2120,8 +2263,11 @@ class ShearX(Affine):
             mode=mode,
             fit_output=fit_output,
             backend=backend,
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed,
+            name=name,
+            random_state=random_state,
+            deterministic=deterministic,
+        )
 
 
 class ShearY(Affine):
@@ -2184,10 +2330,19 @@ class ShearY(Affine):
     """
 
     # Added in 0.4.0.
-    def __init__(self, shear=(-30, 30), order=1, cval=0, mode="constant",
-                 fit_output=False, backend="auto",
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        shear=(-30, 30),
+        order=1,
+        cval=0,
+        mode="constant",
+        fit_output=False,
+        backend="auto",
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(ShearY, self).__init__(
             shear={"y": shear},
             order=order,
@@ -2195,8 +2350,11 @@ class ShearY(Affine):
             mode=mode,
             fit_output=fit_output,
             backend=backend,
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed,
+            name=name,
+            random_state=random_state,
+            deterministic=deterministic,
+        )
 
 
 class AffineCv2(meta.Augmenter):
@@ -2497,121 +2655,180 @@ class AffineCv2(meta.Augmenter):
 
     """
 
-    def __init__(self, scale=1.0, translate_percent=None, translate_px=None,
-                 rotate=0.0, shear=0.0, order=cv2.INTER_LINEAR, cval=0,
-                 mode=cv2.BORDER_CONSTANT,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        scale=1.0,
+        translate_percent=None,
+        translate_px=None,
+        rotate=0.0,
+        shear=0.0,
+        order=cv2.INTER_LINEAR,
+        cval=0,
+        mode=cv2.BORDER_CONSTANT,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(AffineCv2, self).__init__(
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed, name=name, random_state=random_state, deterministic=deterministic
+        )
 
         # using a context on __init__ seems to produce no warning,
         # so warn manually here
         ia.warn_deprecated(
             "AffineCv2 is deprecated. "
             "Use imgaug.augmenters.geometric.Affine(..., backend='cv2') "
-            "instead.", stacklevel=4)
+            "instead.",
+            stacklevel=4,
+        )
 
-        available_orders = [cv2.INTER_NEAREST, cv2.INTER_LINEAR,
-                            cv2.INTER_CUBIC, cv2.INTER_LANCZOS4]
+        available_orders = [
+            cv2.INTER_NEAREST,
+            cv2.INTER_LINEAR,
+            cv2.INTER_CUBIC,
+            cv2.INTER_LANCZOS4,
+        ]
         available_orders_str = ["nearest", "linear", "cubic", "lanczos4"]
 
         if order == ia.ALL:
             self.order = iap.Choice(available_orders)
         elif ia.is_single_integer(order):
-            assert order in available_orders, (
-                "Expected order's integer value to be in %s, got %d." % (
-                    str(available_orders), order))
+            assert (
+                order in available_orders
+            ), "Expected order's integer value to be in %s, got %d." % (
+                str(available_orders),
+                order,
+            )
             self.order = iap.Deterministic(order)
         elif ia.is_string(order):
-            assert order in available_orders_str, (
-                "Expected order to be in %s, got %s." % (
-                    str(available_orders_str), order))
+            assert (
+                order in available_orders_str
+            ), "Expected order to be in %s, got %s." % (
+                str(available_orders_str),
+                order,
+            )
             self.order = iap.Deterministic(order)
         elif isinstance(order, list):
             valid_types = all(
-                [ia.is_single_integer(val) or ia.is_string(val)
-                 for val in order])
+                [ia.is_single_integer(val) or ia.is_string(val) for val in order]
+            )
             assert valid_types, (
                 "Expected order list to only contain integers/strings, got "
-                "types %s." % (str([type(val) for val in order]),))
+                "types %s." % (str([type(val) for val in order]),)
+            )
             valid_orders = all(
-                [val in available_orders + available_orders_str
-                 for val in order])
-            assert valid_orders, (
-                "Expected all order values to be in %s, got %s." % (
-                    available_orders + available_orders_str, str(order),))
+                [val in available_orders + available_orders_str for val in order]
+            )
+            assert valid_orders, "Expected all order values to be in %s, got %s." % (
+                available_orders + available_orders_str,
+                str(order),
+            )
             self.order = iap.Choice(order)
         elif isinstance(order, iap.StochasticParameter):
             self.order = order
         else:
             raise Exception(
                 "Expected order to be imgaug.ALL, int, string, a list of"
-                "int/string or StochasticParameter, got %s." % (type(order),))
+                "int/string or StochasticParameter, got %s." % (type(order),)
+            )
 
         if cval == ia.ALL:
             self.cval = iap.DiscreteUniform(0, 255)
         else:
             self.cval = iap.handle_discrete_param(
-                cval, "cval", value_range=(0, 255), tuple_to_uniform=True,
-                list_to_choice=True, allow_floats=True)
+                cval,
+                "cval",
+                value_range=(0, 255),
+                tuple_to_uniform=True,
+                list_to_choice=True,
+                allow_floats=True,
+            )
 
-        available_modes = [cv2.BORDER_REPLICATE, cv2.BORDER_REFLECT,
-                           cv2.BORDER_REFLECT_101, cv2.BORDER_WRAP,
-                           cv2.BORDER_CONSTANT]
-        available_modes_str = ["replicate", "reflect", "reflect_101",
-                               "wrap", "constant"]
+        available_modes = [
+            cv2.BORDER_REPLICATE,
+            cv2.BORDER_REFLECT,
+            cv2.BORDER_REFLECT_101,
+            cv2.BORDER_WRAP,
+            cv2.BORDER_CONSTANT,
+        ]
+        available_modes_str = [
+            "replicate",
+            "reflect",
+            "reflect_101",
+            "wrap",
+            "constant",
+        ]
         if mode == ia.ALL:
             self.mode = iap.Choice(available_modes)
         elif ia.is_single_integer(mode):
-            assert mode in available_modes, (
-                "Expected mode to be in %s, got %d." % (
-                    str(available_modes), mode))
+            assert mode in available_modes, "Expected mode to be in %s, got %d." % (
+                str(available_modes),
+                mode,
+            )
             self.mode = iap.Deterministic(mode)
         elif ia.is_string(mode):
-            assert mode in available_modes_str, (
-                "Expected mode to be in %s, got %s." % (
-                    str(available_modes_str), mode))
+            assert mode in available_modes_str, "Expected mode to be in %s, got %s." % (
+                str(available_modes_str),
+                mode,
+            )
             self.mode = iap.Deterministic(mode)
         elif isinstance(mode, list):
-            all_valid_types = all([
-                ia.is_single_integer(val) or ia.is_string(val) for val in mode])
+            all_valid_types = all(
+                [ia.is_single_integer(val) or ia.is_string(val) for val in mode]
+            )
             assert all_valid_types, (
                 "Expected mode list to only contain integers/strings, "
-                "got types %s." % (str([type(val) for val in mode]),))
-            all_valid_modes = all([
-                val in available_modes + available_modes_str for val in mode])
-            assert all_valid_modes, (
-                "Expected all mode values to be in %s, got %s." % (
-                    str(available_modes + available_modes_str), str(mode)))
+                "got types %s." % (str([type(val) for val in mode]),)
+            )
+            all_valid_modes = all(
+                [val in available_modes + available_modes_str for val in mode]
+            )
+            assert all_valid_modes, "Expected all mode values to be in %s, got %s." % (
+                str(available_modes + available_modes_str),
+                str(mode),
+            )
             self.mode = iap.Choice(mode)
         elif isinstance(mode, iap.StochasticParameter):
             self.mode = mode
         else:
             raise Exception(
                 "Expected mode to be imgaug.ALL, an int, a string, a list of "
-                "int/strings or StochasticParameter, got %s." % (type(mode),))
+                "int/strings or StochasticParameter, got %s." % (type(mode),)
+            )
 
         # scale
         if isinstance(scale, dict):
             assert "x" in scale or "y" in scale, (
                 "Expected scale dictionary to contain at "
-                "least key \"x\" or key \"y\". Found neither of them.")
+                'least key "x" or key "y". Found neither of them.'
+            )
             x = scale.get("x", 1.0)
             y = scale.get("y", 1.0)
             self.scale = (
                 iap.handle_continuous_param(
-                    x, "scale['x']", value_range=(0+1e-4, None),
-                    tuple_to_uniform=True, list_to_choice=True),
+                    x,
+                    "scale['x']",
+                    value_range=(0 + 1e-4, None),
+                    tuple_to_uniform=True,
+                    list_to_choice=True,
+                ),
                 iap.handle_continuous_param(
-                    y, "scale['y']", value_range=(0+1e-4, None),
-                    tuple_to_uniform=True, list_to_choice=True)
+                    y,
+                    "scale['y']",
+                    value_range=(0 + 1e-4, None),
+                    tuple_to_uniform=True,
+                    list_to_choice=True,
+                ),
             )
         else:
             self.scale = iap.handle_continuous_param(
-                scale, "scale", value_range=(0+1e-4, None),
-                tuple_to_uniform=True, list_to_choice=True)
+                scale,
+                "scale",
+                value_range=(0 + 1e-4, None),
+                tuple_to_uniform=True,
+                list_to_choice=True,
+            )
 
         # translate
         if translate_percent is None and translate_px is None:
@@ -2619,87 +2836,138 @@ class AffineCv2(meta.Augmenter):
 
         assert translate_percent is None or translate_px is None, (
             "Expected either translate_percent or translate_px to be "
-            "provided, but neither of them was.")
+            "provided, but neither of them was."
+        )
 
         if translate_percent is not None:
             # translate by percent
             if isinstance(translate_percent, dict):
                 assert "x" in translate_percent or "y" in translate_percent, (
                     "Expected translate_percent dictionary to contain at "
-                    "least key \"x\" or key \"y\". Found neither of them.")
+                    'least key "x" or key "y". Found neither of them.'
+                )
                 x = translate_percent.get("x", 0)
                 y = translate_percent.get("y", 0)
                 self.translate = (
                     iap.handle_continuous_param(
-                        x, "translate_percent['x']", value_range=None,
-                        tuple_to_uniform=True, list_to_choice=True),
+                        x,
+                        "translate_percent['x']",
+                        value_range=None,
+                        tuple_to_uniform=True,
+                        list_to_choice=True,
+                    ),
                     iap.handle_continuous_param(
-                        y, "translate_percent['y']", value_range=None,
-                        tuple_to_uniform=True, list_to_choice=True)
+                        y,
+                        "translate_percent['y']",
+                        value_range=None,
+                        tuple_to_uniform=True,
+                        list_to_choice=True,
+                    ),
                 )
             else:
                 self.translate = iap.handle_continuous_param(
-                    translate_percent, "translate_percent", value_range=None,
-                    tuple_to_uniform=True, list_to_choice=True)
+                    translate_percent,
+                    "translate_percent",
+                    value_range=None,
+                    tuple_to_uniform=True,
+                    list_to_choice=True,
+                )
         else:
             # translate by pixels
             if isinstance(translate_px, dict):
                 assert "x" in translate_px or "y" in translate_px, (
                     "Expected translate_px dictionary to contain at "
-                    "least key \"x\" or key \"y\". Found neither of them.")
+                    'least key "x" or key "y". Found neither of them.'
+                )
                 x = translate_px.get("x", 0)
                 y = translate_px.get("y", 0)
                 self.translate = (
                     iap.handle_discrete_param(
-                        x, "translate_px['x']", value_range=None,
-                        tuple_to_uniform=True, list_to_choice=True,
-                        allow_floats=False),
+                        x,
+                        "translate_px['x']",
+                        value_range=None,
+                        tuple_to_uniform=True,
+                        list_to_choice=True,
+                        allow_floats=False,
+                    ),
                     iap.handle_discrete_param(
-                        y, "translate_px['y']", value_range=None,
-                        tuple_to_uniform=True, list_to_choice=True,
-                        allow_floats=False)
+                        y,
+                        "translate_px['y']",
+                        value_range=None,
+                        tuple_to_uniform=True,
+                        list_to_choice=True,
+                        allow_floats=False,
+                    ),
                 )
             else:
                 self.translate = iap.handle_discrete_param(
-                    translate_px, "translate_px", value_range=None,
-                    tuple_to_uniform=True, list_to_choice=True,
-                    allow_floats=False)
+                    translate_px,
+                    "translate_px",
+                    value_range=None,
+                    tuple_to_uniform=True,
+                    list_to_choice=True,
+                    allow_floats=False,
+                )
 
         self.rotate = iap.handle_continuous_param(
-            rotate, "rotate", value_range=None, tuple_to_uniform=True,
-            list_to_choice=True)
+            rotate,
+            "rotate",
+            value_range=None,
+            tuple_to_uniform=True,
+            list_to_choice=True,
+        )
         self.shear = iap.handle_continuous_param(
-            shear, "shear", value_range=None, tuple_to_uniform=True,
-            list_to_choice=True)
+            shear, "shear", value_range=None, tuple_to_uniform=True, list_to_choice=True
+        )
 
     def _augment_images(self, images, random_state, parents, hooks):
         nb_images = len(images)
-        scale_samples, translate_samples, rotate_samples, shear_samples, \
-            cval_samples, mode_samples, order_samples = self._draw_samples(
-                nb_images, random_state)
+        (
+            scale_samples,
+            translate_samples,
+            rotate_samples,
+            shear_samples,
+            cval_samples,
+            mode_samples,
+            order_samples,
+        ) = self._draw_samples(nb_images, random_state)
         result = self._augment_images_by_samples(
-            images, scale_samples, translate_samples, rotate_samples,
-            shear_samples, cval_samples, mode_samples, order_samples)
+            images,
+            scale_samples,
+            translate_samples,
+            rotate_samples,
+            shear_samples,
+            cval_samples,
+            mode_samples,
+            order_samples,
+        )
         return result
 
     @classmethod
-    def _augment_images_by_samples(cls, images, scale_samples,
-                                   translate_samples, rotate_samples,
-                                   shear_samples, cval_samples, mode_samples,
-                                   order_samples):
+    def _augment_images_by_samples(
+        cls,
+        images,
+        scale_samples,
+        translate_samples,
+        rotate_samples,
+        shear_samples,
+        cval_samples,
+        mode_samples,
+        order_samples,
+    ):
         # TODO change these to class attributes
         order_str_to_int = {
             "nearest": cv2.INTER_NEAREST,
             "linear": cv2.INTER_LINEAR,
             "cubic": cv2.INTER_CUBIC,
-            "lanczos4": cv2.INTER_LANCZOS4
+            "lanczos4": cv2.INTER_LANCZOS4,
         }
         mode_str_to_int = {
             "replicate": cv2.BORDER_REPLICATE,
             "reflect": cv2.BORDER_REFLECT,
             "reflect_101": cv2.BORDER_REFLECT_101,
             "wrap": cv2.BORDER_WRAP,
-            "constant": cv2.BORDER_CONSTANT
+            "constant": cv2.BORDER_CONSTANT,
         }
 
         nb_images = len(images)
@@ -2712,13 +2980,11 @@ class AffineCv2(meta.Augmenter):
             translate_x = translate_samples[0][i]
             translate_y = translate_samples[1][i]
             if ia.is_single_float(translate_y):
-                translate_y_px = int(
-                    np.round(translate_y * images[i].shape[0]))
+                translate_y_px = int(np.round(translate_y * images[i].shape[0]))
             else:
                 translate_y_px = translate_y
             if ia.is_single_float(translate_x):
-                translate_x_px = int(
-                    np.round(translate_x * images[i].shape[1]))
+                translate_x_px = int(np.round(translate_x * images[i].shape[1]))
             else:
                 translate_x_px = translate_x
             rotate = rotate_samples[i]
@@ -2727,33 +2993,32 @@ class AffineCv2(meta.Augmenter):
             mode = mode_samples[i]
             order = order_samples[i]
 
-            mode = (mode
-                    if ia.is_single_integer(mode)
-                    else mode_str_to_int[mode])
-            order = (order
-                     if ia.is_single_integer(order)
-                     else order_str_to_int[order])
+            mode = mode if ia.is_single_integer(mode) else mode_str_to_int[mode]
+            order = order if ia.is_single_integer(order) else order_str_to_int[order]
 
             any_change = (
-                scale_x != 1.0 or scale_y != 1.0
-                or translate_x_px != 0 or translate_y_px != 0
-                or rotate != 0 or shear != 0
+                scale_x != 1.0
+                or scale_y != 1.0
+                or translate_x_px != 0
+                or translate_y_px != 0
+                or rotate != 0
+                or shear != 0
             )
 
             if any_change:
                 matrix_to_topleft = tf.SimilarityTransform(
-                    translation=[-shift_x, -shift_y])
+                    translation=[-shift_x, -shift_y]
+                )
                 matrix_transforms = tf.AffineTransform(
                     scale=(scale_x, scale_y),
                     translation=(translate_x_px, translate_y_px),
                     rotation=math.radians(rotate),
-                    shear=math.radians(shear)
+                    shear=math.radians(shear),
                 )
                 matrix_to_center = tf.SimilarityTransform(
-                    translation=[shift_x, shift_y])
-                matrix = (matrix_to_topleft
-                          + matrix_transforms
-                          + matrix_to_center)
+                    translation=[shift_x, shift_y]
+                )
+                matrix = matrix_to_topleft + matrix_transforms + matrix_to_center
 
                 image_warped = cv2.warpAffine(
                     _normalize_cv2_input_arr_(images[i]),
@@ -2761,7 +3026,7 @@ class AffineCv2(meta.Augmenter):
                     dsize=(width, height),
                     flags=order,
                     borderMode=mode,
-                    borderValue=tuple([int(v) for v in cval])
+                    borderValue=tuple([int(v) for v in cval]),
                 )
 
                 # cv2 warp drops last axis if shape is (H, W, 1)
@@ -2777,42 +3042,73 @@ class AffineCv2(meta.Augmenter):
 
     def _augment_heatmaps(self, heatmaps, random_state, parents, hooks):
         nb_images = len(heatmaps)
-        scale_samples, translate_samples, rotate_samples, shear_samples, \
-            cval_samples, mode_samples, order_samples = self._draw_samples(
-                nb_images, random_state)
+        (
+            scale_samples,
+            translate_samples,
+            rotate_samples,
+            shear_samples,
+            cval_samples,
+            mode_samples,
+            order_samples,
+        ) = self._draw_samples(nb_images, random_state)
         cval_samples = np.zeros((cval_samples.shape[0], 1), dtype=np.float32)
         mode_samples = ["constant"] * len(mode_samples)
         arrs = [heatmap_i.arr_0to1 for heatmap_i in heatmaps]
         arrs_aug = self._augment_images_by_samples(
-            arrs, scale_samples, translate_samples, rotate_samples,
-            shear_samples, cval_samples, mode_samples, order_samples)
+            arrs,
+            scale_samples,
+            translate_samples,
+            rotate_samples,
+            shear_samples,
+            cval_samples,
+            mode_samples,
+            order_samples,
+        )
         for heatmap_i, arr_aug in zip(heatmaps, arrs_aug):
             heatmap_i.arr_0to1 = arr_aug
         return heatmaps
 
     def _augment_segmentation_maps(self, segmaps, random_state, parents, hooks):
         nb_images = len(segmaps)
-        scale_samples, translate_samples, rotate_samples, shear_samples, \
-            cval_samples, mode_samples, order_samples = self._draw_samples(
-                nb_images, random_state)
+        (
+            scale_samples,
+            translate_samples,
+            rotate_samples,
+            shear_samples,
+            cval_samples,
+            mode_samples,
+            order_samples,
+        ) = self._draw_samples(nb_images, random_state)
         cval_samples = np.zeros((cval_samples.shape[0], 1), dtype=np.float32)
         mode_samples = ["constant"] * len(mode_samples)
         order_samples = [0] * len(order_samples)
         arrs = [segmaps_i.arr for segmaps_i in segmaps]
         arrs_aug = self._augment_images_by_samples(
-            arrs, scale_samples, translate_samples, rotate_samples,
-            shear_samples, cval_samples, mode_samples, order_samples)
+            arrs,
+            scale_samples,
+            translate_samples,
+            rotate_samples,
+            shear_samples,
+            cval_samples,
+            mode_samples,
+            order_samples,
+        )
         for segmaps_i, arr_aug in zip(segmaps, arrs_aug):
             segmaps_i.arr = arr_aug
         return segmaps
 
-    def _augment_keypoints(self, keypoints_on_images, random_state, parents,
-                           hooks):
+    def _augment_keypoints(self, keypoints_on_images, random_state, parents, hooks):
         result = []
         nb_images = len(keypoints_on_images)
-        scale_samples, translate_samples, rotate_samples, shear_samples, \
-            _cval_samples, _mode_samples, _order_samples = self._draw_samples(
-                nb_images, random_state)
+        (
+            scale_samples,
+            translate_samples,
+            rotate_samples,
+            shear_samples,
+            _cval_samples,
+            _mode_samples,
+            _order_samples,
+        ) = self._draw_samples(nb_images, random_state)
 
         for i, keypoints_on_image in enumerate(keypoints_on_images):
             if not keypoints_on_image.keypoints:
@@ -2828,121 +3124,136 @@ class AffineCv2(meta.Augmenter):
             translate_y = translate_samples[1][i]
             if ia.is_single_float(translate_y):
                 translate_y_px = int(
-                    np.round(translate_y * keypoints_on_image.shape[0]))
+                    np.round(translate_y * keypoints_on_image.shape[0])
+                )
             else:
                 translate_y_px = translate_y
             if ia.is_single_float(translate_x):
                 translate_x_px = int(
-                    np.round(translate_x * keypoints_on_image.shape[1]))
+                    np.round(translate_x * keypoints_on_image.shape[1])
+                )
             else:
                 translate_x_px = translate_x
             rotate = rotate_samples[i]
             shear = shear_samples[i]
 
             any_change = (
-                scale_x != 1.0 or scale_y != 1.0
-                or translate_x_px != 0 or translate_y_px != 0
-                or rotate != 0 or shear != 0
+                scale_x != 1.0
+                or scale_y != 1.0
+                or translate_x_px != 0
+                or translate_y_px != 0
+                or rotate != 0
+                or shear != 0
             )
 
             if any_change:
                 matrix_to_topleft = tf.SimilarityTransform(
-                    translation=[-shift_x, -shift_y])
+                    translation=[-shift_x, -shift_y]
+                )
                 matrix_transforms = tf.AffineTransform(
                     scale=(scale_x, scale_y),
                     translation=(translate_x_px, translate_y_px),
                     rotation=math.radians(rotate),
-                    shear=math.radians(shear)
+                    shear=math.radians(shear),
                 )
                 matrix_to_center = tf.SimilarityTransform(
-                    translation=[shift_x, shift_y])
-                matrix = (matrix_to_topleft
-                          + matrix_transforms
-                          + matrix_to_center)
+                    translation=[shift_x, shift_y]
+                )
+                matrix = matrix_to_topleft + matrix_transforms + matrix_to_center
 
                 coords = keypoints_on_image.to_xy_array()
                 coords_aug = tf.matrix_transform(coords, matrix.params)
-                kps_new = [kp.deepcopy(x=coords[0], y=coords[1])
-                           for kp, coords
-                           in zip(keypoints_on_image.keypoints, coords_aug)]
-                result.append(keypoints_on_image.deepcopy(
-                    keypoints=kps_new,
-                    shape=keypoints_on_image.shape
-                ))
+                kps_new = [
+                    kp.deepcopy(x=coords[0], y=coords[1])
+                    for kp, coords in zip(keypoints_on_image.keypoints, coords_aug)
+                ]
+                result.append(
+                    keypoints_on_image.deepcopy(
+                        keypoints=kps_new, shape=keypoints_on_image.shape
+                    )
+                )
             else:
                 result.append(keypoints_on_image)
         return result
 
-    def _augment_polygons(self, polygons_on_images, random_state, parents,
-                          hooks):
+    def _augment_polygons(self, polygons_on_images, random_state, parents, hooks):
         return self._augment_polygons_as_keypoints(
-            polygons_on_images, random_state, parents, hooks)
+            polygons_on_images, random_state, parents, hooks
+        )
 
-    def _augment_line_strings(self, line_strings_on_images, random_state,
-                              parents, hooks):
+    def _augment_line_strings(
+        self, line_strings_on_images, random_state, parents, hooks
+    ):
         return self._augment_line_strings_as_keypoints(
-            line_strings_on_images, random_state, parents, hooks)
+            line_strings_on_images, random_state, parents, hooks
+        )
 
-    def _augment_bounding_boxes(self, bounding_boxes_on_images, random_state,
-                                parents, hooks):
+    def _augment_bounding_boxes(
+        self, bounding_boxes_on_images, random_state, parents, hooks
+    ):
         return self._augment_bounding_boxes_as_keypoints(
-            bounding_boxes_on_images, random_state, parents, hooks)
+            bounding_boxes_on_images, random_state, parents, hooks
+        )
 
     def get_parameters(self):
         """See :func:`~imgaug.augmenters.meta.Augmenter.get_parameters`."""
-        return [self.scale, self.translate, self.rotate, self.shear,
-                self.order, self.cval, self.mode]
+        return [
+            self.scale,
+            self.translate,
+            self.rotate,
+            self.shear,
+            self.order,
+            self.cval,
+            self.mode,
+        ]
 
     def _draw_samples(self, nb_samples, random_state):
         rngs = random_state.duplicate(11)
 
         if isinstance(self.scale, tuple):
             scale_samples = (
-                self.scale[0].draw_samples((nb_samples,),
-                                           random_state=rngs[0]),
-                self.scale[1].draw_samples((nb_samples,),
-                                           random_state=rngs[1]),
+                self.scale[0].draw_samples((nb_samples,), random_state=rngs[0]),
+                self.scale[1].draw_samples((nb_samples,), random_state=rngs[1]),
             )
         else:
-            scale_samples = self.scale.draw_samples((nb_samples,),
-                                                    random_state=rngs[2])
+            scale_samples = self.scale.draw_samples((nb_samples,), random_state=rngs[2])
             scale_samples = (scale_samples, scale_samples)
 
         if isinstance(self.translate, tuple):
             translate_samples = (
-                self.translate[0].draw_samples((nb_samples,),
-                                               random_state=rngs[3]),
-                self.translate[1].draw_samples((nb_samples,),
-                                               random_state=rngs[4]),
+                self.translate[0].draw_samples((nb_samples,), random_state=rngs[3]),
+                self.translate[1].draw_samples((nb_samples,), random_state=rngs[4]),
             )
         else:
             translate_samples = self.translate.draw_samples(
-                (nb_samples,), random_state=rngs[5])
+                (nb_samples,), random_state=rngs[5]
+            )
             translate_samples = (translate_samples, translate_samples)
 
-        valid_dts = iadt._convert_dtype_strs_to_types(
-            "int32 int64 float32 float64"
-        )
+        valid_dts = iadt._convert_dtype_strs_to_types("int32 int64 float32 float64")
         for i in sm.xrange(2):
-            assert translate_samples[i].dtype in valid_dts, (
-                "Expected translate_samples to have any dtype of %s. "
-                "Got %s." % (str(valid_dts), translate_samples[i].dtype.name,))
+            assert (
+                translate_samples[i].dtype in valid_dts
+            ), "Expected translate_samples to have any dtype of %s. " "Got %s." % (
+                str(valid_dts),
+                translate_samples[i].dtype.name,
+            )
 
-        rotate_samples = self.rotate.draw_samples((nb_samples,),
-                                                  random_state=rngs[6])
-        shear_samples = self.shear.draw_samples((nb_samples,),
-                                                random_state=rngs[7])
+        rotate_samples = self.rotate.draw_samples((nb_samples,), random_state=rngs[6])
+        shear_samples = self.shear.draw_samples((nb_samples,), random_state=rngs[7])
 
-        cval_samples = self.cval.draw_samples((nb_samples, 3),
-                                              random_state=rngs[8])
-        mode_samples = self.mode.draw_samples((nb_samples,),
-                                              random_state=rngs[9])
-        order_samples = self.order.draw_samples((nb_samples,),
-                                                random_state=rngs[10])
+        cval_samples = self.cval.draw_samples((nb_samples, 3), random_state=rngs[8])
+        mode_samples = self.mode.draw_samples((nb_samples,), random_state=rngs[9])
+        order_samples = self.order.draw_samples((nb_samples,), random_state=rngs[10])
 
         return (
-            scale_samples, translate_samples, rotate_samples, shear_samples,
-            cval_samples, mode_samples, order_samples
+            scale_samples,
+            translate_samples,
+            rotate_samples,
+            shear_samples,
+            cval_samples,
+            mode_samples,
+            order_samples,
         )
 
 
@@ -3103,25 +3414,49 @@ class PiecewiseAffine(meta.Augmenter):
 
     """
 
-    def __init__(self, scale=(0.0, 0.04), nb_rows=(2, 4), nb_cols=(2, 4),
-                 order=1, cval=0, mode="constant", absolute_scale=False,
-                 polygon_recoverer=None,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        scale=(0.0, 0.04),
+        nb_rows=(2, 4),
+        nb_cols=(2, 4),
+        order=1,
+        cval=0,
+        mode="constant",
+        absolute_scale=False,
+        polygon_recoverer=None,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(PiecewiseAffine, self).__init__(
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed, name=name, random_state=random_state, deterministic=deterministic
+        )
 
         self.scale = iap.handle_continuous_param(
-            scale, "scale", value_range=(0, None), tuple_to_uniform=True,
-            list_to_choice=True)
+            scale,
+            "scale",
+            value_range=(0, None),
+            tuple_to_uniform=True,
+            list_to_choice=True,
+        )
         self.jitter = iap.Normal(loc=0, scale=self.scale)
         self.nb_rows = iap.handle_discrete_param(
-            nb_rows, "nb_rows", value_range=(2, None), tuple_to_uniform=True,
-            list_to_choice=True, allow_floats=False)
+            nb_rows,
+            "nb_rows",
+            value_range=(2, None),
+            tuple_to_uniform=True,
+            list_to_choice=True,
+            allow_floats=False,
+        )
         self.nb_cols = iap.handle_discrete_param(
-            nb_cols, "nb_cols", value_range=(2, None), tuple_to_uniform=True,
-            list_to_choice=True, allow_floats=False)
+            nb_cols,
+            "nb_cols",
+            value_range=(2, None),
+            tuple_to_uniform=True,
+            list_to_choice=True,
+            allow_floats=False,
+        )
 
         self.order = _handle_order_arg(order, backend="skimage")
         self.cval = _handle_cval_arg(cval)
@@ -3149,34 +3484,43 @@ class PiecewiseAffine(meta.Augmenter):
         samples = self._draw_samples(batch.nb_rows, random_state)
 
         if batch.images is not None:
-            batch.images = self._augment_images_by_samples(batch.images,
-                                                           samples)
+            batch.images = self._augment_images_by_samples(batch.images, samples)
 
         if batch.heatmaps is not None:
             batch.heatmaps = self._augment_maps_by_samples(
-                batch.heatmaps, "arr_0to1", samples, self._cval_heatmaps,
-                self._mode_heatmaps, self._order_heatmaps)
+                batch.heatmaps,
+                "arr_0to1",
+                samples,
+                self._cval_heatmaps,
+                self._mode_heatmaps,
+                self._order_heatmaps,
+            )
 
         if batch.segmentation_maps is not None:
             batch.segmentation_maps = self._augment_maps_by_samples(
-                batch.segmentation_maps, "arr", samples,
-                self._cval_segmentation_maps, self._mode_segmentation_maps,
-                self._order_segmentation_maps)
+                batch.segmentation_maps,
+                "arr",
+                samples,
+                self._cval_segmentation_maps,
+                self._mode_segmentation_maps,
+                self._order_segmentation_maps,
+            )
 
         # TODO add test for recoverer
         if batch.polygons is not None:
             func = functools.partial(
-                self._augment_keypoints_by_samples,
-                samples=samples)
+                self._augment_keypoints_by_samples, samples=samples
+            )
             batch.polygons = self._apply_to_polygons_as_keypoints(
-                batch.polygons, func, recoverer=self.polygon_recoverer)
+                batch.polygons, func, recoverer=self.polygon_recoverer
+            )
 
         for augm_name in ["keypoints", "bounding_boxes", "line_strings"]:
             augm_value = getattr(batch, augm_name)
             if augm_value is not None:
                 func = functools.partial(
-                    self._augment_keypoints_by_samples,
-                    samples=samples)
+                    self._augment_keypoints_by_samples, samples=samples
+                )
                 cbaois = self._apply_to_cbaois_as_keypoints(augm_value, func)
                 setattr(batch, augm_name, cbaois)
 
@@ -3187,17 +3531,21 @@ class PiecewiseAffine(meta.Augmenter):
         iadt.gate_dtypes_strs(
             images,
             allowed="bool uint8 uint16 uint32 int8 int16 int32 "
-                    "float16 float32 float64",
+            "float16 float32 float64",
             disallowed="uint64 int64 float128",
-            augmenter=self
+            augmenter=self,
         )
 
         result = images
 
         for i, image in enumerate(images):
             transformer = self._get_transformer(
-                image.shape, image.shape, samples.nb_rows[i],
-                samples.nb_cols[i], samples.jitter[i])
+                image.shape,
+                image.shape,
+                samples.nb_rows[i],
+                samples.nb_cols[i],
+                samples.jitter[i],
+            )
 
             if transformer is not None:
                 input_dtype = image.dtype
@@ -3211,7 +3559,7 @@ class PiecewiseAffine(meta.Augmenter):
                     mode=samples.mode[i],
                     cval=samples.get_clipped_cval(i, image.dtype),
                     preserve_range=True,
-                    output_shape=images[i].shape
+                    output_shape=images[i].shape,
                 )
 
                 if input_dtype.kind == "b":
@@ -3219,24 +3567,28 @@ class PiecewiseAffine(meta.Augmenter):
                 else:
                     # warp seems to change everything to float64, including
                     # uint8, making this necessary
-                    image_warped = iadt.restore_dtypes_(
-                        image_warped, input_dtype)
+                    image_warped = iadt.restore_dtypes_(image_warped, input_dtype)
 
                 result[i] = image_warped
 
         return result
 
     # Added in 0.4.0.
-    def _augment_maps_by_samples(self, augmentables, arr_attr_name, samples,
-                                 cval, mode, order):
+    def _augment_maps_by_samples(
+        self, augmentables, arr_attr_name, samples, cval, mode, order
+    ):
         result = augmentables
 
         for i, augmentable in enumerate(augmentables):
             arr = getattr(augmentable, arr_attr_name)
 
             transformer = self._get_transformer(
-                arr.shape, augmentable.shape, samples.nb_rows[i],
-                samples.nb_cols[i], samples.jitter[i])
+                arr.shape,
+                augmentable.shape,
+                samples.nb_rows[i],
+                samples.nb_cols[i],
+                samples.jitter[i],
+            )
 
             if transformer is not None:
                 arr_warped = tf.warp(
@@ -3246,7 +3598,7 @@ class PiecewiseAffine(meta.Augmenter):
                     mode=mode if mode is not None else samples.mode[i],
                     cval=cval if cval is not None else samples.cval[i],
                     preserve_range=True,
-                    output_shape=arr.shape
+                    output_shape=arr.shape,
                 )
 
                 # skimage converts to float64
@@ -3275,8 +3627,12 @@ class PiecewiseAffine(meta.Augmenter):
         for i, kpsoi in enumerate(kpsois):
             h, w = kpsoi.shape[0:2]
             transformer = self._get_transformer(
-                kpsoi.shape, kpsoi.shape, samples.nb_rows[i],
-                samples.nb_cols[i], samples.jitter[i])
+                kpsoi.shape,
+                kpsoi.shape,
+                samples.nb_rows[i],
+                samples.nb_cols[i],
+                samples.jitter[i],
+            )
 
             if transformer is None or len(kpsoi.keypoints) == 0:
                 result.append(kpsoi)
@@ -3314,8 +3670,7 @@ class PiecewiseAffine(meta.Augmenter):
                     transformer,
                     order=1,
                     preserve_range=True,
-                    output_shape=(kpsoi.shape[0], kpsoi.shape[1],
-                                  len(kpsoi.keypoints))
+                    output_shape=(kpsoi.shape[0], kpsoi.shape[1], len(kpsoi.keypoints)),
                 )
 
                 kps_aug = ia.KeypointsOnImage.from_distance_maps(
@@ -3323,15 +3678,14 @@ class PiecewiseAffine(meta.Augmenter):
                     inverted=True,
                     threshold=0.01,
                     if_not_found_coords={"x": -1, "y": -1},
-                    nb_channels=(
-                        None if len(kpsoi.shape) < 3 else kpsoi.shape[2])
+                    nb_channels=(None if len(kpsoi.shape) < 3 else kpsoi.shape[2]),
                 )
 
                 for kp, kp_aug in zip(kpsoi.keypoints, kps_aug.keypoints):
                     # Keypoints that were outside of the image plane before the
                     # augmentation were replaced with (-1, -1) by default (as
                     # they can't be drawn on the keypoint images).
-                    within_image = (0 <= kp.x < w and 0 <= kp.y < h)
+                    within_image = 0 <= kp.x < w and 0 <= kp.y < h
                     if within_image:
                         kp.x = kp_aug.x
                         kp.y = kp_aug.y
@@ -3343,37 +3697,38 @@ class PiecewiseAffine(meta.Augmenter):
     def _draw_samples(self, nb_images, random_state):
         rss = random_state.duplicate(6)
 
-        nb_rows_samples = self.nb_rows.draw_samples((nb_images,),
-                                                    random_state=rss[-6])
-        nb_cols_samples = self.nb_cols.draw_samples((nb_images,),
-                                                    random_state=rss[-5])
-        order_samples = self.order.draw_samples((nb_images,),
-                                                random_state=rss[-4])
-        cval_samples = self.cval.draw_samples((nb_images,),
-                                              random_state=rss[-3])
-        mode_samples = self.mode.draw_samples((nb_images,),
-                                              random_state=rss[-2])
+        nb_rows_samples = self.nb_rows.draw_samples((nb_images,), random_state=rss[-6])
+        nb_cols_samples = self.nb_cols.draw_samples((nb_images,), random_state=rss[-5])
+        order_samples = self.order.draw_samples((nb_images,), random_state=rss[-4])
+        cval_samples = self.cval.draw_samples((nb_images,), random_state=rss[-3])
+        mode_samples = self.mode.draw_samples((nb_images,), random_state=rss[-2])
 
         nb_rows_samples = np.clip(nb_rows_samples, 2, None)
         nb_cols_samples = np.clip(nb_cols_samples, 2, None)
         nb_cells = nb_rows_samples * nb_cols_samples
-        jitter = self.jitter.draw_samples((int(np.sum(nb_cells)), 2),
-                                          random_state=rss[-1])
+        jitter = self.jitter.draw_samples(
+            (int(np.sum(nb_cells)), 2), random_state=rss[-1]
+        )
 
         jitter_by_image = []
         counter = 0
         for nb_cells_i in nb_cells:
-            jitter_img = jitter[counter:counter+nb_cells_i, :]
+            jitter_img = jitter[counter : counter + nb_cells_i, :]
             jitter_by_image.append(jitter_img)
             counter += nb_cells_i
 
         return _PiecewiseAffineSamplingResult(
-            nb_rows=nb_rows_samples, nb_cols=nb_cols_samples,
+            nb_rows=nb_rows_samples,
+            nb_cols=nb_cols_samples,
             jitter=jitter_by_image,
-            order=order_samples, cval=cval_samples, mode=mode_samples)
+            order=order_samples,
+            cval=cval_samples,
+            mode=mode_samples,
+        )
 
-    def _get_transformer(self, augmentable_shape, image_shape, nb_rows,
-                         nb_cols, jitter_img):
+    def _get_transformer(
+        self, augmentable_shape, image_shape, nb_rows, nb_cols, jitter_img
+    ):
         # get coords on y and x axis of points to move around
         # these coordinates are supposed to be at the centers of each cell
         # (otherwise the first coordinate would be at (0, 0) and could hardly
@@ -3423,26 +3778,20 @@ class PiecewiseAffine(meta.Augmenter):
             # outside of the image plane and these would be replaced by
             # (-1, -1), which would not conform with the behaviour of the
             # other augmenters.
-            points_dest[:, 0] = np.clip(points_dest[:, 0],
-                                        0, augmentable_shape[0]-1)
-            points_dest[:, 1] = np.clip(points_dest[:, 1],
-                                        0, augmentable_shape[1]-1)
+            points_dest[:, 0] = np.clip(points_dest[:, 0], 0, augmentable_shape[0] - 1)
+            points_dest[:, 1] = np.clip(points_dest[:, 1], 0, augmentable_shape[1] - 1)
 
             # tf.warp() results in qhull error if the points are identical,
             # which is mainly the case if any axis is 0
             has_low_axis = any([axis <= 1 for axis in augmentable_shape[0:2]])
             has_zero_channels = (
-                (
-                    augmentable_shape is not None
-                    and len(augmentable_shape) == 3
-                    and augmentable_shape[-1] == 0
-                )
-                or
-                (
-                    image_shape is not None
-                    and len(image_shape) == 3
-                    and image_shape[-1] == 0
-                )
+                augmentable_shape is not None
+                and len(augmentable_shape) == 3
+                and augmentable_shape[-1] == 0
+            ) or (
+                image_shape is not None
+                and len(image_shape) == 3
+                and image_shape[-1] == 0
             )
 
             if has_low_axis or has_zero_channels:
@@ -3455,8 +3804,14 @@ class PiecewiseAffine(meta.Augmenter):
     def get_parameters(self):
         """See :func:`~imgaug.augmenters.meta.Augmenter.get_parameters`."""
         return [
-            self.scale, self.nb_rows, self.nb_cols, self.order, self.cval,
-            self.mode, self.absolute_scale]
+            self.scale,
+            self.nb_rows,
+            self.nb_cols,
+            self.order,
+            self.cval,
+            self.mode,
+            self.absolute_scale,
+        ]
 
 
 class _PerspectiveTransformSamplingResult(object):
@@ -3640,20 +3995,33 @@ class PerspectiveTransform(meta.Augmenter):
 
     _BORDER_MODE_STR_TO_INT = {
         "replicate": cv2.BORDER_REPLICATE,
-        "constant": cv2.BORDER_CONSTANT
+        "constant": cv2.BORDER_CONSTANT,
     }
 
-    def __init__(self, scale=(0.0, 0.06), cval=0, mode="constant",
-                 keep_size=True, fit_output=False, polygon_recoverer="auto",
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        scale=(0.0, 0.06),
+        cval=0,
+        mode="constant",
+        keep_size=True,
+        fit_output=False,
+        polygon_recoverer="auto",
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(PerspectiveTransform, self).__init__(
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed, name=name, random_state=random_state, deterministic=deterministic
+        )
 
         self.scale = iap.handle_continuous_param(
-            scale, "scale", value_range=(0, None), tuple_to_uniform=True,
-            list_to_choice=True)
+            scale,
+            "scale",
+            value_range=(0, None),
+            tuple_to_uniform=True,
+            list_to_choice=True,
+        )
         self.jitter = iap.Normal(loc=0, scale=self.scale)
 
         # setting these to 1x1 caused problems for large scales and polygon
@@ -3694,34 +4062,39 @@ class PerspectiveTransform(meta.Augmenter):
         if mode == ia.ALL:
             return iap.Choice(available_modes)
         if ia.is_single_integer(mode):
-            assert mode in available_modes, (
-                "Expected mode to be in %s, got %d." % (
-                    str(available_modes), mode))
+            assert mode in available_modes, "Expected mode to be in %s, got %d." % (
+                str(available_modes),
+                mode,
+            )
             return iap.Deterministic(mode)
         if ia.is_string(mode):
-            assert mode in available_modes_str, (
-                "Expected mode to be in %s, got %s." % (
-                    str(available_modes_str), mode))
+            assert mode in available_modes_str, "Expected mode to be in %s, got %s." % (
+                str(available_modes_str),
+                mode,
+            )
             return iap.Deterministic(mode)
         if isinstance(mode, list):
-            valid_types = all([ia.is_single_integer(val) or ia.is_string(val)
-                               for val in mode])
+            valid_types = all(
+                [ia.is_single_integer(val) or ia.is_string(val) for val in mode]
+            )
             assert valid_types, (
                 "Expected mode list to only contain integers/strings, got "
-                "types %s." % (
-                    ", ".join([str(type(val)) for val in mode]),))
-            valid_modes = all([val in available_modes + available_modes_str
-                               for val in mode])
-            assert valid_modes, (
-                "Expected all mode values to be in %s, got %s." % (
-                    str(available_modes + available_modes_str), str(mode)))
+                "types %s." % (", ".join([str(type(val)) for val in mode]),)
+            )
+            valid_modes = all(
+                [val in available_modes + available_modes_str for val in mode]
+            )
+            assert valid_modes, "Expected all mode values to be in %s, got %s." % (
+                str(available_modes + available_modes_str),
+                str(mode),
+            )
             return iap.Choice(mode)
         if isinstance(mode, iap.StochasticParameter):
             return mode
         raise Exception(
             "Expected mode to be imgaug.ALL, an int, a string, a list "
-            "of int/strings or StochasticParameter, got %s." % (
-                type(mode),))
+            "of int/strings or StochasticParameter, got %s." % (type(mode),)
+        )
 
     # Added in 0.4.0.
     def _augment_batch_(self, batch, random_state, parents, hooks):
@@ -3731,50 +4104,62 @@ class PerspectiveTransform(meta.Augmenter):
         # results.
         random_state.advance_()
 
-        samples_images = self._draw_samples(batch.get_rowwise_shapes(),
-                                            random_state.copy())
+        samples_images = self._draw_samples(
+            batch.get_rowwise_shapes(), random_state.copy()
+        )
 
         if batch.images is not None:
-            batch.images = self._augment_images_by_samples(batch.images,
-                                                           samples_images)
+            batch.images = self._augment_images_by_samples(batch.images, samples_images)
 
         if batch.heatmaps is not None:
             samples = self._draw_samples(
-                [augmentable.arr_0to1.shape
-                 for augmentable in batch.heatmaps],
-                random_state.copy())
+                [augmentable.arr_0to1.shape for augmentable in batch.heatmaps],
+                random_state.copy(),
+            )
 
             batch.heatmaps = self._augment_maps_by_samples(
-                batch.heatmaps, "arr_0to1", samples, samples_images,
-                self._cval_heatmaps, self._mode_heatmaps, self._order_heatmaps)
+                batch.heatmaps,
+                "arr_0to1",
+                samples,
+                samples_images,
+                self._cval_heatmaps,
+                self._mode_heatmaps,
+                self._order_heatmaps,
+            )
 
         if batch.segmentation_maps is not None:
             samples = self._draw_samples(
-                [augmentable.arr.shape
-                 for augmentable in batch.segmentation_maps],
-                random_state.copy())
+                [augmentable.arr.shape for augmentable in batch.segmentation_maps],
+                random_state.copy(),
+            )
 
             batch.segmentation_maps = self._augment_maps_by_samples(
-                batch.segmentation_maps, "arr", samples, samples_images,
-                self._cval_segmentation_maps, self._mode_segmentation_maps,
-                self._order_segmentation_maps)
+                batch.segmentation_maps,
+                "arr",
+                samples,
+                samples_images,
+                self._cval_segmentation_maps,
+                self._mode_segmentation_maps,
+                self._order_segmentation_maps,
+            )
 
         # large scale values cause invalid polygons (unclear why that happens),
         # hence the recoverer
         # TODO add test for recoverer
         if batch.polygons is not None:
             func = functools.partial(
-                self._augment_keypoints_by_samples,
-                samples_images=samples_images)
+                self._augment_keypoints_by_samples, samples_images=samples_images
+            )
             batch.polygons = self._apply_to_polygons_as_keypoints(
-                batch.polygons, func, recoverer=self.polygon_recoverer)
+                batch.polygons, func, recoverer=self.polygon_recoverer
+            )
 
         for augm_name in ["keypoints", "bounding_boxes", "line_strings"]:
             augm_value = getattr(batch, augm_name)
             if augm_value is not None:
                 func = functools.partial(
-                    self._augment_keypoints_by_samples,
-                    samples_images=samples_images)
+                    self._augment_keypoints_by_samples, samples_images=samples_images
+                )
                 cbaois = self._apply_to_cbaois_as_keypoints(augm_value, func)
                 setattr(batch, augm_name, cbaois)
 
@@ -3786,28 +4171,35 @@ class PerspectiveTransform(meta.Augmenter):
             images,
             allowed="bool uint8 uint16 int8 int16 float16 float32 float64",
             disallowed="uint32 uint64 int32 int64 float128",
-            augmenter=self
+            augmenter=self,
         )
 
         result = images
         if not self.keep_size:
             result = list(result)
 
-        gen = enumerate(zip(images, samples.matrices, samples.max_heights,
-                            samples.max_widths, samples.cvals, samples.modes))
+        gen = enumerate(
+            zip(
+                images,
+                samples.matrices,
+                samples.max_heights,
+                samples.max_widths,
+                samples.cvals,
+                samples.modes,
+            )
+        )
 
         for i, (image, matrix, max_height, max_width, cval, mode) in gen:
             input_dtype = image.dtype
             if input_dtype == iadt._INT8_DTYPE:
                 image = image.astype(np.int16)
-            elif (input_dtype
-                  in {iadt._BOOL_DTYPE, iadt._FLOAT16_DTYPE}):
+            elif input_dtype in {iadt._BOOL_DTYPE, iadt._FLOAT16_DTYPE}:
                 image = image.astype(np.float32)
 
             # cv2.warpPerspective only supports <=4 channels and errors
             # on axes with size zero
             nb_channels = image.shape[2]
-            has_zero_sized_axis = (image.size == 0)
+            has_zero_sized_axis = image.size == 0
             if has_zero_sized_axis:
                 warped = image
             elif nb_channels <= 4:
@@ -3816,7 +4208,8 @@ class PerspectiveTransform(meta.Augmenter):
                     matrix,
                     (max_width, max_height),
                     borderValue=cval,
-                    borderMode=mode)
+                    borderMode=mode,
+                )
                 if warped.ndim == 2 and images[i].ndim == 3:
                     warped = np.expand_dims(warped, 2)
             else:
@@ -3828,9 +4221,9 @@ class PerspectiveTransform(meta.Augmenter):
                         _normalize_cv2_input_arr_(image[..., c]),
                         matrix,
                         (max_width, max_height),
-                        borderValue=cval[min(c, len(cval)-1)],
+                        borderValue=cval[min(c, len(cval) - 1)],
                         borderMode=mode,
-                        flags=cv2.INTER_LINEAR
+                        flags=cv2.INTER_LINEAR,
                     )
                     for c in sm.xrange(nb_channels)
                 ]
@@ -3850,8 +4243,9 @@ class PerspectiveTransform(meta.Augmenter):
         return result
 
     # Added in 0.4.0.
-    def _augment_maps_by_samples(self, augmentables, arr_attr_name,
-                                 samples, samples_images, cval, mode, flags):
+    def _augment_maps_by_samples(
+        self, augmentables, arr_attr_name, samples, samples_images, cval, mode, flags
+    ):
         result = augmentables
 
         # estimate max_heights/max_widths for the underlying images
@@ -3865,8 +4259,9 @@ class PerspectiveTransform(meta.Augmenter):
             max_heights_imgs = samples_images.max_heights
             max_widths_imgs = samples_images.max_widths
 
-        gen = enumerate(zip(augmentables, samples.matrices, samples.max_heights,
-                            samples.max_widths))
+        gen = enumerate(
+            zip(augmentables, samples.matrices, samples.max_heights, samples.max_widths)
+        )
 
         for i, (augmentable_i, matrix, max_height, max_width) in gen:
             arr = getattr(augmentable_i, arr_attr_name)
@@ -3880,8 +4275,8 @@ class PerspectiveTransform(meta.Augmenter):
                 cval_i = samples.cvals[i]
 
             nb_channels = arr.shape[2]
-            image_has_zero_sized_axis = (0 in augmentable_i.shape)
-            map_has_zero_sized_axis = (arr.size == 0)
+            image_has_zero_sized_axis = 0 in augmentable_i.shape
+            map_has_zero_sized_axis = arr.size == 0
 
             if not image_has_zero_sized_axis:
                 if not map_has_zero_sized_axis:
@@ -3892,7 +4287,7 @@ class PerspectiveTransform(meta.Augmenter):
                             (max_width, max_height),
                             borderValue=cval_i,
                             borderMode=mode_i,
-                            flags=flags
+                            flags=flags,
                         )
                         for c in sm.xrange(nb_channels)
                     ]
@@ -3905,7 +4300,8 @@ class PerspectiveTransform(meta.Augmenter):
                     augmentable_i = augmentable_i.resize((h, w))
                 else:
                     new_shape = (
-                        max_heights_imgs[i], max_widths_imgs[i]
+                        max_heights_imgs[i],
+                        max_widths_imgs[i],
                     ) + augmentable_i.shape[2:]
                     augmentable_i.shape = new_shape
 
@@ -3917,13 +4313,17 @@ class PerspectiveTransform(meta.Augmenter):
     def _augment_keypoints_by_samples(self, kpsois, samples_images):
         result = kpsois
 
-        gen = enumerate(zip(kpsois,
-                            samples_images.matrices,
-                            samples_images.max_heights,
-                            samples_images.max_widths))
+        gen = enumerate(
+            zip(
+                kpsois,
+                samples_images.matrices,
+                samples_images.max_heights,
+                samples_images.max_widths,
+            )
+        )
 
         for i, (kpsoi, matrix, max_height, max_width) in gen:
-            image_has_zero_sized_axis = (0 in kpsoi.shape)
+            image_has_zero_sized_axis = 0 in kpsoi.shape
 
             if not image_has_zero_sized_axis:
                 shape_orig = kpsoi.shape
@@ -3932,7 +4332,8 @@ class PerspectiveTransform(meta.Augmenter):
                 if not kpsoi.empty:
                     kps_arr = kpsoi.to_xy_array()
                     warped = cv2.perspectiveTransform(
-                        np.array([kps_arr], dtype=np.float32), matrix)
+                        np.array([kps_arr], dtype=np.float32), matrix
+                    )
                     warped = warped[0]
                     for kp, coords in zip(kpsoi.keypoints, warped):
                         kp.x = coords[0]
@@ -3952,12 +4353,9 @@ class PerspectiveTransform(meta.Augmenter):
         nb_images = len(shapes)
         rngs = random_state.duplicate(3)
 
-        cval_samples = self.cval.draw_samples((nb_images, 3),
-                                              random_state=rngs[0])
-        mode_samples = self.mode.draw_samples((nb_images,),
-                                              random_state=rngs[1])
-        jitter = self.jitter.draw_samples((nb_images, 4, 2),
-                                          random_state=rngs[2])
+        cval_samples = self.cval.draw_samples((nb_images, 3), random_state=rngs[0])
+        mode_samples = self.mode.draw_samples((nb_images,), random_state=rngs[1])
+        jitter = self.jitter.draw_samples((nb_images, 4, 2), random_state=rngs[2])
 
         # cv2 perspectiveTransform doesn't accept numpy arrays as cval
         cval_samples_cv2 = cval_samples.tolist()
@@ -4003,12 +4401,12 @@ class PerspectiveTransform(meta.Augmenter):
             min_width = None
             max_width = None
             while min_width is None or min_width < self.min_width:
-                width_top = np.sqrt(((tr[0]-tl[0])**2) + ((tr[1]-tl[1])**2))
-                width_bottom = np.sqrt(((br[0]-bl[0])**2) + ((br[1]-bl[1])**2))
+                width_top = np.sqrt(((tr[0] - tl[0]) ** 2) + ((tr[1] - tl[1]) ** 2))
+                width_bottom = np.sqrt(((br[0] - bl[0]) ** 2) + ((br[1] - bl[1]) ** 2))
                 max_width = int(max(width_top, width_bottom))
                 min_width = int(min(width_top, width_bottom))
                 if min_width < self.min_width:
-                    step_size = (self.min_width - min_width)/2
+                    step_size = (self.min_width - min_width) / 2
                     tl[0] -= step_size
                     tr[0] += step_size
                     bl[0] -= step_size
@@ -4020,12 +4418,12 @@ class PerspectiveTransform(meta.Augmenter):
             min_height = None
             max_height = None
             while min_height is None or min_height < self.min_height:
-                height_right = np.sqrt(((tr[0]-br[0])**2) + ((tr[1]-br[1])**2))
-                height_left = np.sqrt(((tl[0]-bl[0])**2) + ((tl[1]-bl[1])**2))
+                height_right = np.sqrt(((tr[0] - br[0]) ** 2) + ((tr[1] - br[1]) ** 2))
+                height_left = np.sqrt(((tl[0] - bl[0]) ** 2) + ((tl[1] - bl[1]) ** 2))
                 max_height = int(max(height_right, height_left))
                 min_height = int(min(height_right, height_left))
                 if min_height < self.min_height:
-                    step_size = (self.min_height - min_height)/2
+                    step_size = (self.min_height - min_height) / 2
                     tl[1] -= step_size
                     tr[1] -= step_size
                     bl[1] += step_size
@@ -4038,12 +4436,10 @@ class PerspectiveTransform(meta.Augmenter):
             # order
             # do not use width-1 or height-1 here, as for e.g. width=3, height=2
             # the bottom right coordinate is at (3.0, 2.0) and not (2.0, 1.0)
-            dst = np.array([
-                [0, 0],
-                [max_width, 0],
-                [max_width, max_height],
-                [0, max_height]
-            ], dtype=np.float32)
+            dst = np.array(
+                [[0, 0], [max_width, 0], [max_width, max_height], [0, max_height]],
+                dtype=np.float32,
+            )
 
             # compute the perspective transform matrix and then apply it
             m = cv2.getPerspectiveTransform(points_i, dst)
@@ -4057,8 +4453,8 @@ class PerspectiveTransform(meta.Augmenter):
 
         mode_samples = mode_samples.astype(np.int32)
         return _PerspectiveTransformSamplingResult(
-            matrices, max_heights, max_widths, cval_samples_cv2,
-            mode_samples)
+            matrices, max_heights, max_widths, cval_samples_cv2, mode_samples
+        )
 
     @classmethod
     def _order_points(cls, pts):
@@ -4090,11 +4486,9 @@ class PerspectiveTransform(meta.Augmenter):
         height, width = shape
         # do not use width-1 or height-1 here, as for e.g. width=3, height=2
         # the bottom right coordinate is at (3.0, 2.0) and not (2.0, 1.0)
-        rect = np.array([
-            [0, 0],
-            [width, 0],
-            [width, height],
-            [0, height]], dtype=np.float32)
+        rect = np.array(
+            [[0, 0], [width, 0], [width, height], [0, height]], dtype=np.float32
+        )
         dst = cv2.perspectiveTransform(np.array([rect]), matrix)[0]
 
         # get min x, y over transformed 4 points
@@ -4109,8 +4503,7 @@ class PerspectiveTransform(meta.Augmenter):
 
     def get_parameters(self):
         """See :func:`~imgaug.augmenters.meta.Augmenter.get_parameters`."""
-        return [self.jitter, self.keep_size, self.cval, self.mode,
-                self.fit_output]
+        return [self.jitter, self.keep_size, self.cval, self.mode, self.fit_output]
 
 
 # TODO add independent sigmas for x/y
@@ -4310,7 +4703,7 @@ class ElasticTransformation(meta.Augmenter):
         "constant": cv2.BORDER_CONSTANT,
         "nearest": cv2.BORDER_REPLICATE,
         "reflect": cv2.BORDER_REFLECT_101,
-        "wrap": cv2.BORDER_WRAP
+        "wrap": cv2.BORDER_WRAP,
     }
 
     _MAPPING_ORDER_SCIPY_CV2 = {
@@ -4319,24 +4712,40 @@ class ElasticTransformation(meta.Augmenter):
         2: cv2.INTER_CUBIC,
         3: cv2.INTER_CUBIC,
         4: cv2.INTER_CUBIC,
-        5: cv2.INTER_CUBIC
+        5: cv2.INTER_CUBIC,
     }
 
-    def __init__(self, alpha=(1.0, 40.0), sigma=(4.0, 8.0), order=0, cval=0,
-                 mode="constant",
-                 polygon_recoverer="auto",
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        alpha=(1.0, 40.0),
+        sigma=(4.0, 8.0),
+        order=0,
+        cval=0,
+        mode="constant",
+        polygon_recoverer="auto",
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(ElasticTransformation, self).__init__(
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed, name=name, random_state=random_state, deterministic=deterministic
+        )
 
         self.alpha = iap.handle_continuous_param(
-            alpha, "alpha", value_range=(0, None), tuple_to_uniform=True,
-            list_to_choice=True)
+            alpha,
+            "alpha",
+            value_range=(0, None),
+            tuple_to_uniform=True,
+            list_to_choice=True,
+        )
         self.sigma = iap.handle_continuous_param(
-            sigma, "sigma", value_range=(0, None), tuple_to_uniform=True,
-            list_to_choice=True)
+            sigma,
+            "sigma",
+            value_range=(0, None),
+            tuple_to_uniform=True,
+            list_to_choice=True,
+        )
 
         self.order = self._handle_order_arg(order)
         self.cval = _handle_cval_arg(cval)
@@ -4367,8 +4776,13 @@ class ElasticTransformation(meta.Augmenter):
         if order == ia.ALL:
             return iap.Choice([0, 1, 2, 3, 4, 5])
         return iap.handle_discrete_param(
-            order, "order", value_range=(0, 5), tuple_to_uniform=True,
-            list_to_choice=True, allow_floats=False)
+            order,
+            "order",
+            value_range=(0, 5),
+            tuple_to_uniform=True,
+            list_to_choice=True,
+            allow_floats=False,
+        )
 
     @classmethod
     @iap._prefetchable_str
@@ -4378,26 +4792,29 @@ class ElasticTransformation(meta.Augmenter):
         if ia.is_string(mode):
             return iap.Deterministic(mode)
         if ia.is_iterable(mode):
-            assert all([ia.is_string(val) for val in mode]), (
-                "Expected mode list to only contain strings, got "
-                "types %s." % (
-                    ", ".join([str(type(val)) for val in mode]),))
+            assert all(
+                [ia.is_string(val) for val in mode]
+            ), "Expected mode list to only contain strings, got " "types %s." % (
+                ", ".join([str(type(val)) for val in mode]),
+            )
             return iap.Choice(mode)
         if isinstance(mode, iap.StochasticParameter):
             return mode
         raise Exception(
             "Expected mode to be imgaug.ALL, a string, a list of strings "
-            "or StochasticParameter, got %s." % (type(mode),))
+            "or StochasticParameter, got %s." % (type(mode),)
+        )
 
     def _draw_samples(self, nb_images, random_state):
-        rss = random_state.duplicate(nb_images+5)
+        rss = random_state.duplicate(nb_images + 5)
         alphas = self.alpha.draw_samples((nb_images,), random_state=rss[-5])
         sigmas = self.sigma.draw_samples((nb_images,), random_state=rss[-4])
         orders = self.order.draw_samples((nb_images,), random_state=rss[-3])
         cvals = self.cval.draw_samples((nb_images,), random_state=rss[-2])
         modes = self.mode.draw_samples((nb_images,), random_state=rss[-1])
         return _ElasticTransformationSamplingResult(
-            rss[0], alphas, sigmas, orders, cvals, modes)
+            rss[0], alphas, sigmas, orders, cvals, modes
+        )
 
     # Added in 0.4.0.
     def _augment_batch_(self, batch, random_state, parents, hooks):
@@ -4406,51 +4823,70 @@ class ElasticTransformation(meta.Augmenter):
             iadt.gate_dtypes_strs(
                 batch.images,
                 allowed="bool uint8 uint16 uint32 uint64 int8 int16 int32 "
-                        "int64 float16 float32 float64",
+                "int64 float16 float32 float64",
                 disallowed="float128",
-                augmenter=self
+                augmenter=self,
             )
 
         shapes = batch.get_rowwise_shapes()
         samples = self._draw_samples(len(shapes), random_state)
         smgen = _ElasticTfShiftMapGenerator()
-        shift_maps = smgen.generate(shapes, samples.alphas, samples.sigmas,
-                                    samples.random_state)
+        shift_maps = smgen.generate(
+            shapes, samples.alphas, samples.sigmas, samples.random_state
+        )
 
         for i, (shape, (dx, dy)) in enumerate(zip(shapes, shift_maps)):
             if batch.images is not None:
                 batch.images[i] = self._augment_image_by_samples(
-                    batch.images[i], i, samples, dx, dy)
+                    batch.images[i], i, samples, dx, dy
+                )
             if batch.heatmaps is not None:
                 batch.heatmaps[i] = self._augment_hm_or_sm_by_samples(
-                    batch.heatmaps[i], i, samples, dx, dy, "arr_0to1",
-                    self._cval_heatmaps, self._mode_heatmaps,
-                    self._order_heatmaps)
+                    batch.heatmaps[i],
+                    i,
+                    samples,
+                    dx,
+                    dy,
+                    "arr_0to1",
+                    self._cval_heatmaps,
+                    self._mode_heatmaps,
+                    self._order_heatmaps,
+                )
             if batch.segmentation_maps is not None:
                 batch.segmentation_maps[i] = self._augment_hm_or_sm_by_samples(
-                    batch.segmentation_maps[i], i, samples, dx, dy, "arr",
-                    self._cval_segmentation_maps, self._mode_segmentation_maps,
-                    self._order_segmentation_maps)
+                    batch.segmentation_maps[i],
+                    i,
+                    samples,
+                    dx,
+                    dy,
+                    "arr",
+                    self._cval_segmentation_maps,
+                    self._mode_segmentation_maps,
+                    self._order_segmentation_maps,
+                )
             if batch.keypoints is not None:
                 batch.keypoints[i] = self._augment_kpsoi_by_samples(
-                    batch.keypoints[i], i, samples, dx, dy)
+                    batch.keypoints[i], i, samples, dx, dy
+                )
             if batch.bounding_boxes is not None:
                 batch.bounding_boxes[i] = self._augment_bbsoi_by_samples(
-                    batch.bounding_boxes[i], i, samples, dx, dy)
+                    batch.bounding_boxes[i], i, samples, dx, dy
+                )
             if batch.polygons is not None:
                 batch.polygons[i] = self._augment_psoi_by_samples(
-                    batch.polygons[i], i, samples, dx, dy)
+                    batch.polygons[i], i, samples, dx, dy
+                )
             if batch.line_strings is not None:
                 batch.line_strings[i] = self._augment_lsoi_by_samples(
-                    batch.line_strings[i], i, samples, dx, dy)
+                    batch.line_strings[i], i, samples, dx, dy
+                )
 
         return batch
 
     # Added in 0.4.0.
     def _augment_image_by_samples(self, image, row_idx, samples, dx, dy):
         # pylint: disable=invalid-name
-        min_value, _center_value, max_value = \
-            iadt.get_value_range_of_dtype(image.dtype)
+        min_value, _center_value, max_value = iadt.get_value_range_of_dtype(image.dtype)
         cval = max(min(samples.cvals[row_idx], max_value), min_value)
 
         input_dtype = image.dtype
@@ -4458,18 +4894,22 @@ class ElasticTransformation(meta.Augmenter):
             image = image.astype(np.float32)
 
         image_aug = self._map_coordinates(
-            image, dx, dy,
+            image,
+            dx,
+            dy,
             order=samples.orders[row_idx],
             cval=cval,
-            mode=samples.modes[row_idx])
+            mode=samples.modes[row_idx],
+        )
 
         if image.dtype != input_dtype:
             image_aug = iadt.restore_dtypes_(image_aug, input_dtype)
         return image_aug
 
     # Added in 0.4.0.
-    def _augment_hm_or_sm_by_samples(self, augmentable, row_idx, samples,
-                                     dx, dy, arr_attr_name, cval, mode, order):
+    def _augment_hm_or_sm_by_samples(
+        self, augmentable, row_idx, samples, dx, dy, arr_attr_name, cval, mode, order
+    ):
         # pylint: disable=invalid-name
         cval = cval if cval is not None else samples.cvals[row_idx]
         mode = mode if mode is not None else samples.modes[row_idx]
@@ -4483,7 +4923,8 @@ class ElasticTransformation(meta.Augmenter):
 
         if arr.shape[0:2] == augmentable.shape[0:2]:
             arr_warped = self._map_coordinates(
-                arr, dx, dy, order=order, cval=cval, mode=mode)
+                arr, dx, dy, order=order, cval=cval, mode=mode
+            )
 
             # interpolation in map_coordinates() can cause some values to
             # be below/above 1.0, so we clip here
@@ -4508,7 +4949,8 @@ class ElasticTransformation(meta.Augmenter):
             #      also simplify the code as this branch could be merged
             #      with the one above.
             arr_warped = self._map_coordinates(
-                arr, dx, dy, order=order, cval=cval, mode=mode)
+                arr, dx, dy, order=order, cval=cval, mode=mode
+            )
 
             # interpolation in map_coordinates() can cause some values to
             # be below/above 1.0, so we clip here
@@ -4534,10 +4976,11 @@ class ElasticTransformation(meta.Augmenter):
         # Note: we should stop for zero-sized axes early here, event though
         # there is a height/width check for each keypoint, because the
         # channel number can also be zero
-        image_has_zero_sized_axes = (0 in kpsoi.shape)
+        image_has_zero_sized_axes = 0 in kpsoi.shape
         params_below_thresh = (
             alpha <= self.KEYPOINT_AUG_ALPHA_THRESH
-            or sigma <= self.KEYPOINT_AUG_SIGMA_THRESH)
+            or sigma <= self.KEYPOINT_AUG_SIGMA_THRESH
+        )
 
         if kpsoi.empty or image_has_zero_sized_axes or params_below_thresh:
             # ElasticTransformation does not change the shape, hence we can
@@ -4545,12 +4988,12 @@ class ElasticTransformation(meta.Augmenter):
             return kpsoi
 
         for kp in kpsoi.keypoints:
-            within_image_plane = (0 <= kp.x < width and 0 <= kp.y < height)
+            within_image_plane = 0 <= kp.x < width and 0 <= kp.y < height
             if within_image_plane:
                 kp_neighborhood = kp.generate_similar_points_manhattan(
                     self.NB_NEIGHBOURING_KEYPOINTS,
                     self.NEIGHBOURING_KEYPOINTS_DISTANCE,
-                    return_array=True
+                    return_array=True,
                 )
 
                 # We can clip here, because we made sure above that the
@@ -4563,14 +5006,12 @@ class ElasticTransformation(meta.Augmenter):
                 yy = np.round(kp_neighborhood[:, 1]).astype(np.int32)
                 inside_image_mask = np.logical_and(
                     np.logical_and(0 <= xx, xx < width),
-                    np.logical_and(0 <= yy, yy < height)
+                    np.logical_and(0 <= yy, yy < height),
                 )
                 xx = xx[inside_image_mask]
                 yy = yy[inside_image_mask]
 
-                xxyy = np.concatenate(
-                    [xx[:, np.newaxis], yy[:, np.newaxis]],
-                    axis=1)
+                xxyy = np.concatenate([xx[:, np.newaxis], yy[:, np.newaxis]], axis=1)
 
                 xxyy_aug = np.copy(xxyy).astype(np.float32)
                 xxyy_aug[:, 0] += dx[yy, xx]
@@ -4587,23 +5028,39 @@ class ElasticTransformation(meta.Augmenter):
     # Added in 0.4.0.
     def _augment_psoi_by_samples(self, psoi, row_idx, samples, dx, dy):
         # pylint: disable=invalid-name
-        func = functools.partial(self._augment_kpsoi_by_samples,
-                                 row_idx=row_idx, samples=samples, dx=dx, dy=dy)
+        func = functools.partial(
+            self._augment_kpsoi_by_samples,
+            row_idx=row_idx,
+            samples=samples,
+            dx=dx,
+            dy=dy,
+        )
         return self._apply_to_polygons_as_keypoints(
-            psoi, func, recoverer=self.polygon_recoverer)
+            psoi, func, recoverer=self.polygon_recoverer
+        )
 
     # Added in 0.4.0.
     def _augment_lsoi_by_samples(self, lsoi, row_idx, samples, dx, dy):
         # pylint: disable=invalid-name
-        func = functools.partial(self._augment_kpsoi_by_samples,
-                                 row_idx=row_idx, samples=samples, dx=dx, dy=dy)
+        func = functools.partial(
+            self._augment_kpsoi_by_samples,
+            row_idx=row_idx,
+            samples=samples,
+            dx=dx,
+            dy=dy,
+        )
         return self._apply_to_cbaois_as_keypoints(lsoi, func)
 
     # Added in 0.4.0.
     def _augment_bbsoi_by_samples(self, bbsoi, row_idx, samples, dx, dy):
         # pylint: disable=invalid-name
-        func = functools.partial(self._augment_kpsoi_by_samples,
-                                 row_idx=row_idx, samples=samples, dx=dx, dy=dy)
+        func = functools.partial(
+            self._augment_kpsoi_by_samples,
+            row_idx=row_idx,
+            samples=samples,
+            dx=dx,
+            dy=dy,
+        )
         return self._apply_to_cbaois_as_keypoints(bbsoi, func)
 
     def get_parameters(self):
@@ -4728,20 +5185,21 @@ class ElasticTransformation(meta.Augmenter):
         if image.size == 0:
             return np.copy(image)
 
-        if (order == 0
-                and image.dtype
-                in {iadt._UINT64_DTYPE, iadt._INT64_DTYPE}):
+        if order == 0 and image.dtype in {iadt._UINT64_DTYPE, iadt._INT64_DTYPE}:
             raise Exception(
                 "dtypes uint64 and int64 are only supported in "
                 "ElasticTransformation for order=0, got order=%d with "
-                "dtype=%s." % (order, image.dtype.name))
+                "dtype=%s." % (order, image.dtype.name)
+            )
 
         input_dtype = image.dtype
         if image.dtype.kind == "b":
             image = image.astype(np.float32)
-        elif (order == 1
-              and image.dtype
-              in {iadt._INT8_DTYPE, iadt._INT16_DTYPE, iadt._INT32_DTYPE}):
+        elif order == 1 and image.dtype in {
+            iadt._INT8_DTYPE,
+            iadt._INT16_DTYPE,
+            iadt._INT32_DTYPE,
+        }:
             image = image.astype(np.float64)
         elif order >= 2 and image.dtype == iadt._INT8_DTYPE:
             image = image.astype(np.int16)
@@ -4763,13 +5221,14 @@ class ElasticTransformation(meta.Augmenter):
                 "uint32 uint64 int8 int32 int64 float128 bool"
             )
 
-        bad_dx_shape_cv2 = (dx.shape[0] >= shrt_max or dx.shape[1] >= shrt_max)
-        bad_dy_shape_cv2 = (dy.shape[0] >= shrt_max or dy.shape[1] >= shrt_max)
+        bad_dx_shape_cv2 = dx.shape[0] >= shrt_max or dx.shape[1] >= shrt_max
+        bad_dy_shape_cv2 = dy.shape[0] >= shrt_max or dy.shape[1] >= shrt_max
         if bad_dtype_cv2 or bad_dx_shape_cv2 or bad_dy_shape_cv2:
             backend = "scipy"
 
-        assert image.ndim == 3, (
-            "Expected 3-dimensional image, got %d dimensions." % (image.ndim,))
+        assert image.ndim == 3, "Expected 3-dimensional image, got %d dimensions." % (
+            image.ndim,
+        )
 
         h, w, nb_channels = image.shape
         last = self._last_meshgrid
@@ -4779,7 +5238,7 @@ class ElasticTransformation(meta.Augmenter):
             y, x = np.meshgrid(
                 np.arange(h).astype(np.float32),
                 np.arange(w).astype(np.float32),
-                indexing="ij"
+                indexing="ij",
             )
             self._last_meshgrid = (y, x)
         x_shifted = x - dx
@@ -4794,7 +5253,7 @@ class ElasticTransformation(meta.Augmenter):
                     (y_shifted.flatten(), x_shifted.flatten()),
                     order=order,
                     cval=cval,
-                    mode=mode
+                    mode=mode,
                 )
                 remapped = remapped_flat.reshape((h, w))
                 result[..., c] = remapped
@@ -4807,10 +5266,10 @@ class ElasticTransformation(meta.Augmenter):
             border_mode = self._MAPPING_MODE_SCIPY_CV2[mode]
             interpolation = self._MAPPING_ORDER_SCIPY_CV2[order]
 
-            is_nearest_neighbour = (interpolation == cv2.INTER_NEAREST)
+            is_nearest_neighbour = interpolation == cv2.INTER_NEAREST
             map1, map2 = cv2.convertMaps(
-                x_shifted, y_shifted, cv2.CV_16SC2,
-                nninterpolation=is_nearest_neighbour)
+                x_shifted, y_shifted, cv2.CV_16SC2, nninterpolation=is_nearest_neighbour
+            )
             # remap only supports up to 4 channels
             if nb_channels <= 4:
                 # dst does not seem to improve performance here
@@ -4820,7 +5279,7 @@ class ElasticTransformation(meta.Augmenter):
                     map2,
                     interpolation=interpolation,
                     borderMode=border_mode,
-                    borderValue=tuple([cval] * nb_channels)
+                    borderValue=tuple([cval] * nb_channels),
                 )
                 if image.ndim == 3 and result.ndim == 2:
                     result = result[..., np.newaxis]
@@ -4828,11 +5287,15 @@ class ElasticTransformation(meta.Augmenter):
                 current_chan_idx = 0
                 result = []
                 while current_chan_idx < nb_channels:
-                    channels = image[..., current_chan_idx:current_chan_idx+4]
+                    channels = image[..., current_chan_idx : current_chan_idx + 4]
                     result_c = cv2.remap(
                         _normalize_cv2_input_arr_(channels),
-                        map1, map2, interpolation=interpolation,
-                        borderMode=border_mode, borderValue=(cval, cval, cval))
+                        map1,
+                        map2,
+                        interpolation=interpolation,
+                        borderMode=border_mode,
+                        borderValue=(cval, cval, cval),
+                    )
                     if result_c.ndim == 2:
                         result_c = result_c[..., np.newaxis]
                     result.append(result_c)
@@ -4887,9 +5350,7 @@ class _ElasticTfShiftMapGenerator(object):
         fliplr_dy = [False, True]
         flipud_dy = [False, True]
         configs = list(
-            itertools.product(
-                switch, fliplr_dx, flipud_dx, fliplr_dy, flipud_dy
-            )
+            itertools.product(switch, fliplr_dx, flipud_dx, fliplr_dy, flipud_dy)
         )
 
         areas = [shape[0] * shape[1] for shape in shapes]
@@ -4898,7 +5359,7 @@ class _ElasticTfShiftMapGenerator(object):
             self._split_chunks(shapes, nb_chunks),
             self._split_chunks(areas, nb_chunks),
             self._split_chunks(alphas, nb_chunks),
-            self._split_chunks(sigmas, nb_chunks)
+            self._split_chunks(sigmas, nb_chunks),
         )
         # "_c" denotes a chunk here
         for shapes_c, areas_c, alphas_c, sigmas_c in gen:
@@ -4921,13 +5382,12 @@ class _ElasticTfShiftMapGenerator(object):
                 if area_i == 0:
                     yield (
                         np.zeros(shape_i, dtype=np.float32),
-                        np.zeros(shape_i, dtype=np.float32)
+                        np.zeros(shape_i, dtype=np.float32),
                     )
                 else:
                     dx_i = dx_i[0:area_i].reshape(shape_i)
                     dy_i = dy_i[0:area_i].reshape(shape_i)
-                    dx_i, dy_i = self._flip(dx_i, dy_i,
-                                            (dx_lr, dx_ud, dy_lr, dy_ud))
+                    dx_i, dy_i = self._flip(dx_i, dy_i, (dx_lr, dx_ud, dy_lr, dy_ud))
                     dx_i, dy_i = self._mul_alpha(dx_i, dy_i, alphas_c[i])
                     yield self._smoothen_(dx_i, dy_i, sigmas_c[i])
 
@@ -4960,7 +5420,7 @@ class _ElasticTfShiftMapGenerator(object):
             dx = blur_lib.blur_gaussian_(dx, sigma)
             dy = blur_lib.blur_gaussian_(dy, sigma)
         else:
-            ksize = int(round(2*sigma))
+            ksize = int(round(2 * sigma))
             dx = cv2.blur(dx, (ksize, ksize), dst=dx)
             dy = cv2.blur(dy, (ksize, ksize), dst=dy)
         return dx, dy
@@ -4969,7 +5429,7 @@ class _ElasticTfShiftMapGenerator(object):
     @classmethod
     def _split_chunks(cls, iterable, chunk_size):
         for i in sm.xrange(0, len(iterable), chunk_size):
-            yield iterable[i:i+chunk_size]
+            yield iterable[i : i + chunk_size]
 
 
 class Rot90(meta.Augmenter):
@@ -5074,18 +5534,29 @@ class Rot90(meta.Augmenter):
 
     """
 
-    def __init__(self, k=1, keep_size=True,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        k=1,
+        keep_size=True,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(Rot90, self).__init__(
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed, name=name, random_state=random_state, deterministic=deterministic
+        )
 
         if k == ia.ALL:
             k = [0, 1, 2, 3]
         self.k = iap.handle_discrete_param(
-            k, "k", value_range=None, tuple_to_uniform=True,
-            list_to_choice=True, allow_floats=False)
+            k,
+            "k",
+            value_range=None,
+            tuple_to_uniform=True,
+            list_to_choice=True,
+            allow_floats=False,
+        )
 
         self.keep_size = keep_size
 
@@ -5099,23 +5570,23 @@ class Rot90(meta.Augmenter):
 
         if batch.images is not None:
             batch.images = self._augment_arrays_by_samples(
-                batch.images, ks, self.keep_size, ia.imresize_single_image)
+                batch.images, ks, self.keep_size, ia.imresize_single_image
+            )
 
         if batch.heatmaps is not None:
             batch.heatmaps = self._augment_maps_by_samples(
-                batch.heatmaps, "arr_0to1", ks)
+                batch.heatmaps, "arr_0to1", ks
+            )
 
         if batch.segmentation_maps is not None:
             batch.segmentation_maps = self._augment_maps_by_samples(
-                batch.segmentation_maps, "arr", ks)
+                batch.segmentation_maps, "arr", ks
+            )
 
-        for augm_name in ["keypoints", "bounding_boxes", "polygons",
-                          "line_strings"]:
+        for augm_name in ["keypoints", "bounding_boxes", "polygons", "line_strings"]:
             augm_value = getattr(batch, augm_name)
             if augm_value is not None:
-                func = functools.partial(
-                    self._augment_keypoints_by_samples,
-                    ks=ks)
+                func = functools.partial(self._augment_keypoints_by_samples, ks=ks)
                 cbaois = self._apply_to_cbaois_as_keypoints(augm_value, func)
                 setattr(batch, augm_name, cbaois)
 
@@ -5132,9 +5603,8 @@ class Rot90(meta.Augmenter):
             arr_aug = np.rot90(arr, k_i, axes=(1, 0))
 
             do_resize = (
-                keep_size
-                and arr.shape != arr_aug.shape
-                and resize_func is not None)
+                keep_size and arr.shape != arr_aug.shape and resize_func is not None
+            )
             if do_resize:
                 arr_aug = resize_func(arr_aug, arr.shape[0:2])
             arrs_aug.append(arr_aug)
@@ -5148,8 +5618,7 @@ class Rot90(meta.Augmenter):
     def _augment_maps_by_samples(self, augmentables, arr_attr_name, ks):
         # pylint: disable=invalid-name
         arrs = [getattr(map_i, arr_attr_name) for map_i in augmentables]
-        arrs_aug = self._augment_arrays_by_samples(
-            arrs, ks, self.keep_size, None)
+        arrs_aug = self._augment_arrays_by_samples(arrs, ks, self.keep_size, None)
 
         maps_aug = []
         gen = zip(augmentables, arrs, arrs_aug, ks)
@@ -5160,8 +5629,7 @@ class Rot90(meta.Augmenter):
                 augmentable_i = augmentable_i.resize(shape_orig[0:2])
             elif k_i % 2 == 1:
                 h, w = augmentable_i.shape[0:2]
-                augmentable_i.shape = tuple(
-                    [w, h] + list(augmentable_i.shape[2:]))
+                augmentable_i.shape = tuple([w, h] + list(augmentable_i.shape[2:]))
             else:
                 # keep_size was False, but rotated by a multiple of 2,
                 # hence height and width do not change
@@ -5338,12 +5806,17 @@ class WithPolarWarping(meta.Augmenter):
     """
 
     # Added in 0.4.0.
-    def __init__(self, children,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        children,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(WithPolarWarping, self).__init__(
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed, name=name, random_state=random_state, deterministic=deterministic
+        )
         self.children = meta.handle_children_list(children, self.name, "then")
 
     # Added in 0.4.0.
@@ -5351,10 +5824,9 @@ class WithPolarWarping(meta.Augmenter):
         if batch.images is not None:
             iadt.gate_dtypes_strs(
                 batch.images,
-                allowed="bool uint8 uint16 int8 int16 int32 float16 float32 "
-                        "float64",
+                allowed="bool uint8 uint16 int8 int16 int32 float16 float32 " "float64",
                 disallowed="uint32 uint64 int64 float128",
-                augmenter=self
+                augmenter=self,
             )
 
         with batch.propagation_hooks_ctx(self, hooks, parents):
@@ -5367,9 +5839,9 @@ class WithPolarWarping(meta.Augmenter):
                 setattr(batch, column.attr_name, col_aug)
                 inv_data[column.name] = inv_data_col
 
-            batch = self.children.augment_batch_(batch,
-                                                 parents=parents + [self],
-                                                 hooks=hooks)
+            batch = self.children.augment_batch_(
+                batch, parents=parents + [self], hooks=hooks
+            )
             for column in batch.columns:
                 func = getattr(self, "_invert_warp_%s_" % (column.name,))
                 col_unaug = func(column.value, inv_data[column.name])
@@ -5404,8 +5876,8 @@ class WithPolarWarping(meta.Augmenter):
             for psoi, bbs_as_psoi in zip(batch.polygons, psois):
                 assert psoi.shape == bbs_as_psoi.shape, (
                     "Expected polygons and bounding boxes to have the same "
-                    ".shape value, got %s and %s." % (psoi.shape,
-                                                      bbs_as_psoi.shape))
+                    ".shape value, got %s and %s." % (psoi.shape, bbs_as_psoi.shape)
+                )
 
                 psoi.polygons.extend(bbs_as_psoi.polygons)
 
@@ -5433,8 +5905,7 @@ class WithPolarWarping(meta.Augmenter):
                     polygon.label = None
                     is_bb = True
                 elif polygon.label.endswith(";$$IMGAUG_BB_AS_POLYGON"):
-                    polygon.label = \
-                        polygon.label[:-len(";$$IMGAUG_BB_AS_POLYGON")]
+                    polygon.label = polygon.label[: -len(";$$IMGAUG_BB_AS_POLYGON")]
                     is_bb = True
 
                 if is_bb:
@@ -5471,8 +5942,7 @@ class WithPolarWarping(meta.Augmenter):
     # Added in 0.4.0.
     @classmethod
     def _invert_warp_heatmaps_(cls, heatmaps_warped, inv_data):
-        return cls._invert_warp_maps_(heatmaps_warped, "arr_0to1", False,
-                                      inv_data)
+        return cls._invert_warp_maps_(heatmaps_warped, "arr_0to1", False, inv_data)
 
     # Added in 0.4.0.
     @classmethod
@@ -5481,10 +5951,8 @@ class WithPolarWarping(meta.Augmenter):
 
     # Added in 0.4.0.
     @classmethod
-    def _invert_warp_segmentation_maps_(cls, segmentation_maps_warped,
-                                        inv_data):
-        return cls._invert_warp_maps_(segmentation_maps_warped, "arr", True,
-                                      inv_data)
+    def _invert_warp_segmentation_maps_(cls, segmentation_maps_warped, inv_data):
+        return cls._invert_warp_maps_(segmentation_maps_warped, "arr", True, inv_data)
 
     # Added in 0.4.0.
     @classmethod
@@ -5499,15 +5967,17 @@ class WithPolarWarping(meta.Augmenter):
     # Added in 0.4.0.
     @classmethod
     def _warp_bounding_boxes_(cls, bbsois):  # pylint: disable=useless-return
-        assert bbsois is None, ("Expected BBs to have been converted "
-                                "to polygons.")
+        assert bbsois is None, "Expected BBs to have been converted " "to polygons."
         return None
 
     # Added in 0.4.0.
     @classmethod
-    def _invert_warp_bounding_boxes_(cls, bbsois_warped, _image_shapes_orig):  # pylint: disable=useless-return
-        assert bbsois_warped is None, ("Expected BBs to have been converted "
-                                       "to polygons.")
+    def _invert_warp_bounding_boxes_(
+        cls, bbsois_warped, _image_shapes_orig
+    ):  # pylint: disable=useless-return
+        assert bbsois_warped is None, (
+            "Expected BBs to have been converted " "to polygons."
+        )
         return None
 
     # Added in 0.4.0.
@@ -5560,27 +6030,40 @@ class WithPolarWarping(meta.Augmenter):
             assert height <= 32767 and width <= 32767, (
                 "WithPolarWarping._warp_arrays() can currently only handle "
                 "arrays with axis sizes below 32767, but got shape %s. This "
-                "is an OpenCV limitation." % (arr.shape,))
+                "is an OpenCV limitation." % (arr.shape,)
+            )
 
             dest_size = (0, 0)
-            center_xy = (width/2, height/2)
-            max_radius = np.sqrt((height/2.0)**2.0 + (width/2.0)**2.0)
+            center_xy = (width / 2, height / 2)
+            max_radius = np.sqrt((height / 2.0) ** 2.0 + (width / 2.0) ** 2.0)
 
             if arr.ndim == 3 and arr.shape[-1] > 512:
                 arr_warped = np.stack(
-                    [cv2.warpPolar(_normalize_cv2_input_arr_(arr[..., c_idx]),
-                                   dest_size, center_xy, max_radius, flags)
-                     for c_idx in np.arange(arr.shape[-1])],
-                    axis=-1)
+                    [
+                        cv2.warpPolar(
+                            _normalize_cv2_input_arr_(arr[..., c_idx]),
+                            dest_size,
+                            center_xy,
+                            max_radius,
+                            flags,
+                        )
+                        for c_idx in np.arange(arr.shape[-1])
+                    ],
+                    axis=-1,
+                )
             else:
-                arr_warped = cv2.warpPolar(_normalize_cv2_input_arr_(arr),
-                                           dest_size, center_xy, max_radius,
-                                           flags)
+                arr_warped = cv2.warpPolar(
+                    _normalize_cv2_input_arr_(arr),
+                    dest_size,
+                    center_xy,
+                    max_radius,
+                    flags,
+                )
                 if arr_warped.ndim == 2 and arr.ndim == 3:
                     arr_warped = arr_warped[:, :, np.newaxis]
 
             if input_dtype.kind == "b":
-                arr_warped = (arr_warped > 128)
+                arr_warped = arr_warped > 128
             elif input_dtype == iadt._FLOAT16_DTYPE:
                 arr_warped = arr_warped.astype(np.float16)
 
@@ -5590,14 +6073,12 @@ class WithPolarWarping(meta.Augmenter):
 
     # Added in 0.4.0.
     @classmethod
-    def _invert_warp_arrays(cls, arrays_warped, interpolation_nearest,
-                            inv_data):
+    def _invert_warp_arrays(cls, arrays_warped, interpolation_nearest, inv_data):
         shapes_orig = inv_data
         if arrays_warped is None:
             return None
 
-        flags = (cv2.WARP_FILL_OUTLIERS + cv2.WARP_POLAR_LINEAR
-                 + cv2.WARP_INVERSE_MAP)
+        flags = cv2.WARP_FILL_OUTLIERS + cv2.WARP_POLAR_LINEAR + cv2.WARP_INVERSE_MAP
         if interpolation_nearest:
             flags += cv2.INTER_NEAREST
 
@@ -5618,33 +6099,43 @@ class WithPolarWarping(meta.Augmenter):
             height, width = shape_orig[0:2]
 
             # remap limitation, see docs for warpPolar()
-            assert (arr_warped.shape[0] <= 32767
-                    and arr_warped.shape[1] <= 32767), (
-                        "WithPolarWarping._warp_arrays() can currently only "
-                        "handle arrays with axis sizes below 32767, but got "
-                        "shape %s. This is an OpenCV limitation." % (
-                            arr_warped.shape,))
+            assert arr_warped.shape[0] <= 32767 and arr_warped.shape[1] <= 32767, (
+                "WithPolarWarping._warp_arrays() can currently only "
+                "handle arrays with axis sizes below 32767, but got "
+                "shape %s. This is an OpenCV limitation." % (arr_warped.shape,)
+            )
 
             dest_size = (width, height)
-            center_xy = (width/2, height/2)
-            max_radius = np.sqrt((height/2.0)**2.0 + (width/2.0)**2.0)
+            center_xy = (width / 2, height / 2)
+            max_radius = np.sqrt((height / 2.0) ** 2.0 + (width / 2.0) ** 2.0)
 
             if arr_warped.ndim == 3 and arr_warped.shape[-1] > 512:
                 arr_inv = np.stack(
-                    [cv2.warpPolar(
-                        _normalize_cv2_input_arr_(arr_warped[..., c_idx]),
-                        dest_size, center_xy, max_radius, flags)
-                     for c_idx in np.arange(arr_warped.shape[-1])],
-                    axis=-1)
+                    [
+                        cv2.warpPolar(
+                            _normalize_cv2_input_arr_(arr_warped[..., c_idx]),
+                            dest_size,
+                            center_xy,
+                            max_radius,
+                            flags,
+                        )
+                        for c_idx in np.arange(arr_warped.shape[-1])
+                    ],
+                    axis=-1,
+                )
             else:
                 arr_inv = cv2.warpPolar(
                     _normalize_cv2_input_arr_(arr_warped),
-                    dest_size, center_xy, max_radius, flags)
+                    dest_size,
+                    center_xy,
+                    max_radius,
+                    flags,
+                )
                 if arr_inv.ndim == 2 and arr_warped.ndim == 3:
                     arr_inv = arr_inv[:, :, np.newaxis]
 
             if input_dtype.kind == "b":
-                arr_inv = (arr_inv > 128)
+                arr_inv = arr_inv > 128
             elif input_dtype == iadt._FLOAT16_DTYPE:
                 arr_inv = arr_inv.astype(np.float16)
 
@@ -5670,7 +6161,8 @@ class WithPolarWarping(meta.Augmenter):
                 shapes_imgs_orig.append(map_i.shape)
 
         arrays_warped, warparr_inv_data = cls._warp_arrays(
-            arrays, interpolation_nearest)
+            arrays, interpolation_nearest
+        )
         shapes_imgs_warped = cls._warp_shape_tuples(shapes_imgs_orig)
 
         for i, map_i in enumerate(maps):
@@ -5682,8 +6174,9 @@ class WithPolarWarping(meta.Augmenter):
 
     # Added in 0.4.0.
     @classmethod
-    def _invert_warp_maps_(cls, maps_warped, arr_attr_name,
-                           interpolation_nearest, invert_data):
+    def _invert_warp_maps_(
+        cls, maps_warped, arr_attr_name, interpolation_nearest, invert_data
+    ):
         if maps_warped is None:
             return None
 
@@ -5696,9 +6189,9 @@ class WithPolarWarping(meta.Augmenter):
             else:
                 arrays_warped.append(getattr(map_warped, arr_attr_name))
 
-        arrays_inv = cls._invert_warp_arrays(arrays_warped,
-                                             interpolation_nearest,
-                                             warparr_inv_data)
+        arrays_inv = cls._invert_warp_arrays(
+            arrays_warped, interpolation_nearest, warparr_inv_data
+        )
 
         for i, map_i in enumerate(maps_warped):
             if not skipped[i]:
@@ -5718,27 +6211,28 @@ class WithPolarWarping(meta.Augmenter):
         flags = cv2.WARP_POLAR_LINEAR
 
         coords_warped = []
-        for coords_i, shape, shape_warped in zip(coords, image_shapes,
-                                                 image_shapes_warped):
+        for coords_i, shape, shape_warped in zip(
+            coords, image_shapes, image_shapes_warped
+        ):
             if 0 in shape:
                 coords_warped.append(coords_i)
                 continue
 
             height, width = shape[0:2]
             dest_size = (shape_warped[1], shape_warped[0])
-            center_xy = (width/2, height/2)
-            max_radius = np.sqrt((height/2.0)**2.0 + (width/2.0)**2.0)
+            center_xy = (width / 2, height / 2)
+            max_radius = np.sqrt((height / 2.0) ** 2.0 + (width / 2.0) ** 2.0)
 
             coords_i_warped = cls.warpPolarCoords(
-                coords_i, dest_size, center_xy, max_radius, flags)
+                coords_i, dest_size, center_xy, max_radius, flags
+            )
 
             coords_warped.append(coords_i_warped)
         return coords_warped, image_shapes
 
     # Added in 0.4.0.
     @classmethod
-    def _invert_warp_coords(cls, coords_warped, image_shapes_after_aug,
-                            inv_data):
+    def _invert_warp_coords(cls, coords_warped, image_shapes_after_aug, inv_data):
         image_shapes_orig = inv_data
         if coords_warped is None:
             return None
@@ -5754,12 +6248,12 @@ class WithPolarWarping(meta.Augmenter):
             shape_warped = image_shapes_after_aug[i]
             height, width = shape_orig[0:2]
             dest_size = (shape_warped[1], shape_warped[0])
-            center_xy = (width/2, height/2)
-            max_radius = np.sqrt((height/2.0)**2.0 + (width/2.0)**2.0)
+            center_xy = (width / 2, height / 2)
+            max_radius = np.sqrt((height / 2.0) ** 2.0 + (width / 2.0) ** 2.0)
 
-            coords_i_inv = cls.warpPolarCoords(coords_i_warped,
-                                               dest_size, center_xy,
-                                               max_radius, flags)
+            coords_i_inv = cls.warpPolarCoords(
+                coords_i_warped, dest_size, center_xy, max_radius, flags
+            )
 
             coords_inv.append(coords_i_inv)
         return coords_inv
@@ -5775,8 +6269,7 @@ class WithPolarWarping(meta.Augmenter):
         image_shapes_warped = cls._warp_shape_tuples(image_shapes)
 
         coords_warped, inv_data = cls._warp_coords(coords, image_shapes)
-        for i, (cbaoi, coords_i_warped) in enumerate(zip(cbaois,
-                                                         coords_warped)):
+        for i, (cbaoi, coords_i_warped) in enumerate(zip(cbaois, coords_warped)):
             cbaoi = cbaoi.fill_from_xy_array_(coords_i_warped)
             cbaoi.shape = image_shapes_warped[i]
             cbaois[i] = cbaoi
@@ -5792,12 +6285,12 @@ class WithPolarWarping(meta.Augmenter):
         coords = [cbaoi.to_xy_array() for cbaoi in cbaois_warped]
         image_shapes_after_aug = [cbaoi.shape for cbaoi in cbaois_warped]
 
-        coords_warped = cls._invert_warp_coords(coords, image_shapes_after_aug,
-                                                image_shapes_orig)
+        coords_warped = cls._invert_warp_coords(
+            coords, image_shapes_after_aug, image_shapes_orig
+        )
 
         cbaois = cbaois_warped
-        for i, (cbaoi, coords_i_warped) in enumerate(zip(cbaois,
-                                                         coords_warped)):
+        for i, (cbaoi, coords_i_warped) in enumerate(zip(cbaois, coords_warped)):
             cbaoi = cbaoi.fill_from_xy_array_(coords_i_warped)
             cbaoi.shape = image_shapes_orig[i]
             cbaois[i] = cbaoi
@@ -5816,7 +6309,7 @@ class WithPolarWarping(meta.Augmenter):
                 continue
 
             height, width = shape[0:2]
-            max_radius = np.sqrt((height/2.0)**2.0 + (width/2.0)**2.0)
+            max_radius = np.sqrt((height / 2.0) ** 2.0 + (width / 2.0) ** 2.0)
             # np.round() is here a replacement for cvRound(). It is not fully
             # clear whether the two functions behave exactly identical in all
             # situations.
@@ -5852,7 +6345,7 @@ class WithPolarWarping(meta.Augmenter):
         if np.logical_and(flags, cv2.WARP_INVERSE_MAP):
             rho = src[:, 0]
             phi = src[:, 1]
-            Kangle = dsize_height / (2*np.pi)
+            Kangle = dsize_height / (2 * np.pi)
             angleRad = phi / Kangle
             if np.bitwise_and(flags, cv2.WARP_POLAR_LOG):
                 Klog = dsize_width / np.log(maxRadius)
@@ -5871,7 +6364,7 @@ class WithPolarWarping(meta.Augmenter):
             x = src[:, 0]
             y = src[:, 1]
 
-            Kangle = dsize_height / (2*np.pi)
+            Kangle = dsize_height / (2 * np.pi)
             Klin = dsize_width / maxRadius
 
             I_x, I_y = (x - center_x, y - center_y)
@@ -5902,12 +6395,13 @@ class WithPolarWarping(meta.Augmenter):
 
     # Added in 0.4.0.
     def __str__(self):
-        pattern = (
-            "%s("
-            "name=%s, children=%s, deterministic=%s"
-            ")")
-        return pattern % (self.__class__.__name__, self.name,
-                          self.children, self.deterministic)
+        pattern = "%s(" "name=%s, children=%s, deterministic=%s" ")"
+        return pattern % (
+            self.__class__.__name__,
+            self.name,
+            self.children,
+            self.deterministic,
+        )
 
 
 class Jigsaw(meta.Augmenter):
@@ -6018,23 +6512,45 @@ class Jigsaw(meta.Augmenter):
     """
 
     # Added in 0.4.0.
-    def __init__(self, nb_rows=(3, 10), nb_cols=(3, 10), max_steps=1,
-                 allow_pad=True,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        nb_rows=(3, 10),
+        nb_cols=(3, 10),
+        max_steps=1,
+        allow_pad=True,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(Jigsaw, self).__init__(
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed, name=name, random_state=random_state, deterministic=deterministic
+        )
 
         self.nb_rows = iap.handle_discrete_param(
-            nb_rows, "nb_rows", value_range=(1, None), tuple_to_uniform=True,
-            list_to_choice=True, allow_floats=False)
+            nb_rows,
+            "nb_rows",
+            value_range=(1, None),
+            tuple_to_uniform=True,
+            list_to_choice=True,
+            allow_floats=False,
+        )
         self.nb_cols = iap.handle_discrete_param(
-            nb_cols, "nb_cols", value_range=(1, None), tuple_to_uniform=True,
-            list_to_choice=True, allow_floats=False)
+            nb_cols,
+            "nb_cols",
+            value_range=(1, None),
+            tuple_to_uniform=True,
+            list_to_choice=True,
+            allow_floats=False,
+        )
         self.max_steps = iap.handle_discrete_param(
-            max_steps, "max_steps", value_range=(0, None),
-            tuple_to_uniform=True, list_to_choice=True, allow_floats=False)
+            max_steps,
+            "max_steps",
+            value_range=(0, None),
+            tuple_to_uniform=True,
+            list_to_choice=True,
+            allow_floats=False,
+        )
         self.allow_pad = allow_pad
 
     # Added in 0.4.0.
@@ -6063,11 +6579,10 @@ class Jigsaw(meta.Augmenter):
                 padder = size_lib.CenterPadToMultiplesOf(
                     width_multiple=samples.nb_cols[i],
                     height_multiple=samples.nb_rows[i],
-                    seed=random_state
+                    seed=random_state,
                 )
                 row = batch.subselect_rows_by_indices([i])
-                row = padder.augment_batch_(row, parents=parents + [self],
-                                            hooks=hooks)
+                row = padder.augment_batch_(row, parents=parents + [self], hooks=hooks)
                 batch = batch.invert_subselect_rows_by_indices_([i], row)
 
         if batch.images is not None:
@@ -6076,8 +6591,9 @@ class Jigsaw(meta.Augmenter):
 
         if batch.heatmaps is not None:
             for i, heatmap in enumerate(batch.heatmaps):
-                heatmap.arr_0to1 = apply_jigsaw(heatmap.arr_0to1,
-                                                samples.destinations[i])
+                heatmap.arr_0to1 = apply_jigsaw(
+                    heatmap.arr_0to1, samples.destinations[i]
+                )
 
         if batch.segmentation_maps is not None:
             for i, segmap in enumerate(batch.segmentation_maps):
@@ -6086,21 +6602,24 @@ class Jigsaw(meta.Augmenter):
         if batch.keypoints is not None:
             for i, kpsoi in enumerate(batch.keypoints):
                 xy = kpsoi.to_xy_array()
-                xy[...] = apply_jigsaw_to_coords(xy,
-                                                 samples.destinations[i],
-                                                 image_shape=kpsoi.shape)
+                xy[...] = apply_jigsaw_to_coords(
+                    xy, samples.destinations[i], image_shape=kpsoi.shape
+                )
                 kpsoi.fill_from_xy_array_(xy)
 
-        has_other_cbaoi = any([getattr(batch, attr_name) is not None
-                               for attr_name
-                               in ["bounding_boxes", "polygons",
-                                   "line_strings"]])
+        has_other_cbaoi = any(
+            [
+                getattr(batch, attr_name) is not None
+                for attr_name in ["bounding_boxes", "polygons", "line_strings"]
+            ]
+        )
         if has_other_cbaoi:
             raise NotImplementedError(
                 "Jigsaw currently only supports augmentation of images, "
                 "heatmaps, segmentation maps and keypoints. "
                 "Explicitly not supported are: bounding boxes, polygons "
-                "and line strings.")
+                "and line strings."
+            )
 
         # We don't crop back to the original size, partly because it is
         # rather cumbersome to implement, partly because the padded
@@ -6113,18 +6632,15 @@ class Jigsaw(meta.Augmenter):
     # Added in 0.4.0.
     def _draw_samples(self, batch, random_state):
         nb_images = batch.nb_rows
-        nb_rows = self.nb_rows.draw_samples((nb_images,),
-                                            random_state=random_state)
-        nb_cols = self.nb_cols.draw_samples((nb_images,),
-                                            random_state=random_state)
-        max_steps = self.max_steps.draw_samples((nb_images,),
-                                                random_state=random_state)
+        nb_rows = self.nb_rows.draw_samples((nb_images,), random_state=random_state)
+        nb_cols = self.nb_cols.draw_samples((nb_images,), random_state=random_state)
+        max_steps = self.max_steps.draw_samples((nb_images,), random_state=random_state)
         destinations = []
         for i in np.arange(nb_images):
             destinations.append(
                 generate_jigsaw_destinations(
-                    nb_rows[i], nb_cols[i], max_steps[i],
-                    seed=random_state)
+                    nb_rows[i], nb_cols[i], max_steps[i], seed=random_state
+                )
             )
 
         samples = _JigsawSamples(nb_rows, nb_cols, max_steps, destinations)
@@ -6139,16 +6655,17 @@ class Jigsaw(meta.Augmenter):
 
         image_shapes = batch.get_rowwise_shapes()
         batch.heatmaps, heatmaps_shapes_orig = cls._resize_maps_single_list(
-            batch.heatmaps, "arr_0to1", image_shapes)
+            batch.heatmaps, "arr_0to1", image_shapes
+        )
         batch.segmentation_maps, sm_shapes_orig = cls._resize_maps_single_list(
-            batch.segmentation_maps, "arr", image_shapes)
+            batch.segmentation_maps, "arr", image_shapes
+        )
 
         return batch, (heatmaps_shapes_orig, sm_shapes_orig)
 
     # Added in 0.4.0.
     @classmethod
-    def _resize_maps_single_list(cls, augmentables, arr_attr_name,
-                                 image_shapes):
+    def _resize_maps_single_list(cls, augmentables, arr_attr_name, image_shapes):
         if augmentables is None:
             return None, None
 
@@ -6165,9 +6682,11 @@ class Jigsaw(meta.Augmenter):
     @classmethod
     def _invert_resize_maps(cls, batch, shapes_orig):
         batch.heatmaps = cls._invert_resize_maps_single_list(
-            batch.heatmaps, shapes_orig[0])
+            batch.heatmaps, shapes_orig[0]
+        )
         batch.segmentation_maps = cls._invert_resize_maps_single_list(
-            batch.segmentation_maps, shapes_orig[1])
+            batch.segmentation_maps, shapes_orig[1]
+        )
 
         return batch
 

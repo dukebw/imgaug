@@ -21,7 +21,7 @@ def main():
     ]
 
     image = ia.data.quokka(size=(256, 256), extract="square")
-    images = np.uint8([image] * (5*5))
+    images = np.uint8([image] * (5 * 5))
 
     for i, (name, aug) in enumerate(augs):
         print(i, name)

@@ -7,8 +7,10 @@ from imgaug import augmenters as iaa
 
 
 def main():
-    image = imageio.imread("https://upload.wikimedia.org/wikipedia/commons/8/89/Kukle%2CCzech_Republic..jpg",
-                           format="jpg")
+    image = imageio.imread(
+        "https://upload.wikimedia.org/wikipedia/commons/8/89/Kukle%2CCzech_Republic..jpg",
+        format="jpg",
+    )
     augs = [
         ("iaa.FastSnowyLandscape(64, 1.5)", iaa.FastSnowyLandscape(64, 1.5)),
         ("iaa.FastSnowyLandscape(128, 1.5)", iaa.FastSnowyLandscape(128, 1.5)),
@@ -19,7 +21,7 @@ def main():
         ("iaa.FastSnowyLandscape(64, 3.5)", iaa.FastSnowyLandscape(64, 3.5)),
         ("iaa.FastSnowyLandscape(128, 3.5)", iaa.FastSnowyLandscape(128, 3.5)),
         ("iaa.FastSnowyLandscape(200, 3.5)", iaa.FastSnowyLandscape(200, 3.5)),
-        ("iaa.FastSnowyLandscape()", iaa.FastSnowyLandscape())
+        ("iaa.FastSnowyLandscape()", iaa.FastSnowyLandscape()),
     ]
 
     for descr, aug in augs:

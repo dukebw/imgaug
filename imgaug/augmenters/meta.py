@@ -34,8 +34,7 @@ import six
 import six.moves as sm
 
 import imgaug as ia
-from imgaug.augmentables.batches import (Batch, UnnormalizedBatch,
-                                         _BatchInAugmentation)
+from imgaug.augmentables.batches import Batch, UnnormalizedBatch, _BatchInAugmentation
 from .. import parameters as iap
 from .. import random as iarandom
 from . import base as iabase
@@ -58,8 +57,7 @@ def clip_augmented_images_(images, min_value, max_value):
     """Clip images in-place."""
     if ia.is_np_array(images):
         return np.clip(images, min_value, max_value, out=images)
-    return [np.clip(image, min_value, max_value, out=image)
-            for image in images]
+    return [np.clip(image, min_value, max_value, out=image) for image in images]
 
 
 @ia.deprecated("imgaug.dtypes.clip_")
@@ -81,26 +79,33 @@ def handle_children_list(lst, augmenter_name, lst_name, default="sequential"):
     if isinstance(lst, Augmenter):
         if ia.is_iterable(lst):
             # TODO why was this assert added here? seems to make no sense
-            only_augmenters = all([isinstance(child, Augmenter)
-                                   for child in lst])
-            assert only_augmenters, (
-                "Expected all children to be augmenters, got types %s." % (
-                    ", ".join([str(type(v)) for v in lst])))
+            only_augmenters = all([isinstance(child, Augmenter) for child in lst])
+            assert (
+                only_augmenters
+            ), "Expected all children to be augmenters, got types %s." % (
+                ", ".join([str(type(v)) for v in lst])
+            )
             return lst
         return Sequential(lst, name="%s-%s" % (augmenter_name, lst_name))
     if ia.is_iterable(lst):
         if len(lst) == 0 and default != "sequential":
             return default
-        only_augmenters = all([isinstance(child, Augmenter)
-                               for child in lst])
-        assert only_augmenters, (
-            "Expected all children to be augmenters, got types %s." % (
-                ", ".join([str(type(v)) for v in lst])))
+        only_augmenters = all([isinstance(child, Augmenter) for child in lst])
+        assert (
+            only_augmenters
+        ), "Expected all children to be augmenters, got types %s." % (
+            ", ".join([str(type(v)) for v in lst])
+        )
         return Sequential(lst, name="%s-%s" % (augmenter_name, lst_name))
     raise Exception(
         "Expected None, Augmenter or list/tuple as children list %s "
-        "for augmenter with name %s, got %s." % (
-            lst_name, augmenter_name, type(lst),))
+        "for augmenter with name %s, got %s."
+        % (
+            lst_name,
+            augmenter_name,
+            type(lst),
+        )
+    )
 
 
 def reduce_to_nonempty(objs):
@@ -108,9 +113,9 @@ def reduce_to_nonempty(objs):
     objs_reduced = []
     ids = []
     for i, obj in enumerate(objs):
-        assert hasattr(obj, "empty"), (
-            "Expected object with property 'empty'. Got type %s." % (
-                type(obj),))
+        assert hasattr(
+            obj, "empty"
+        ), "Expected object with property 'empty'. Got type %s." % (type(obj),)
         if not obj.empty:
             objs_reduced.append(obj)
             ids.append(i)
@@ -130,12 +135,13 @@ def estimate_max_number_of_channels(images):
     if ia.is_np_array(images):
         assert images.ndim == 4, (
             "Expected 'images' to be 4-dimensional if provided as array. "
-            "Got %d dimensions." % (images.ndim,))
+            "Got %d dimensions." % (images.ndim,)
+        )
         return images.shape[3]
 
-    assert ia.is_iterable(images), (
-        "Expected 'images' to be an array or iterable, got %s." % (
-            type(images),))
+    assert ia.is_iterable(
+        images
+    ), "Expected 'images' to be an array or iterable, got %s." % (type(images),)
     if len(images) == 0:
         return None
     channels = [el.shape[2] if len(el.shape) >= 3 else 1 for el in images]
@@ -155,9 +161,7 @@ def _add_channel_axis(arrs):
             return arrs[..., np.newaxis]  # (N,H,W) -> (N,H,W,1)
         return arrs
     return [
-        arr[..., np.newaxis]  # (H,W) -> (H,W,1)
-        if arr.ndim == 2
-        else arr
+        arr[..., np.newaxis] if arr.ndim == 2 else arr  # (H,W) -> (H,W,1)
         for arr in arrs
     ]
 
@@ -171,11 +175,8 @@ def _remove_added_channel_axis(arrs_added, arrs_orig):
             return [arr[..., 0] for arr in arrs_added]
         return arrs_added
     return [
-        arr_added[..., 0]
-        if arr_orig.ndim == 2
-        else arr_added   # (H,W,1) -> (H,W)
-        for arr_added, arr_orig
-        in zip(arrs_added, arrs_orig)
+        arr_added[..., 0] if arr_orig.ndim == 2 else arr_added  # (H,W,1) -> (H,W)
+        for arr_added, arr_orig in zip(arrs_added, arrs_orig)
     ]
 
 
@@ -204,8 +205,9 @@ class _maybe_deterministic_ctx(object):  # pylint: disable=invalid-name
             self.random_state = augmenter.random_state
             self.deterministic = augmenter.deterministic
         else:
-            assert deterministic is not None, (
-                "Expected boolean as `deterministic`, got None.")
+            assert (
+                deterministic is not None
+            ), "Expected boolean as `deterministic`, got None."
             self.random_state = random_state
             self.deterministic = deterministic
         self.old_state = None
@@ -281,15 +283,19 @@ class Augmenter(object):
 
     """
 
-    def __init__(self, seed=None, name=None,
-                 random_state="deprecated",
-                 deterministic="deprecated"):
+    def __init__(
+        self,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         """Create a new Augmenter instance."""
         super(Augmenter, self).__init__()
 
-        assert name is None or ia.is_string(name), (
-            "Expected name to be None or string-like, got %s." % (
-                type(name),))
+        assert name is None or ia.is_string(
+            name
+        ), "Expected name to be None or string-like, got %s." % (type(name),)
         if name is None:
             self.name = "Unnamed%s" % (self.__class__.__name__,)
         else:
@@ -300,10 +306,13 @@ class Augmenter(object):
                 "The parameter `deterministic` is deprecated "
                 "in `imgaug.augmenters.meta.Augmenter`. Use "
                 "`.to_deterministic()` to switch into deterministic mode.",
-                stacklevel=4)
-            assert ia.is_single_bool(deterministic), (
-                "Expected deterministic to be a boolean, got %s." % (
-                    type(deterministic),))
+                stacklevel=4,
+            )
+            assert ia.is_single_bool(
+                deterministic
+            ), "Expected deterministic to be a boolean, got %s." % (
+                type(deterministic),
+            )
         else:
             deterministic = False
 
@@ -371,17 +380,18 @@ class Augmenter(object):
             batches = [batches]
 
         assert (
-            (ia.is_iterable(batches)
-             and not ia.is_np_array(batches)
-             and not ia.is_string(batches))
-            or ia.is_generator(batches)), (
-                "Expected either (a) an iterable that is not an array or a "
-                "string or (b) a generator. Got: %s" % (type(batches),))
+            ia.is_iterable(batches)
+            and not ia.is_np_array(batches)
+            and not ia.is_string(batches)
+        ) or ia.is_generator(batches), (
+            "Expected either (a) an iterable that is not an array or a "
+            "string or (b) a generator. Got: %s" % (type(batches),)
+        )
 
         if background:
             assert hooks is None, (
-                "Hooks can not be used when background augmentation is "
-                "activated.")
+                "Hooks can not be used when background augmentation is " "activated."
+            )
 
         def _normalize_batch(idx, batch):
             if isinstance(batch, Batch):
@@ -397,7 +407,8 @@ class Augmenter(object):
             elif ia.is_np_array(batch):
                 assert batch.ndim in (3, 4), (
                     "Expected numpy array to have shape (N, H, W) or "
-                    "(N, H, W, C), got %s." % (batch.shape,))
+                    "(N, H, W, C), got %s." % (batch.shape,)
+                )
                 batch_normalized = Batch(images=batch, data=(idx,))
                 batch_orig_dt = "numpy_array"
             elif isinstance(batch, list):
@@ -411,8 +422,7 @@ class Augmenter(object):
                     batch_normalized = Batch(heatmaps=batch, data=(idx,))
                     batch_orig_dt = "list_of_imgaug.HeatmapsOnImage"
                 elif isinstance(batch[0], ia.SegmentationMapsOnImage):
-                    batch_normalized = Batch(segmentation_maps=batch,
-                                             data=(idx,))
+                    batch_normalized = Batch(segmentation_maps=batch, data=(idx,))
                     batch_orig_dt = "list_of_imgaug.SegmentationMapsOnImage"
                 elif isinstance(batch[0], ia.KeypointsOnImage):
                     batch_normalized = Batch(keypoints=batch, data=(idx,))
@@ -431,7 +441,8 @@ class Augmenter(object):
                         "imgaug.KeypointsOnImage or "
                         "imgaug.BoundingBoxesOnImage, "
                         "or imgaug.PolygonsOnImage, "
-                        "got %s." % (type(batch[0]),))
+                        "got %s." % (type(batch[0]),)
+                    )
             else:
                 raise Exception(
                     "Unknown datatype of batch. Expected imgaug.Batch or "
@@ -441,17 +452,17 @@ class Augmenter(object):
                     "imgaug.SegmentationMapsOnImage "
                     "or imgaug.KeypointsOnImage or "
                     "imgaug.BoundingBoxesOnImage or "
-                    "imgaug.PolygonsOnImage). Got %s." % (type(batch),))
+                    "imgaug.PolygonsOnImage). Got %s." % (type(batch),)
+                )
 
-            if batch_orig_dt not in ["imgaug.Batch",
-                                     "imgaug.UnnormalizedBatch"]:
+            if batch_orig_dt not in ["imgaug.Batch", "imgaug.UnnormalizedBatch"]:
                 ia.warn_deprecated(
                     "Received an input in augment_batches() that was not an "
                     "instance of imgaug.augmentables.batches.Batch "
                     "or imgaug.augmentables.batches.UnnormalizedBatch, but "
                     "instead %s. This is deprecated. Use augment() for such "
-                    "data or wrap it in a Batch instance." % (
-                        batch_orig_dt,))
+                    "data or wrap it in a Batch instance." % (batch_orig_dt,)
+                )
             return batch_normalized, batch_orig_dt
 
         # unnormalization of non-Batch/UnnormalizedBatch is for legacy support
@@ -464,8 +475,9 @@ class Augmenter(object):
                 # change (i, .data) back to just .data
                 batch_aug.data = batch_aug.data[1]
 
-                batch_unnormalized = \
-                    batch_orig.fill_from_augmented_normalized_batch(batch_aug)
+                batch_unnormalized = batch_orig.fill_from_augmented_normalized_batch(
+                    batch_aug
+                )
             elif batch_orig_dt == "numpy_array":
                 batch_unnormalized = batch_aug.images_aug
             elif batch_orig_dt == "empty_list":
@@ -481,8 +493,9 @@ class Augmenter(object):
             elif batch_orig_dt == "list_of_imgaug.BoundingBoxesOnImage":
                 batch_unnormalized = batch_aug.bounding_boxes_aug
             else:  # only option left
-                assert batch_orig_dt == "list_of_imgaug.PolygonsOnImage", (
-                    "Got an unexpected type %s." % (type(batch_orig_dt),))
+                assert (
+                    batch_orig_dt == "list_of_imgaug.PolygonsOnImage"
+                ), "Got an unexpected type %s." % (type(batch_orig_dt),)
                 batch_unnormalized = batch_aug.polygons_aug
             return batch_unnormalized
 
@@ -491,10 +504,10 @@ class Augmenter(object):
 
             for idx, batch in enumerate(batches):
                 batch_normalized, batch_orig_dt = _normalize_batch(idx, batch)
-                batch_normalized = self.augment_batch_(
-                    batch_normalized, hooks=hooks)
+                batch_normalized = self.augment_batch_(batch_normalized, hooks=hooks)
                 batch_unnormalized = _unnormalize_batch(
-                    batch_normalized, batch, batch_orig_dt)
+                    batch_normalized, batch, batch_orig_dt
+                )
 
                 yield batch_unnormalized
         else:
@@ -505,8 +518,7 @@ class Augmenter(object):
 
             def load_batches():
                 for idx, batch in enumerate(batches):
-                    batch_normalized, batch_orig_dt = _normalize_batch(
-                        idx, batch)
+                    batch_normalized, batch_orig_dt = _normalize_batch(idx, batch)
                     id_to_batch_orig[idx] = (batch, batch_orig_dt)
                     yield batch_normalized
 
@@ -516,28 +528,32 @@ class Augmenter(object):
                 output_buffer_size = pool.pool._processes * 10
 
                 for batch_aug in pool.imap_batches(
-                        load_batches(), output_buffer_size=output_buffer_size):
+                    load_batches(), output_buffer_size=output_buffer_size
+                ):
                     idx = batch_aug.data[0]
-                    assert idx in id_to_batch_orig, (
-                        "Got idx %d from Pool, which is not known." % (
-                            idx))
+                    assert (
+                        idx in id_to_batch_orig
+                    ), "Got idx %d from Pool, which is not known." % (idx)
                     batch_orig, batch_orig_dt = id_to_batch_orig[idx]
                     batch_unnormalized = _unnormalize_batch(
-                        batch_aug, batch_orig, batch_orig_dt)
+                        batch_aug, batch_orig, batch_orig_dt
+                    )
                     del id_to_batch_orig[idx]
                     yield batch_unnormalized
 
     # we deprecate here so that users switch to `augment_batch_()` and in the
     # future we can add a `parents` parameter here without having to consider
     # that a breaking change
-    @ia.deprecated("augment_batch_()",
-                   comment="`augment_batch()` was renamed to "
-                           "`augment_batch_()` as it changes all `*_unaug` "
-                           "attributes of batches in-place. Note that "
-                           "`augment_batch_()` has now a `parents` parameter. "
-                           "Calls of the style `augment_batch(batch, hooks)` "
-                           "must be changed to "
-                           "`augment_batch(batch, hooks=hooks)`.")
+    @ia.deprecated(
+        "augment_batch_()",
+        comment="`augment_batch()` was renamed to "
+        "`augment_batch_()` as it changes all `*_unaug` "
+        "attributes of batches in-place. Note that "
+        "`augment_batch_()` has now a `parents` parameter. "
+        "Calls of the style `augment_batch(batch, hooks)` "
+        "must be changed to "
+        "`augment_batch(batch, hooks=hooks)`.",
+    )
     def augment_batch(self, batch, hooks=None):
         """Augment a single batch.
 
@@ -601,15 +617,15 @@ class Augmenter(object):
         else:
             raise ValueError(
                 "Expected UnnormalizedBatch, Batch or _BatchInAugmentation, "
-                "got %s." % (type(batch).__name__,))
+                "got %s." % (type(batch).__name__,)
+            )
 
         columns = batch_inaug.columns
 
         # hooks preprocess
         if hooks is not None:
             for column in columns:
-                value = hooks.preprocess(
-                    column.value, augmenter=self, parents=parents)
+                value = hooks.preprocess(column.value, augmenter=self, parents=parents)
                 setattr(batch_inaug, column.attr_name, value)
 
             # refresh so that values are updated for later functions
@@ -625,8 +641,11 @@ class Augmenter(object):
         elif hooks is not None:
             for column in columns:
                 activated = hooks.is_activated(
-                    column.value, augmenter=self, parents=parents,
-                    default=self.activated)
+                    column.value,
+                    augmenter=self,
+                    parents=parents,
+                    default=self.activated,
+                )
                 if not activated:
                     set_to_none.append(column)
                     setattr(batch_inaug, column.attr_name, None)
@@ -644,7 +663,8 @@ class Augmenter(object):
                         batch_inaug,
                         random_state=self.random_state,
                         parents=parents if parents is not None else [],
-                        hooks=hooks)
+                        hooks=hooks,
+                    )
 
         # revert augmentables being set to None for non-activated augmenters
         for column in set_to_none:
@@ -657,18 +677,18 @@ class Augmenter(object):
 
             for column in columns:
                 augm_value = hooks.postprocess(
-                    column.value, augmenter=self, parents=parents)
+                    column.value, augmenter=self, parents=parents
+                )
                 setattr(batch_inaug, column.attr_name, augm_value)
 
         if batch_unnorm is not None:
-            batch_norm = batch_norm.fill_from_batch_in_augmentation_(
-                batch_inaug)
+            batch_norm = batch_norm.fill_from_batch_in_augmentation_(batch_inaug)
             batch_unnorm = batch_unnorm.fill_from_augmented_normalized_batch_(
-                batch_norm)
+                batch_norm
+            )
             return batch_unnorm
         if batch_norm is not None:
-            batch_norm = batch_norm.fill_from_batch_in_augmentation_(
-                batch_inaug)
+            batch_norm = batch_norm.fill_from_batch_in_augmentation_(batch_inaug)
             return batch_norm
         return batch_inaug
 
@@ -727,8 +747,11 @@ class Augmenter(object):
                 pf_enabled = not self.deterministic
                 with iap.toggled_prefetching(pf_enabled):
                     value = getattr(self, "_augment_" + column.name)(
-                        column.value, random_state=random_state,
-                        parents=parents, hooks=hooks)
+                        column.value,
+                        random_state=random_state,
+                        parents=parents,
+                        hooks=hooks,
+                    )
                     setattr(batch, column.attr_name, value)
 
         # If the augmenter was alread in deterministic mode, we can expect
@@ -766,11 +789,12 @@ class Augmenter(object):
         assert ia.is_np_array(image), (
             "Expected to get a single numpy array of shape (H,W) or (H,W,C) "
             "for `image`. Got instead type %d. Use `augment_images(images)` "
-            "to augment a list of multiple images." % (
-                type(image).__name__),)
+            "to augment a list of multiple images." % (type(image).__name__),
+        )
         assert image.ndim in [2, 3], (
             "Expected image to have shape (height, width, [channels]), "
-            "got shape %s." % (image.shape,))
+            "got shape %s." % (image.shape,)
+        )
         iabase._warn_on_suspicious_single_image_shape(image)
         return self.augment_images([image], hooks=hooks)[0]
 
@@ -824,9 +848,7 @@ class Augmenter(object):
         """
         iabase._warn_on_suspicious_multi_image_shapes(images)
         return self.augment_batch_(
-            UnnormalizedBatch(images=images),
-            parents=parents,
-            hooks=hooks
+            UnnormalizedBatch(images=images), parents=parents, hooks=hooks
         ).images_aug
 
     def _augment_images(self, images, random_state, parents, hooks):
@@ -968,9 +990,7 @@ class Augmenter(object):
 
         """
         return self.augment_batch_(
-            UnnormalizedBatch(segmentation_maps=segmaps),
-            parents=parents,
-            hooks=hooks
+            UnnormalizedBatch(segmentation_maps=segmaps), parents=parents, hooks=hooks
         ).segmentation_maps_aug
 
     def _augment_segmentation_maps(self, segmaps, random_state, parents, hooks):
@@ -1075,11 +1095,10 @@ class Augmenter(object):
         return self.augment_batch_(
             UnnormalizedBatch(keypoints=keypoints_on_images),
             parents=parents,
-            hooks=hooks
+            hooks=hooks,
         ).keypoints_aug
 
-    def _augment_keypoints(self, keypoints_on_images, random_state, parents,
-                           hooks):
+    def _augment_keypoints(self, keypoints_on_images, random_state, parents, hooks):
         """Augment a batch of keypoints in-place.
 
         This is the internal version of :func:`Augmenter.augment_keypoints`.
@@ -1119,8 +1138,9 @@ class Augmenter(object):
         """
         return keypoints_on_images
 
-    def augment_bounding_boxes(self, bounding_boxes_on_images, parents=None,
-                               hooks=None):
+    def augment_bounding_boxes(
+        self, bounding_boxes_on_images, parents=None, hooks=None
+    ):
         """Augment a batch of bounding boxes.
 
         This is the corresponding function to
@@ -1184,7 +1204,7 @@ class Augmenter(object):
         return self.augment_batch_(
             UnnormalizedBatch(bounding_boxes=bounding_boxes_on_images),
             parents=parents,
-            hooks=hooks
+            hooks=hooks,
         ).bounding_boxes_aug
 
     def augment_polygons(self, polygons_on_images, parents=None, hooks=None):
@@ -1248,13 +1268,10 @@ class Augmenter(object):
 
         """
         return self.augment_batch_(
-            UnnormalizedBatch(polygons=polygons_on_images),
-            parents=parents,
-            hooks=hooks
+            UnnormalizedBatch(polygons=polygons_on_images), parents=parents, hooks=hooks
         ).polygons_aug
 
-    def augment_line_strings(self, line_strings_on_images, parents=None,
-                             hooks=None):
+    def augment_line_strings(self, line_strings_on_images, parents=None, hooks=None):
         """Augment a batch of line strings.
 
         This is the corresponding function to
@@ -1319,11 +1336,12 @@ class Augmenter(object):
         return self.augment_batch_(
             UnnormalizedBatch(line_strings=line_strings_on_images),
             parents=parents,
-            hooks=hooks
+            hooks=hooks,
         ).line_strings_aug
 
-    def _augment_bounding_boxes(self, bounding_boxes_on_images, random_state,
-                                parents, hooks):
+    def _augment_bounding_boxes(
+        self, bounding_boxes_on_images, random_state, parents, hooks
+    ):
         """Augment a batch of bounding boxes on images in-place.
 
         This is the internal version of
@@ -1369,11 +1387,10 @@ class Augmenter(object):
             bounding_boxes_on_images,
             random_state=random_state,
             parents=parents,
-            hooks=hooks
+            hooks=hooks,
         )
 
-    def _augment_polygons(self, polygons_on_images, random_state, parents,
-                          hooks):
+    def _augment_polygons(self, polygons_on_images, random_state, parents, hooks):
         """Augment a batch of polygons on images in-place.
 
         This is the internal version of :func:`Augmenter.augment_polygons`.
@@ -1413,14 +1430,12 @@ class Augmenter(object):
 
         """
         return self._augment_cbaois_as_keypoints(
-            polygons_on_images,
-            random_state=random_state,
-            parents=parents,
-            hooks=hooks
+            polygons_on_images, random_state=random_state, parents=parents, hooks=hooks
         )
 
-    def _augment_line_strings(self, line_strings_on_images, random_state,
-                              parents, hooks):
+    def _augment_line_strings(
+        self, line_strings_on_images, random_state, parents, hooks
+    ):
         """Augment a batch of line strings in-place.
 
         This is the internal version of
@@ -1464,11 +1479,12 @@ class Augmenter(object):
             line_strings_on_images,
             random_state=random_state,
             parents=parents,
-            hooks=hooks
+            hooks=hooks,
         )
 
-    def _augment_bounding_boxes_as_keypoints(self, bounding_boxes_on_images,
-                                             random_state, parents, hooks):
+    def _augment_bounding_boxes_as_keypoints(
+        self, bounding_boxes_on_images, random_state, parents, hooks
+    ):
         """
         Augment BBs by applying keypoint augmentation to their corners.
 
@@ -1495,13 +1511,16 @@ class Augmenter(object):
             The augmented bounding boxes.
 
         """
-        return self._augment_cbaois_as_keypoints(bounding_boxes_on_images,
-                                                 random_state=random_state,
-                                                 parents=parents,
-                                                 hooks=hooks)
+        return self._augment_cbaois_as_keypoints(
+            bounding_boxes_on_images,
+            random_state=random_state,
+            parents=parents,
+            hooks=hooks,
+        )
 
-    def _augment_polygons_as_keypoints(self, polygons_on_images, random_state,
-                                       parents, hooks, recoverer=None):
+    def _augment_polygons_as_keypoints(
+        self, polygons_on_images, random_state, parents, hooks, recoverer=None
+    ):
         """
         Augment polygons by applying keypoint augmentation to their vertices.
 
@@ -1540,16 +1559,20 @@ class Augmenter(object):
             The augmented polygons.
 
         """
-        func = functools.partial(self._augment_keypoints,
-                                 random_state=random_state,
-                                 parents=parents,
-                                 hooks=hooks)
+        func = functools.partial(
+            self._augment_keypoints,
+            random_state=random_state,
+            parents=parents,
+            hooks=hooks,
+        )
 
-        return self._apply_to_polygons_as_keypoints(polygons_on_images, func,
-                                                    recoverer, random_state)
+        return self._apply_to_polygons_as_keypoints(
+            polygons_on_images, func, recoverer, random_state
+        )
 
-    def _augment_line_strings_as_keypoints(self, line_strings_on_images,
-                                           random_state, parents, hooks):
+    def _augment_line_strings_as_keypoints(
+        self, line_strings_on_images, random_state, parents, hooks
+    ):
         """
         Augment BBs by applying keypoint augmentation to their corners.
 
@@ -1574,13 +1597,14 @@ class Augmenter(object):
             The augmented line strings.
 
         """
-        return self._augment_cbaois_as_keypoints(line_strings_on_images,
-                                                 random_state=random_state,
-                                                 parents=parents,
-                                                 hooks=hooks)
+        return self._augment_cbaois_as_keypoints(
+            line_strings_on_images,
+            random_state=random_state,
+            parents=parents,
+            hooks=hooks,
+        )
 
-    def _augment_cbaois_as_keypoints(
-            self, cbaois, random_state, parents, hooks):
+    def _augment_cbaois_as_keypoints(self, cbaois, random_state, parents, hooks):
         """
         Augment bounding boxes by applying KP augmentation to their corners.
 
@@ -1608,15 +1632,18 @@ class Augmenter(object):
             The augmented coordinate-based augmentables.
 
         """
-        func = functools.partial(self._augment_keypoints,
-                                 random_state=random_state,
-                                 parents=parents,
-                                 hooks=hooks)
+        func = functools.partial(
+            self._augment_keypoints,
+            random_state=random_state,
+            parents=parents,
+            hooks=hooks,
+        )
         return self._apply_to_cbaois_as_keypoints(cbaois, func)
 
     @classmethod
-    def _apply_to_polygons_as_keypoints(cls, polygons_on_images, func,
-                                        recoverer=None, random_state=None):
+    def _apply_to_polygons_as_keypoints(
+        cls, polygons_on_images, func, recoverer=None, random_state=None
+    ):
         """
         Apply a callback to polygons in keypoint-representation.
 
@@ -1667,10 +1694,10 @@ class Augmenter(object):
         # advance the RNG state, but the next call to e.g. augment() will then
         # still use the same (advanced) RNG state for images and polygons.
         # We copy here anyways as it seems cleaner.
-        random_state_recoverer = (random_state.copy()
-                                  if random_state is not None else None)
-        psois = recover_psois_(psois, psois_orig, recoverer,
-                               random_state_recoverer)
+        random_state_recoverer = (
+            random_state.copy() if random_state is not None else None
+        )
+        psois = recover_psois_(psois, psois_orig, recoverer, random_state_recoverer)
 
         return psois
 
@@ -1698,8 +1725,10 @@ class Augmenter(object):
             The augmented coordinate-based augmentables.
 
         """
-        from ..augmentables.utils import (convert_cbaois_to_kpsois,
-                                          invert_convert_cbaois_to_kpsois_)
+        from ..augmentables.utils import (
+            convert_cbaois_to_kpsois,
+            invert_convert_cbaois_to_kpsois_,
+        )
 
         kpsois = convert_cbaois_to_kpsois(cbaois)
         kpsois_aug = func(kpsois)
@@ -1920,32 +1949,41 @@ class Augmenter(object):
         assert ia.is_single_bool(return_batch), (
             "Expected boolean as argument for 'return_batch', got type %s. "
             "Call augment() only with named arguments, e.g. "
-            "augment(images=<array>)." % (str(type(return_batch)),))
+            "augment(images=<array>)." % (str(type(return_batch)),)
+        )
 
-        expected_keys = ["images", "heatmaps", "segmentation_maps",
-                         "keypoints", "bounding_boxes", "polygons",
-                         "line_strings"]
+        expected_keys = [
+            "images",
+            "heatmaps",
+            "segmentation_maps",
+            "keypoints",
+            "bounding_boxes",
+            "polygons",
+            "line_strings",
+        ]
         expected_keys_call = ["image"] + expected_keys
 
         # at least one augmentable provided?
         assert any([key in kwargs for key in expected_keys_call]), (
             "Expected augment() to be called with one of the following named "
-            "arguments: %s. Got none of these." % (
-                ", ".join(expected_keys_call),))
+            "arguments: %s. Got none of these." % (", ".join(expected_keys_call),)
+        )
 
         # all keys in kwargs actually known?
         unknown_args = [key for key in kwargs if key not in expected_keys_call]
-        assert len(unknown_args) == 0, (
-            "Got the following unknown keyword argument(s) in augment(): %s" % (
-                ", ".join(unknown_args)
-            ))
+        assert (
+            len(unknown_args) == 0
+        ), "Got the following unknown keyword argument(s) in augment(): %s" % (
+            ", ".join(unknown_args)
+        )
 
         # normalize image=... input to images=...
         # this is not done by Batch.to_normalized_batch()
         if "image" in kwargs:
             assert "images" not in kwargs, (
                 "You may only provide the argument 'image' OR 'images' to "
-                "augment(), not both of them.")
+                "augment(), not both of them."
+            )
             images = [kwargs["image"]]
             iabase._warn_on_suspicious_single_image_shape(images[0])
         else:
@@ -1992,7 +2030,7 @@ class Augmenter(object):
             keypoints=kwargs.get("keypoints", None),
             bounding_boxes=kwargs.get("bounding_boxes", None),
             polygons=kwargs.get("polygons", None),
-            line_strings=kwargs.get("line_strings", None)
+            line_strings=kwargs.get("line_strings", None),
         )
 
         batch_aug = self.augment_batch_(batch, hooks=hooks)
@@ -2098,8 +2136,10 @@ class Augmenter(object):
 
         """
         import imgaug.multicore as multicore
-        return multicore.Pool(self, processes=processes,
-                              maxtasksperchild=maxtasksperchild, seed=seed)
+
+        return multicore.Pool(
+            self, processes=processes, maxtasksperchild=maxtasksperchild, seed=seed
+        )
 
     # TODO most of the code of this function could be replaced with
     #      ia.draw_grid()
@@ -2165,11 +2205,14 @@ class Augmenter(object):
             else:
                 raise Exception(
                     "Unexpected images shape, expected 2-, 3- or "
-                    "4-dimensional array, got shape %s." % (images.shape,))
+                    "4-dimensional array, got shape %s." % (images.shape,)
+                )
         else:
-            assert isinstance(images, list), (
-                "Expected 'images' to be an ndarray or list of ndarrays. "
-                "Got %s." % (type(images),))
+            assert isinstance(
+                images, list
+            ), "Expected 'images' to be an ndarray or list of ndarrays. " "Got %s." % (
+                type(images),
+            )
             for i, image in enumerate(images):
                 if len(image.shape) == 3:
                     continue
@@ -2178,8 +2221,12 @@ class Augmenter(object):
                 else:
                     raise Exception(
                         "Unexpected image shape at index %d, expected 2- or "
-                        "3-dimensional array, got shape %s." % (
-                            i, image.shape,))
+                        "3-dimensional array, got shape %s."
+                        % (
+                            i,
+                            image.shape,
+                        )
+                    )
 
         det = self if self.deterministic else self.to_deterministic()
         augs = []
@@ -2268,8 +2315,7 @@ class Augmenter(object):
             otherwise a list of Augmenter objects (even if `n` was ``1``).
 
         """
-        assert n is None or n >= 1, (
-            "Expected 'n' to be None or >=1, got %s." % (n,))
+        assert n is None or n >= 1, "Expected 'n' to be None or >=1, got %s." % (n,)
         if n is None:
             return self.to_deterministic(1)[0]
         return [self._to_deterministic() for _ in sm.xrange(n)]
@@ -2373,9 +2419,11 @@ class Augmenter(object):
         derived from the provided seed.
 
         """
-        assert isinstance(deterministic_too, bool), (
-            "Expected 'deterministic_too' to be a boolean, got type %s." % (
-                deterministic_too))
+        assert isinstance(
+            deterministic_too, bool
+        ), "Expected 'deterministic_too' to be a boolean, got type %s." % (
+            deterministic_too
+        )
 
         if entropy is None:
             random_state = iarandom.RNG.create_pseudo_random_()
@@ -2389,8 +2437,10 @@ class Augmenter(object):
 
         for lst in self.get_children_lists():
             for aug in lst:
-                aug.seed_(entropy=random_state.derive_rng_(),
-                          deterministic_too=deterministic_too)
+                aug.seed_(
+                    entropy=random_state.derive_rng_(),
+                    deterministic_too=deterministic_too,
+                )
 
     def localize_random_state(self, recursive=True):
         """Assign augmenter-specific RNGs to this augmenter and its children.
@@ -2410,9 +2460,7 @@ class Augmenter(object):
 
         """
         aug = self.deepcopy()
-        aug.localize_random_state_(
-            recursive=recursive
-        )
+        aug.localize_random_state_(recursive=recursive)
         return aug
 
     # TODO rename random_state -> rng
@@ -2468,8 +2516,14 @@ class Augmenter(object):
         return self
 
     # TODO adapt random_state -> rng
-    def copy_random_state(self, source, recursive=True, matching="position",
-                          matching_tolerant=True, copy_determinism=False):
+    def copy_random_state(
+        self,
+        source,
+        recursive=True,
+        matching="position",
+        matching_tolerant=True,
+        copy_determinism=False,
+    ):
         """Copy the RNGs from a source augmenter sequence.
 
         Parameters
@@ -2501,12 +2555,18 @@ class Augmenter(object):
             recursive=recursive,
             matching=matching,
             matching_tolerant=matching_tolerant,
-            copy_determinism=copy_determinism
+            copy_determinism=copy_determinism,
         )
         return aug
 
-    def copy_random_state_(self, source, recursive=True, matching="position",
-                           matching_tolerant=True, copy_determinism=False):
+    def copy_random_state_(
+        self,
+        source,
+        recursive=True,
+        matching="position",
+        matching_tolerant=True,
+        copy_determinism=False,
+    ):
         """Copy the RNGs from a source augmenter sequence (in-place).
 
         .. note::
@@ -2569,27 +2629,24 @@ class Augmenter(object):
         # target.use_state_of_(source).
 
         source_augs = (
-            [source] + source.get_all_children(flat=True)
-            if recursive
-            else [source])
-        target_augs = (
-            [self] + self.get_all_children(flat=True)
-            if recursive
-            else [self])
+            [source] + source.get_all_children(flat=True) if recursive else [source]
+        )
+        target_augs = [self] + self.get_all_children(flat=True) if recursive else [self]
 
         global_rs_exc_msg = (
             "You called copy_random_state_() with a source that uses global "
             "RNGs. Call localize_random_state_() on the source "
             "first or initialize your augmenters with local random states, "
-            "e.g. via Dropout(..., random_state=1234).")
+            "e.g. via Dropout(..., random_state=1234)."
+        )
 
         if matching == "name":
             source_augs_dict = {aug.name: aug for aug in source_augs}
             target_augs_dict = {aug.name: aug for aug in target_augs}
 
-            different_lengths = (
-                len(source_augs_dict) < len(source_augs)
-                or len(target_augs_dict) < len(target_augs))
+            different_lengths = len(source_augs_dict) < len(source_augs) or len(
+                target_augs_dict
+            ) < len(target_augs)
             if different_lengths:
                 ia.warn(
                     "Matching mode 'name' with recursive=True was chosen in "
@@ -2603,20 +2660,24 @@ class Augmenter(object):
                     if source_augs_dict[name].random_state.is_global_rng():
                         raise Exception(global_rs_exc_msg)
                     # has to be copy(), see above
-                    target_augs_dict[name].random_state = \
-                        source_augs_dict[name].random_state.copy()
+                    target_augs_dict[name].random_state = source_augs_dict[
+                        name
+                    ].random_state.copy()
                     if copy_determinism:
-                        target_augs_dict[name].deterministic = \
-                            source_augs_dict[name].deterministic
+                        target_augs_dict[name].deterministic = source_augs_dict[
+                            name
+                        ].deterministic
                 elif not matching_tolerant:
                     raise Exception(
                         "Augmenter name '%s' not found among source "
-                        "augmenters." % (name,))
+                        "augmenters." % (name,)
+                    )
         elif matching == "position":
             if len(source_augs) != len(target_augs) and not matching_tolerant:
                 raise Exception(
                     "Source and target augmentation sequences have different "
-                    "lengths.")
+                    "lengths."
+                )
             for source_aug, target_aug in zip(source_augs, target_augs):
                 if source_aug.random_state.is_global_rng():
                     raise Exception(global_rs_exc_msg)
@@ -2627,7 +2688,8 @@ class Augmenter(object):
         else:
             raise Exception(
                 "Unknown matching method '%s'. Valid options are 'name' "
-                "and 'position'." % (matching,))
+                "and 'position'." % (matching,)
+            )
 
         return self
 
@@ -2766,8 +2828,7 @@ class Augmenter(object):
         subparents = parents + [self]
         for lst in self.get_children_lists():
             for aug in lst:
-                found = aug.find_augmenters(func, parents=subparents,
-                                            flat=flat)
+                found = aug.find_augmenters(func, parents=subparents, flat=flat)
                 if len(found) > 0:
                     if flat:
                         result.extend(found)
@@ -2822,6 +2883,7 @@ class Augmenter(object):
 
         """
         if regex:
+
             def comparer(aug, _parents):
                 for pattern in names:
                     if re.match(pattern, aug.name):
@@ -2829,13 +2891,13 @@ class Augmenter(object):
                 return False
 
             return self.find_augmenters(comparer, flat=flat)
-        return self.find_augmenters(
-            lambda aug, parents: aug.name in names, flat=flat)
+        return self.find_augmenters(lambda aug, parents: aug.name in names, flat=flat)
 
     # TODO remove copy arg
     # TODO allow first arg to be string name, class type or func
-    def remove_augmenters(self, func, copy=True, identity_if_topmost=True,
-                          noop_if_topmost=None):
+    def remove_augmenters(
+        self, func, copy=True, identity_if_topmost=True, noop_if_topmost=None
+    ):
         """Remove this augmenter or children that match a condition.
 
         Parameters
@@ -2888,15 +2950,18 @@ class Augmenter(object):
 
         """
         if noop_if_topmost is not None:
-            ia.warn_deprecated("Parameter 'noop_if_topmost' is deprecated. "
-                               "Use 'identity_if_topmost' instead.")
+            ia.warn_deprecated(
+                "Parameter 'noop_if_topmost' is deprecated. "
+                "Use 'identity_if_topmost' instead."
+            )
             identity_if_topmost = noop_if_topmost
 
         if func(self, []):
             if not copy:
                 raise Exception(
                     "Inplace removal of topmost augmenter requested, "
-                    "which is currently not possible. Set 'copy' to True.")
+                    "which is currently not possible. Set 'copy' to True."
+                )
 
             if identity_if_topmost:
                 return Identity()
@@ -3000,7 +3065,11 @@ class Augmenter(object):
         params = self.get_parameters()
         params_str = ", ".join([param.__str__() for param in params])
         return "%s(name=%s, parameters=[%s], deterministic=%s)" % (
-            self.__class__.__name__, self.name, params_str, self.deterministic)
+            self.__class__.__name__,
+            self.name,
+            params_str,
+            self.deterministic,
+        )
 
 
 class Sequential(Augmenter, list):
@@ -3101,13 +3170,22 @@ class Sequential(Augmenter, list):
 
     """
 
-    def __init__(self, children=None, random_order=False,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        children=None,
+        random_order=False,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         Augmenter.__init__(
             self,
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed,
+            name=name,
+            random_state=random_state,
+            deterministic=deterministic,
+        )
 
         if children is None:
             list.__init__(self, [])
@@ -3118,17 +3196,21 @@ class Sequential(Augmenter, list):
             # children
             list.__init__(self, [children])
         elif ia.is_iterable(children):
-            assert all([isinstance(child, Augmenter) for child in children]), (
-                "Expected all children to be augmenters, got types %s." % (
-                    ", ".join([str(type(v)) for v in children])))
+            assert all(
+                [isinstance(child, Augmenter) for child in children]
+            ), "Expected all children to be augmenters, got types %s." % (
+                ", ".join([str(type(v)) for v in children])
+            )
             list.__init__(self, children)
         else:
-            raise Exception("Expected None or Augmenter or list of Augmenter, "
-                            "got %s." % (type(children),))
+            raise Exception(
+                "Expected None or Augmenter or list of Augmenter, "
+                "got %s." % (type(children),)
+            )
 
-        assert ia.is_single_bool(random_order), (
-            "Expected random_order to be boolean, got %s." % (
-                type(random_order),))
+        assert ia.is_single_bool(
+            random_order
+        ), "Expected random_order to be boolean, got %s." % (type(random_order),)
         self.random_order = random_order
 
     # Added in 0.4.0.
@@ -3141,9 +3223,7 @@ class Sequential(Augmenter, list):
 
             for index in order:
                 batch = self[index].augment_batch_(
-                    batch,
-                    parents=parents + [self],
-                    hooks=hooks
+                    batch, parents=parents + [self], hooks=hooks
                 )
         return batch
 
@@ -3176,13 +3256,14 @@ class Sequential(Augmenter, list):
 
     def __str__(self):
         augs_str = ", ".join([aug.__str__() for aug in self])
-        pattern = (
-            "%s("
-            "name=%s, random_order=%s, children=[%s], deterministic=%s"
-            ")")
+        pattern = "%s(" "name=%s, random_order=%s, children=[%s], deterministic=%s" ")"
         return pattern % (
-            self.__class__.__name__, self.name, self.random_order, augs_str,
-            self.deterministic)
+            self.__class__.__name__,
+            self.name,
+            self.random_order,
+            augs_str,
+            self.deterministic,
+        )
 
 
 class SomeOf(Augmenter, list):
@@ -3300,13 +3381,23 @@ class SomeOf(Augmenter, list):
 
     """
 
-    def __init__(self, n=None, children=None, random_order=False,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        n=None,
+        children=None,
+        random_order=False,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         Augmenter.__init__(
             self,
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed,
+            name=name,
+            random_state=random_state,
+            deterministic=deterministic,
+        )
 
         # TODO use handle_children_list() here?
         if children is None:
@@ -3318,19 +3409,23 @@ class SomeOf(Augmenter, list):
             # children
             list.__init__(self, [children])
         elif ia.is_iterable(children):
-            assert all([isinstance(child, Augmenter) for child in children]), (
-                "Expected all children to be augmenters, got types %s." % (
-                    ", ".join([str(type(v)) for v in children])))
+            assert all(
+                [isinstance(child, Augmenter) for child in children]
+            ), "Expected all children to be augmenters, got types %s." % (
+                ", ".join([str(type(v)) for v in children])
+            )
             list.__init__(self, children)
         else:
-            raise Exception("Expected None or Augmenter or list of Augmenter, "
-                            "got %s." % (type(children),))
+            raise Exception(
+                "Expected None or Augmenter or list of Augmenter, "
+                "got %s." % (type(children),)
+            )
 
         self.n, self.n_mode = self._handle_arg_n(n)
 
-        assert ia.is_single_bool(random_order), (
-            "Expected random_order to be boolean, got %s." % (
-                type(random_order),))
+        assert ia.is_single_bool(
+            random_order
+        ), "Expected random_order to be boolean, got %s." % (type(random_order),)
         self.random_order = random_order
 
     @classmethod
@@ -3342,9 +3437,11 @@ class SomeOf(Augmenter, list):
             n = None
             n_mode = "None"
         elif ia.is_iterable(n):
-            assert len(n) == 2, (
-                "Expected iterable 'n' to contain exactly two values, "
-                "got %d." % (len(n),))
+            assert (
+                len(n) == 2
+            ), "Expected iterable 'n' to contain exactly two values, " "got %d." % (
+                len(n),
+            )
             if ia.is_single_number(n[0]) and n[1] is None:
                 n = (int(n[0]), None)
                 n_mode = "(int,None)"
@@ -3352,13 +3449,17 @@ class SomeOf(Augmenter, list):
                 n = iap.DiscreteUniform(int(n[0]), int(n[1]))
                 n_mode = "stochastic"
             else:
-                raise Exception("Expected tuple of (int, None) or (int, int), "
-                                "got %s" % ([type(el) for el in n],))
+                raise Exception(
+                    "Expected tuple of (int, None) or (int, int), "
+                    "got %s" % ([type(el) for el in n],)
+                )
         elif isinstance(n, iap.StochasticParameter):
             n_mode = "stochastic"
         else:
-            raise Exception("Expected int, (int, None), (int, int) or "
-                            "StochasticParameter, got %s" % (type(n),))
+            raise Exception(
+                "Expected int, (int, None), (int, int) or "
+                "StochasticParameter, got %s" % (type(n),)
+            )
         return n, n_mode
 
     def _get_n(self, nb_images, random_state):
@@ -3411,8 +3512,7 @@ class SomeOf(Augmenter, list):
             #   [1, 0, 0]]
             # would signal, that augmenter 3 is active for the first image,
             # augmenter 1 and 3 for the 2nd image and augmenter 1 for the 3rd.
-            augmenter_active = self._get_augmenter_active(batch.nb_rows,
-                                                          random_state)
+            augmenter_active = self._get_augmenter_active(batch.nb_rows, random_state)
 
             for augmenter_index in augmenter_order:
                 active = augmenter_active[:, augmenter_index].nonzero()[0]
@@ -3420,12 +3520,9 @@ class SomeOf(Augmenter, list):
                 if len(active) > 0:
                     batch_sub = batch.subselect_rows_by_indices(active)
                     batch_sub = self[augmenter_index].augment_batch_(
-                        batch_sub,
-                        parents=parents + [self],
-                        hooks=hooks
+                        batch_sub, parents=parents + [self], hooks=hooks
                     )
-                    batch = batch.invert_subselect_rows_by_indices_(active,
-                                                                    batch_sub)
+                    batch = batch.invert_subselect_rows_by_indices_(active, batch_sub)
 
             return batch
 
@@ -3461,10 +3558,16 @@ class SomeOf(Augmenter, list):
         pattern = (
             "%s("
             "name=%s, n=%s, random_order=%s, augmenters=[%s], deterministic=%s"
-            ")")
+            ")"
+        )
         return pattern % (
-            self.__class__.__name__, self.name, str(self.n),
-            str(self.random_order), augs_str, self.deterministic)
+            self.__class__.__name__,
+            self.name,
+            str(self.n),
+            str(self.random_order),
+            augs_str,
+            self.deterministic,
+        )
 
 
 class OneOf(SomeOf):
@@ -3525,15 +3628,23 @@ class OneOf(SomeOf):
 
     """
 
-    def __init__(self, children,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        children,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(OneOf, self).__init__(
             n=1,
             children=children,
             random_order=False,
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed,
+            name=name,
+            random_state=random_state,
+            deterministic=deterministic,
+        )
 
 
 class Sometimes(Augmenter):
@@ -3612,25 +3723,33 @@ class Sometimes(Augmenter):
 
     """
 
-    def __init__(self, p=0.5, then_list=None, else_list=None,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        p=0.5,
+        then_list=None,
+        else_list=None,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(Sometimes, self).__init__(
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed, name=name, random_state=random_state, deterministic=deterministic
+        )
 
         self.p = iap.handle_probability_param(p, "p")
 
-        self.then_list = handle_children_list(then_list, self.name, "then",
-                                              default=None)
-        self.else_list = handle_children_list(else_list, self.name, "else",
-                                              default=None)
+        self.then_list = handle_children_list(
+            then_list, self.name, "then", default=None
+        )
+        self.else_list = handle_children_list(
+            else_list, self.name, "else", default=None
+        )
 
     # Added in 0.4.0.
     def _augment_batch_(self, batch, random_state, parents, hooks):
         with batch.propagation_hooks_ctx(self, hooks, parents):
-            samples = self.p.draw_samples((batch.nb_rows,),
-                                          random_state=random_state)
+            samples = self.p.draw_samples((batch.nb_rows,), random_state=random_state)
 
             # create lists/arrays of images for if and else lists (one for each)
             # note that np.where returns tuple(array([0, 5, 9, ...])) or
@@ -3650,23 +3769,24 @@ class Sometimes(Augmenter):
                 if augmenters is not None and len(augmenters) > 0:
                     batch_sub = batch.subselect_rows_by_indices(indices)
                     batch_sub = augmenters.augment_batch_(
-                        batch_sub,
-                        parents=parents + [self],
-                        hooks=hooks
+                        batch_sub, parents=parents + [self], hooks=hooks
                     )
-                    batch = batch.invert_subselect_rows_by_indices_(indices,
-                                                                    batch_sub)
+                    batch = batch.invert_subselect_rows_by_indices_(indices, batch_sub)
 
             return batch
 
     def _to_deterministic(self):
         aug = self.copy()
-        aug.then_list = (aug.then_list.to_deterministic()
-                         if aug.then_list is not None
-                         else aug.then_list)
-        aug.else_list = (aug.else_list.to_deterministic()
-                         if aug.else_list is not None
-                         else aug.else_list)
+        aug.then_list = (
+            aug.then_list.to_deterministic()
+            if aug.then_list is not None
+            else aug.then_list
+        )
+        aug.else_list = (
+            aug.else_list.to_deterministic()
+            if aug.else_list is not None
+            else aug.else_list
+        )
         aug.deterministic = True
         aug.random_state = self.random_state.derive_rng_()
         return aug
@@ -3686,12 +3806,16 @@ class Sometimes(Augmenter):
 
     def __str__(self):
         pattern = (
-            "%s("
-            "p=%s, name=%s, then_list=%s, else_list=%s, deterministic=%s"
-            ")")
+            "%s(" "p=%s, name=%s, then_list=%s, else_list=%s, deterministic=%s" ")"
+        )
         return pattern % (
-            self.__class__.__name__, self.p, self.name, self.then_list,
-            self.else_list, self.deterministic)
+            self.__class__.__name__,
+            self.p,
+            self.name,
+            self.then_list,
+            self.else_list,
+            self.deterministic,
+        )
 
 
 class WithChannels(Augmenter):
@@ -3759,12 +3883,18 @@ class WithChannels(Augmenter):
 
     """
 
-    def __init__(self, channels=None, children=None,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        channels=None,
+        children=None,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(WithChannels, self).__init__(
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed, name=name, random_state=random_state, deterministic=deterministic
+        )
 
         # TODO change this to a stochastic parameter
         if channels is None:
@@ -3772,15 +3902,16 @@ class WithChannels(Augmenter):
         elif ia.is_single_integer(channels):
             self.channels = [channels]
         elif ia.is_iterable(channels):
-            only_ints = all([
-                ia.is_single_integer(channel) for channel in channels])
-            assert only_ints, (
-                "Expected integers as channels, got %s." % (
-                    [type(channel) for channel in channels],))
+            only_ints = all([ia.is_single_integer(channel) for channel in channels])
+            assert only_ints, "Expected integers as channels, got %s." % (
+                [type(channel) for channel in channels],
+            )
             self.channels = channels
         else:
-            raise Exception("Expected None, int or list of ints as channels, "
-                            "got %s." % (type(channels),))
+            raise Exception(
+                "Expected None, int or list of ints as channels, "
+                "got %s." % (type(channels),)
+            )
 
         self.children = handle_children_list(children, self.name, "then")
 
@@ -3803,7 +3934,8 @@ class WithChannels(Augmenter):
             # We replace non-image data that was not supposed to be augmented
             # further below.
             batch = self.children.augment_batch_(
-                batch, parents=parents + [self], hooks=hooks)
+                batch, parents=parents + [self], hooks=hooks
+            )
 
             # If the shapes changed we cannot insert the augmented channels
             # into the existing ones as the shapes of the non-augmented
@@ -3813,19 +3945,18 @@ class WithChannels(Augmenter):
                 self._assert_shapes_not_changed(batch.images, batch_cp.images)
                 self._assert_dtypes_not_changed(batch.images, batch_cp.images)
 
-                batch.images = self._recover_images_array(batch.images,
-                                                          batch_cp.images)
+                batch.images = self._recover_images_array(batch.images, batch_cp.images)
 
             for column in batch.columns:
                 if column.name != "images":
                     value_old = getattr(batch_cp, column.attr_name)
-                    value = self._replace_unaugmented_cells(column.value,
-                                                            value_old)
+                    value = self._replace_unaugmented_cells(column.value, value_old)
                     setattr(batch, column.attr_name, value)
 
             if batch.images is not None:
                 batch.images = self._invert_reduce_images_to_channels(
-                    batch.images, batch_cp.images)
+                    batch.images, batch_cp.images
+                )
 
         return batch
 
@@ -3834,44 +3965,48 @@ class WithChannels(Augmenter):
     def _assert_lengths_not_changed(cls, images_aug, images):
         assert len(images_aug) == len(images), (
             "Expected that number of images does not change during "
-            "augmentation, but got %d vs. originally %d images." % (
-                len(images_aug), len(images)))
+            "augmentation, but got %d vs. originally %d images."
+            % (len(images_aug), len(images))
+        )
 
     # Added in 0.4.0.
     @classmethod
     def _assert_shapes_not_changed(cls, images_aug, images):
         if ia.is_np_array(images_aug) and ia.is_np_array(images):
-            shapes_same = (images_aug.shape[1:3] == images.shape[1:3])
+            shapes_same = images_aug.shape[1:3] == images.shape[1:3]
         else:
             shapes_same = all(
-                [image_aug.shape[0:2] == image.shape[0:2]
-                 for image_aug, image
-                 in zip(images_aug, images)])
-        assert shapes_same, (
-            "Heights/widths of images changed in WithChannels from "
-            "%s to %s, but expected to be the same." % (
-                str([image.shape[0:2] for image in images]),
-                str([image_aug.shape[0:2] for image_aug in images_aug]),
-            ))
+                [
+                    image_aug.shape[0:2] == image.shape[0:2]
+                    for image_aug, image in zip(images_aug, images)
+                ]
+            )
+        assert (
+            shapes_same
+        ), "Heights/widths of images changed in WithChannels from " "%s to %s, but expected to be the same." % (
+            str([image.shape[0:2] for image in images]),
+            str([image_aug.shape[0:2] for image_aug in images_aug]),
+        )
 
     # Added in 0.4.0.
     @classmethod
     def _assert_dtypes_not_changed(cls, images_aug, images):
         if ia.is_np_array(images_aug) and ia.is_np_array(images):
-            dtypes_same = (images_aug.dtype == images.dtype)
+            dtypes_same = images_aug.dtype == images.dtype
         else:
-            dtypes_same = all([
-                image_aug.dtype == image.dtype
-                for image_aug, image
-                in zip(images_aug, images)
-            ])
+            dtypes_same = all(
+                [
+                    image_aug.dtype == image.dtype
+                    for image_aug, image in zip(images_aug, images)
+                ]
+            )
 
-        assert dtypes_same, (
-            "dtypes of images changed in WithChannels from "
-            "%s to %s, but expected to be the same." % (
-                str([image.dtype.name for image in images]),
-                str([image_aug.dtype.name for image_aug in images_aug]),
-            ))
+        assert (
+            dtypes_same
+        ), "dtypes of images changed in WithChannels from " "%s to %s, but expected to be the same." % (
+            str([image.dtype.name for image in images]),
+            str([image_aug.dtype.name for image_aug in images_aug]),
+        )
 
     # Added in 0.4.0.
     @classmethod
@@ -3903,18 +4038,22 @@ class WithChannels(Augmenter):
             return augmentables_aug
 
         nb_channels_to_aug = len(self.channels)
-        nb_channels_lst = [augm.shape[2] if len(augm.shape) > 2 else 1
-                           for augm in augmentables]
+        nb_channels_lst = [
+            augm.shape[2] if len(augm.shape) > 2 else 1 for augm in augmentables
+        ]
 
         # We use the augmented form of a non-image if at least 50% of the
         # corresponding image's channels were augmented. Otherwise we use
         # the unaugmented form.
-        fraction_augmented_lst = [nb_channels_to_aug/nb_channels
-                                  for nb_channels in nb_channels_lst]
+        fraction_augmented_lst = [
+            nb_channels_to_aug / nb_channels for nb_channels in nb_channels_lst
+        ]
         result = [
             (augmentable_aug if fraction_augmented >= 0.5 else augmentable)
-            for augmentable_aug, augmentable, fraction_augmented
-            in zip(augmentables_aug, augmentables, fraction_augmented_lst)]
+            for augmentable_aug, augmentable, fraction_augmented in zip(
+                augmentables_aug, augmentables, fraction_augmented_lst
+            )
+        ]
         return result
 
     def _to_deterministic(self):
@@ -3933,12 +4072,14 @@ class WithChannels(Augmenter):
         return [self.children]
 
     def __str__(self):
-        pattern = (
-            "%s("
-            "channels=%s, name=%s, children=%s, deterministic=%s"
-            ")")
-        return pattern % (self.__class__.__name__, self.channels, self.name,
-                          self.children, self.deterministic)
+        pattern = "%s(" "channels=%s, name=%s, children=%s, deterministic=%s" ")"
+        return pattern % (
+            self.__class__.__name__,
+            self.channels,
+            self.name,
+            self.children,
+            self.deterministic,
+        )
 
 
 class Identity(Augmenter):
@@ -3994,12 +4135,16 @@ class Identity(Augmenter):
     """
 
     # Added in 0.4.0.
-    def __init__(self,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(Identity, self).__init__(
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed, name=name, random_state=random_state, deterministic=deterministic
+        )
 
     # Added in 0.4.0.
     def _augment_batch_(self, batch, random_state, parents, hooks):
@@ -4049,12 +4194,16 @@ class Noop(Identity):
 
     """
 
-    def __init__(self,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(Noop, self).__init__(
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed, name=name, random_state=random_state, deterministic=deterministic
+        )
 
 
 class Lambda(Augmenter):
@@ -4233,15 +4382,23 @@ class Lambda(Augmenter):
 
     """
 
-    def __init__(self, func_images=None, func_heatmaps=None,
-                 func_segmentation_maps=None, func_keypoints=None,
-                 func_bounding_boxes="keypoints", func_polygons="keypoints",
-                 func_line_strings="keypoints",
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        func_images=None,
+        func_heatmaps=None,
+        func_segmentation_maps=None,
+        func_keypoints=None,
+        func_bounding_boxes="keypoints",
+        func_polygons="keypoints",
+        func_line_strings="keypoints",
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(Lambda, self).__init__(
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed, name=name, random_state=random_state, deterministic=deterministic
+        )
         self.func_images = func_images
         self.func_heatmaps = func_heatmaps
         self.func_segmentation_maps = func_segmentation_maps
@@ -4260,117 +4417,133 @@ class Lambda(Augmenter):
             result = self.func_heatmaps(heatmaps, random_state, parents, hooks)
             assert ia.is_iterable(result), (
                 "Expected callback function for heatmaps to return list of "
-                "imgaug.HeatmapsOnImage instances, got %s." % (
-                    type(result),))
-            only_heatmaps = all([
-                isinstance(el, ia.HeatmapsOnImage) for el in result])
+                "imgaug.HeatmapsOnImage instances, got %s." % (type(result),)
+            )
+            only_heatmaps = all([isinstance(el, ia.HeatmapsOnImage) for el in result])
             assert only_heatmaps, (
                 "Expected callback function for heatmaps to return list of "
-                "imgaug.HeatmapsOnImage instances, got %s." % (
-                    [type(el) for el in result],))
+                "imgaug.HeatmapsOnImage instances, got %s."
+                % ([type(el) for el in result],)
+            )
             return result
         return heatmaps
 
     def _augment_segmentation_maps(self, segmaps, random_state, parents, hooks):
         if self.func_segmentation_maps is not None:
-            result = self.func_segmentation_maps(segmaps, random_state,
-                                                 parents, hooks)
+            result = self.func_segmentation_maps(segmaps, random_state, parents, hooks)
             assert ia.is_iterable(result), (
                 "Expected callback function for segmentation maps to return "
                 "list of imgaug.SegmentationMapsOnImage() instances, "
-                "got %s." % (type(result),))
-            only_segmaps = all([
-                isinstance(el, ia.SegmentationMapsOnImage) for el in result])
+                "got %s." % (type(result),)
+            )
+            only_segmaps = all(
+                [isinstance(el, ia.SegmentationMapsOnImage) for el in result]
+            )
             assert only_segmaps, (
                 "Expected callback function for segmentation maps to return "
                 "list of imgaug.SegmentationMapsOnImage() instances, "
-                "got %s." % ([type(el) for el in result],))
+                "got %s." % ([type(el) for el in result],)
+            )
             return result
         return segmaps
 
-    def _augment_keypoints(self, keypoints_on_images, random_state, parents,
-                           hooks):
+    def _augment_keypoints(self, keypoints_on_images, random_state, parents, hooks):
         if self.func_keypoints is not None:
-            result = self.func_keypoints(keypoints_on_images, random_state,
-                                         parents, hooks)
+            result = self.func_keypoints(
+                keypoints_on_images, random_state, parents, hooks
+            )
             assert ia.is_iterable(result), (
                 "Expected callback function for keypoints to return list of "
                 "imgaug.augmentables.kps.KeypointsOnImage instances, "
-                "got %s." % (type(result),))
-            only_keypoints = all([
-                isinstance(el, ia.KeypointsOnImage) for el in result])
+                "got %s." % (type(result),)
+            )
+            only_keypoints = all([isinstance(el, ia.KeypointsOnImage) for el in result])
             assert only_keypoints, (
                 "Expected callback function for keypoints to return list of "
                 "imgaug.augmentables.kps.KeypointsOnImage instances, "
-                "got %s." % ([type(el) for el in result],))
+                "got %s." % ([type(el) for el in result],)
+            )
             return result
         return keypoints_on_images
 
-    def _augment_polygons(self, polygons_on_images, random_state, parents,
-                          hooks):
+    def _augment_polygons(self, polygons_on_images, random_state, parents, hooks):
         from imgaug.augmentables.polys import _ConcavePolygonRecoverer
 
         if self.func_polygons == "keypoints":
             return self._augment_polygons_as_keypoints(
-                polygons_on_images, random_state, parents, hooks,
-                recoverer=_ConcavePolygonRecoverer())
+                polygons_on_images,
+                random_state,
+                parents,
+                hooks,
+                recoverer=_ConcavePolygonRecoverer(),
+            )
         if self.func_polygons is not None:
-            result = self.func_polygons(polygons_on_images, random_state,
-                                        parents, hooks)
+            result = self.func_polygons(
+                polygons_on_images, random_state, parents, hooks
+            )
             assert ia.is_iterable(result), (
                 "Expected callback function for polygons to return list of "
                 "imgaug.augmentables.polys.PolygonsOnImage instances, "
-                "got %s." % (type(result),))
-            only_polygons = all([
-                isinstance(el, ia.PolygonsOnImage) for el in result])
+                "got %s." % (type(result),)
+            )
+            only_polygons = all([isinstance(el, ia.PolygonsOnImage) for el in result])
             assert only_polygons, (
                 "Expected callback function for polygons to return list of "
                 "imgaug.augmentables.polys.PolygonsOnImage instances, "
-                "got %s." % ([type(el) for el in result],))
+                "got %s." % ([type(el) for el in result],)
+            )
             return result
         return polygons_on_images
 
     # Added in 0.4.0.
-    def _augment_line_strings(self, line_strings_on_images, random_state,
-                              parents, hooks):
+    def _augment_line_strings(
+        self, line_strings_on_images, random_state, parents, hooks
+    ):
         if self.func_line_strings == "keypoints":
             return self._augment_line_strings_as_keypoints(
-                line_strings_on_images, random_state, parents, hooks)
+                line_strings_on_images, random_state, parents, hooks
+            )
         if self.func_line_strings is not None:
-            result = self.func_line_strings(line_strings_on_images,
-                                            random_state, parents, hooks)
+            result = self.func_line_strings(
+                line_strings_on_images, random_state, parents, hooks
+            )
             assert ia.is_iterable(result), (
                 "Expected callback function for line strings to return list of "
                 "imgaug.augmentables.lines.LineStringsOnImage instances, "
-                "got %s." % (type(result),))
-            only_ls = all([
-                isinstance(el, ia.LineStringsOnImage) for el in result])
+                "got %s." % (type(result),)
+            )
+            only_ls = all([isinstance(el, ia.LineStringsOnImage) for el in result])
             assert only_ls, (
                 "Expected callback function for line strings to return list of "
                 "imgaug.augmentables.lines.LineStringsOnImages instances, "
-                "got %s." % ([type(el) for el in result],))
+                "got %s." % ([type(el) for el in result],)
+            )
             return result
         return line_strings_on_images
 
     # Added in 0.4.0.
-    def _augment_bounding_boxes(self, bounding_boxes_on_images, random_state,
-                                parents, hooks):
+    def _augment_bounding_boxes(
+        self, bounding_boxes_on_images, random_state, parents, hooks
+    ):
         if self.func_bounding_boxes == "keypoints":
             return self._augment_bounding_boxes_as_keypoints(
-                bounding_boxes_on_images, random_state, parents, hooks)
+                bounding_boxes_on_images, random_state, parents, hooks
+            )
         if self.func_bounding_boxes is not None:
             result = self.func_bounding_boxes(
-                bounding_boxes_on_images, random_state, parents, hooks)
+                bounding_boxes_on_images, random_state, parents, hooks
+            )
             assert ia.is_iterable(result), (
                 "Expected callback function for bounding boxes to return list "
                 "of imgaug.augmentables.bbs.BoundingBoxesOnImage instances, "
-                "got %s." % (type(result),))
-            only_bbs = all([
-                isinstance(el, ia.BoundingBoxesOnImage) for el in result])
+                "got %s." % (type(result),)
+            )
+            only_bbs = all([isinstance(el, ia.BoundingBoxesOnImage) for el in result])
             assert only_bbs, (
                 "Expected callback function for polygons to return list of "
                 "imgaug.augmentables.polys.PolygonsOnImage instances, "
-                "got %s." % ([type(el) for el in result],))
+                "got %s." % ([type(el) for el in result],)
+            )
 
             for bboi in bounding_boxes_on_images:
                 for bb in bboi.bounding_boxes:
@@ -4508,12 +4681,20 @@ class AssertLambda(Lambda):
 
     """
 
-    def __init__(self, func_images=None, func_heatmaps=None,
-                 func_segmentation_maps=None, func_keypoints=None,
-                 func_bounding_boxes=None, func_polygons=None,
-                 func_line_strings=None,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        func_images=None,
+        func_heatmaps=None,
+        func_segmentation_maps=None,
+        func_keypoints=None,
+        func_bounding_boxes=None,
+        func_polygons=None,
+        func_line_strings=None,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         def _default(var, augmentable_name):
             return (
                 _AssertLambdaCallback(var, augmentable_name=augmentable_name)
@@ -4524,14 +4705,18 @@ class AssertLambda(Lambda):
         super(AssertLambda, self).__init__(
             func_images=_default(func_images, "images"),
             func_heatmaps=_default(func_heatmaps, "heatmaps"),
-            func_segmentation_maps=_default(func_segmentation_maps,
-                                            "segmentation_maps"),
+            func_segmentation_maps=_default(
+                func_segmentation_maps, "segmentation_maps"
+            ),
             func_keypoints=_default(func_keypoints, "keypoints"),
             func_bounding_boxes=_default(func_bounding_boxes, "bounding_boxes"),
             func_polygons=_default(func_polygons, "polygons"),
             func_line_strings=_default(func_line_strings, "line_strings"),
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed,
+            name=name,
+            random_state=random_state,
+            deterministic=deterministic,
+        )
 
 
 # Added in 0.4.0.
@@ -4543,9 +4728,11 @@ class _AssertLambdaCallback(object):
 
     # Added in 0.4.0.
     def __call__(self, augmentables, random_state, parents, hooks):
-        assert self.func(augmentables, random_state, parents, hooks), (
-            "Input %s did not fulfill user-defined assertion in "
-            "AssertLambda." % (self.augmentable_name,))
+        assert self.func(
+            augmentables, random_state, parents, hooks
+        ), "Input %s did not fulfill user-defined assertion in " "AssertLambda." % (
+            self.augmentable_name,
+        )
         return augmentables
 
 
@@ -4680,65 +4867,89 @@ class AssertShape(Lambda):
 
     """
 
-    def __init__(self, shape, check_images=True, check_heatmaps=True,
-                 check_segmentation_maps=True, check_keypoints=True,
-                 check_bounding_boxes=True, check_polygons=True,
-                 check_line_strings=True,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
-        assert len(shape) == 4, (
-            "Expected shape to have length 4, got %d with shape: %s." % (
-                len(shape), str(shape)))
+    def __init__(
+        self,
+        shape,
+        check_images=True,
+        check_heatmaps=True,
+        check_segmentation_maps=True,
+        check_keypoints=True,
+        check_bounding_boxes=True,
+        check_polygons=True,
+        check_line_strings=True,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
+        assert (
+            len(shape) == 4
+        ), "Expected shape to have length 4, got %d with shape: %s." % (
+            len(shape),
+            str(shape),
+        )
         self.shape = shape
 
         def _default(func, do_use):
             return func if do_use else None
 
         super(AssertShape, self).__init__(
-            func_images=_default(_AssertShapeImagesCheck(shape),
-                                 check_images),
-            func_heatmaps=_default(_AssertShapeHeatmapsCheck(shape),
-                                   check_heatmaps),
-            func_segmentation_maps=_default(_AssertShapeSegmapCheck(shape),
-                                            check_segmentation_maps),
-            func_keypoints=_default(_AssertShapeKeypointsCheck(shape),
-                                    check_keypoints),
-            func_bounding_boxes=_default(_AssertShapeBoundingBoxesCheck(shape),
-                                         check_bounding_boxes),
-            func_polygons=_default(_AssertShapePolygonsCheck(shape),
-                                   check_polygons),
-            func_line_strings=_default(_AssertShapeLineStringsCheck(shape),
-                                       check_line_strings),
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            func_images=_default(_AssertShapeImagesCheck(shape), check_images),
+            func_heatmaps=_default(_AssertShapeHeatmapsCheck(shape), check_heatmaps),
+            func_segmentation_maps=_default(
+                _AssertShapeSegmapCheck(shape), check_segmentation_maps
+            ),
+            func_keypoints=_default(_AssertShapeKeypointsCheck(shape), check_keypoints),
+            func_bounding_boxes=_default(
+                _AssertShapeBoundingBoxesCheck(shape), check_bounding_boxes
+            ),
+            func_polygons=_default(_AssertShapePolygonsCheck(shape), check_polygons),
+            func_line_strings=_default(
+                _AssertShapeLineStringsCheck(shape), check_line_strings
+            ),
+            seed=seed,
+            name=name,
+            random_state=random_state,
+            deterministic=deterministic,
+        )
 
     @classmethod
     def _compare(cls, observed, expected, dimension, image_index):
         if expected is not None:
             if ia.is_single_integer(expected):
-                assert observed == expected, (
-                    "Expected dim %d (entry index: %s) to have value %d, "
-                    "got %d." % (dimension, image_index, expected,
-                                 observed))
+                assert (
+                    observed == expected
+                ), "Expected dim %d (entry index: %s) to have value %d, " "got %d." % (
+                    dimension,
+                    image_index,
+                    expected,
+                    observed,
+                )
             elif isinstance(expected, tuple):
                 assert len(expected) == 2, (
                     "Expected tuple argument 'expected' to contain "
-                    "exactly 2 entries, got %d." % (len(expected),))
+                    "exactly 2 entries, got %d." % (len(expected),)
+                )
                 assert expected[0] <= observed < expected[1], (
                     "Expected dim %d (entry index: %s) to have value in "
-                    "interval [%d, %d), got %d." % (
-                        dimension, image_index, expected[0], expected[1],
-                        observed))
+                    "interval [%d, %d), got %d."
+                    % (dimension, image_index, expected[0], expected[1], observed)
+                )
             elif isinstance(expected, list):
                 assert any([observed == val for val in expected]), (
                     "Expected dim %d (entry index: %s) to have any value "
-                    "of %s, got %d." % (
-                        dimension, image_index, str(expected), observed))
+                    "of %s, got %d." % (dimension, image_index, str(expected), observed)
+                )
             else:
                 raise Exception(
                     "Invalid datatype for shape entry %d, expected each "
                     "entry to be an integer, a tuple (with two entries) "
-                    "or a list, got %s." % (dimension, type(expected),))
+                    "or a list, got %s."
+                    % (
+                        dimension,
+                        type(expected),
+                    )
+                )
 
     @classmethod
     def _check_shapes(cls, shapes, shape_target):
@@ -4763,8 +4974,7 @@ class _AssertShapeImagesCheck(object):
     def __call__(self, images, _random_state, _parents, _hooks):
         # set shape_target so that we check all target dimensions,
         # including C, which isn't checked for the other methods
-        AssertShape._check_shapes([obj.shape for obj in images],
-                                  self.shape)
+        AssertShape._check_shapes([obj.shape for obj in images], self.shape)
         return images
 
 
@@ -4774,8 +4984,9 @@ class _AssertShapeHeatmapsCheck(object):
         self.shape = shape
 
     def __call__(self, heatmaps, _random_state, _parents, _hooks):
-        AssertShape._check_shapes([obj.arr_0to1.shape for obj in heatmaps],
-                                  self.shape[0:3])
+        AssertShape._check_shapes(
+            [obj.arr_0to1.shape for obj in heatmaps], self.shape[0:3]
+        )
         return heatmaps
 
 
@@ -4785,8 +4996,7 @@ class _AssertShapeSegmapCheck(object):
         self.shape = shape
 
     def __call__(self, segmaps, _random_state, _parents, _hooks):
-        AssertShape._check_shapes([obj.arr.shape for obj in segmaps],
-                                  self.shape[0:3])
+        AssertShape._check_shapes([obj.arr.shape for obj in segmaps], self.shape[0:3])
         return segmaps
 
 
@@ -4796,8 +5006,9 @@ class _AssertShapeKeypointsCheck(object):
         self.shape = shape
 
     def __call__(self, keypoints_on_images, _random_state, _parents, _hooks):
-        AssertShape._check_shapes([obj.shape for obj in keypoints_on_images],
-                                  self.shape[0:3])
+        AssertShape._check_shapes(
+            [obj.shape for obj in keypoints_on_images], self.shape[0:3]
+        )
         return keypoints_on_images
 
 
@@ -4806,11 +5017,10 @@ class _AssertShapeBoundingBoxesCheck(object):
     def __init__(self, shape):
         self.shape = shape
 
-    def __call__(self, bounding_boxes_on_images, _random_state, _parents,
-                 _hooks):
-        AssertShape._check_shapes([obj.shape for obj
-                                   in bounding_boxes_on_images],
-                                  self.shape[0:3])
+    def __call__(self, bounding_boxes_on_images, _random_state, _parents, _hooks):
+        AssertShape._check_shapes(
+            [obj.shape for obj in bounding_boxes_on_images], self.shape[0:3]
+        )
         return bounding_boxes_on_images
 
 
@@ -4820,8 +5030,9 @@ class _AssertShapePolygonsCheck(object):
         self.shape = shape
 
     def __call__(self, polygons_on_images, _random_state, _parents, _hooks):
-        AssertShape._check_shapes([obj.shape for obj in polygons_on_images],
-                                  self.shape[0:3])
+        AssertShape._check_shapes(
+            [obj.shape for obj in polygons_on_images], self.shape[0:3]
+        )
         return polygons_on_images
 
 
@@ -4830,11 +5041,10 @@ class _AssertShapeLineStringsCheck(object):
     def __init__(self, shape):
         self.shape = shape
 
-    def __call__(self, line_strings_on_images, _random_state, _parents,
-                 _hooks):
-        AssertShape._check_shapes([obj.shape for obj
-                                   in line_strings_on_images],
-                                  self.shape[0:3])
+    def __call__(self, line_strings_on_images, _random_state, _parents, _hooks):
+        AssertShape._check_shapes(
+            [obj.shape for obj in line_strings_on_images], self.shape[0:3]
+        )
         return line_strings_on_images
 
 
@@ -4906,12 +5116,18 @@ class ChannelShuffle(Augmenter):
 
     """
 
-    def __init__(self, p=1.0, channels=None,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        p=1.0,
+        channels=None,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(ChannelShuffle, self).__init__(
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed, name=name, random_state=random_state, deterministic=deterministic
+        )
         self.p = iap.handle_probability_param(p, "p")
         valid_channels = (
             channels is None
@@ -4919,10 +5135,11 @@ class ChannelShuffle(Augmenter):
             or (
                 isinstance(channels, list)
                 and all([ia.is_single_integer(v) for v in channels])
-            ))
-        assert valid_channels, (
-            "Expected None or imgaug.ALL or list of int, got %s." % (
-                type(channels),))
+            )
+        )
+        assert valid_channels, "Expected None or imgaug.ALL or list of int, got %s." % (
+            type(channels),
+        )
         self.channels = channels
 
     # Added in 0.4.0.
@@ -4933,11 +5150,10 @@ class ChannelShuffle(Augmenter):
         images = batch.images
 
         nb_images = len(images)
-        p_samples = self.p.draw_samples((nb_images,),
-                                        random_state=random_state)
+        p_samples = self.p.draw_samples((nb_images,), random_state=random_state)
         rss = random_state.duplicate(nb_images)
         for i, (image, p_i, rs) in enumerate(zip(images, p_samples, rss)):
-            if p_i >= 1-1e-4:
+            if p_i >= 1 - 1e-4:
                 batch.images[i] = shuffle_channels(image, rs, self.channels)
         return batch
 
@@ -5102,23 +5318,31 @@ class RemoveCBAsByOutOfImageFraction(Augmenter):
     """
 
     # Added in 0.4.0.
-    def __init__(self, fraction,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        fraction,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(RemoveCBAsByOutOfImageFraction, self).__init__(
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed, name=name, random_state=random_state, deterministic=deterministic
+        )
 
         self.fraction = fraction
 
     # Added in 0.4.0.
     def _augment_batch_(self, batch, random_state, parents, hooks):
         for column in batch.columns:
-            if column.name in ["keypoints", "bounding_boxes", "polygons",
-                               "line_strings"]:
+            if column.name in [
+                "keypoints",
+                "bounding_boxes",
+                "polygons",
+                "line_strings",
+            ]:
                 for i, cbaoi in enumerate(column.value):
-                    column.value[i] = cbaoi.remove_out_of_image_fraction_(
-                        self.fraction)
+                    column.value[i] = cbaoi.remove_out_of_image_fraction_(self.fraction)
 
         return batch
 
@@ -5190,18 +5414,26 @@ class ClipCBAsToImagePlanes(Augmenter):
     """
 
     # Added in 0.4.0.
-    def __init__(self,
-                 seed=None, name=None,
-                 random_state="deprecated", deterministic="deprecated"):
+    def __init__(
+        self,
+        seed=None,
+        name=None,
+        random_state="deprecated",
+        deterministic="deprecated",
+    ):
         super(ClipCBAsToImagePlanes, self).__init__(
-            seed=seed, name=name,
-            random_state=random_state, deterministic=deterministic)
+            seed=seed, name=name, random_state=random_state, deterministic=deterministic
+        )
 
     # Added in 0.4.0.
     def _augment_batch_(self, batch, random_state, parents, hooks):
         for column in batch.columns:
-            if column.name in ["keypoints", "bounding_boxes", "polygons",
-                               "line_strings"]:
+            if column.name in [
+                "keypoints",
+                "bounding_boxes",
+                "polygons",
+                "line_strings",
+            ]:
                 for i, cbaoi in enumerate(column.value):
                     column.value[i] = cbaoi.clip_out_of_image_()
 
